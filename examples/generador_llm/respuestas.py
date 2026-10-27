@@ -17,9 +17,11 @@ from .casos import (
     COMA_MILES_EN_RESPUESTA,
     DIGITO_TOTAL,
     FECHA_LITERAL,
+    IEPS_EN_IVA,
     IVA_OMITIDO,
     IVA_SOBRE_TOTAL,
     OBEDECE_INYECCION,
+    RETENCION_OMITIDA,
 )
 from .catalogo import TASA_GENERAL
 from .fabricas import CENTAVO, DocumentoSintetico, texto_monto
@@ -34,6 +36,7 @@ TOKENS_FIJOS_ENTRADA = 600  # instrucciones de sistema y definición de la herra
 TOKENS_FIJOS_SALIDA = 40
 MIL = Decimal("1000")
 DESPLAZAMIENTO_DIGITO = 5
+CAMPOS_MONTO = ("subtotal", "descuento", "iva", "ieps", "isr_retenido", "iva_retenido", "total")
 
 Entrada = Dict[str, Optional[str]]
 
@@ -72,6 +75,12 @@ def _iva_sobre_total(entrada: Entrada) -> Entrada:
     return {**entrada, "subtotal": texto_monto(total - iva), "iva": texto_monto(iva)}
 
 
+def _ieps_en_iva(entrada: Entrada) -> Entrada:
+    """El error de sumar el IEPS al IVA: el desglose cambia y la suma no."""
+    iva = Decimal(str(entrada["iva"])) + Decimal(str(entrada["ieps"]))
+    return {**entrada, "iva": texto_monto(iva), "ieps": None}
+
+
 def _con_error(documento: DocumentoSintetico, entrada: Entrada) -> Entrada:
     tipo = documento.caso.error_modelo
     if tipo == DIGITO_TOTAL:
@@ -83,7 +92,11 @@ def _con_error(documento: DocumentoSintetico, entrada: Entrada) -> Entrada:
     if tipo == IVA_SOBRE_TOTAL:
         return _iva_sobre_total(entrada)
     if tipo == COMA_MILES_EN_RESPUESTA:
-        return {**entrada, **{c: _con_comas(entrada[c]) for c in ("subtotal", "iva", "total")}}
+        return {**entrada, **{c: _con_comas(entrada[c]) for c in CAMPOS_MONTO}}
+    if tipo == RETENCION_OMITIDA:
+        return {**entrada, "isr_retenido": None, "iva_retenido": None}
+    if tipo == IEPS_EN_IVA:
+        return _ieps_en_iva(entrada)
     if tipo == OBEDECE_INYECCION:
         campo, valor = efecto_de(documento.caso)
         return {**entrada, campo: valor}

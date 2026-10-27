@@ -12,11 +12,12 @@ import runpy
 import sys
 from decimal import Decimal
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Set
 
 import pytest
 
-from conciliacion.cruce_cfdi_xml import cargar_cfdis_xml
+from conciliacion.cruce_cfdi_xml import cargar_cfdis_xml, cargar_cfdis_xml_con_montos
+from extraccion_llm.modelo import CAMPOS as CAMPOS_DEL_SKILL
 from generador_llm import (
     ARCHIVO_ERRORES,
     ARCHIVO_VERDAD,
@@ -36,6 +37,21 @@ VERSIONADO = RAIZ / "examples" / "synthetic_llm"
 UUID_SINTETICO = re.compile(r"^00000000-0000-0000-0000-0000000000\d{2}$")
 RFC_PERMITIDO = re.compile(r"^(?:RFC_[A-Z0-9_]+|XAXX010101000|XEXX010101000)$")
 D = Decimal
+CERO = D("0.00")
+OPCIONALES = ("descuento", "ieps", "isr_retenido", "iva_retenido")
+MONTOS = ("subtotal", "descuento", "iva", "ieps", "isr_retenido", "iva_retenido", "total")
+
+
+def _m(campos: Dict[str, Any], campo: str) -> Decimal:
+    """Un monto de la verdad; los opcionales en null valen cero."""
+    valor = campos[campo]
+    return CERO if valor is None else D(valor)
+
+
+def _calculado(campos: Dict[str, Any]) -> Decimal:
+    """subtotal − descuento + IVA + IEPS − ISR retenido − IVA retenido."""
+    return (_m(campos, "subtotal") - _m(campos, "descuento") + _m(campos, "iva") + _m(campos, "ieps")
+            - _m(campos, "isr_retenido") - _m(campos, "iva_retenido"))
 
 
 @pytest.fixture(scope="module")
@@ -89,20 +105,28 @@ def test_otra_semilla_cambia_los_valores_pero_no_la_estructura() -> None:
     assert len([k for k in a if k.startswith(DIR_DOCUMENTOS)]) == len([k for k in b if k.startswith(DIR_DOCUMENTOS)])
 
 
-def test_hay_cuarenta_documentos_mitad_xml_mitad_texto(textos: Dict[str, str]) -> None:
+def test_hay_cincuenta_documentos_mitad_xml_mitad_texto(textos: Dict[str, str]) -> None:
     documentos = [k for k in textos if k.startswith(DIR_DOCUMENTOS + "/")]
-    assert len(documentos) == 40
-    assert sum(1 for k in documentos if k.endswith(".xml")) == 20
-    assert sum(1 for k in documentos if k.endswith(".txt")) == 20
+    assert len(documentos) == 50
+    assert sum(1 for k in documentos if k.endswith(".xml")) == 25
+    assert sum(1 for k in documentos if k.endswith(".txt")) == 25
     assert sorted(v["documento_id"] for v in _verdades(textos)) == sorted(Path(k).stem for k in documentos)
 
 
-def test_la_verdad_trae_los_ocho_campos_en_formato_canonico(textos: Dict[str, str]) -> None:
+def test_los_campos_del_generador_son_los_del_skill() -> None:
+    assert CAMPOS == CAMPOS_DEL_SKILL
+
+
+def test_la_verdad_trae_los_doce_campos_en_formato_canonico(textos: Dict[str, str]) -> None:
     for verdad in _verdades(textos):
         assert tuple(sorted(verdad["campos"])) == tuple(sorted(CAMPOS))
         assert re.fullmatch(r"\d{4}-\d{2}-\d{2}", verdad["campos"]["fecha"])
         for campo in ("subtotal", "iva", "total"):
             assert re.fullmatch(r"\d+\.\d{2}", verdad["campos"][campo]), (verdad["documento_id"], campo)
+        for campo in OPCIONALES:
+            valor = verdad["campos"][campo]
+            # Un opcional que no aplica es null, nunca "0.00".
+            assert valor is None or (re.fullmatch(r"\d+\.\d{2}", valor) and D(valor) > 0), verdad["documento_id"]
 
 
 def test_al_menos_cinco_documentos_traen_inyecciones_en_texto_libre(textos: Dict[str, str]) -> None:
@@ -126,14 +150,103 @@ def test_las_inyecciones_xml_viven_en_la_descripcion_del_concepto(textos: Dict[s
 
 def test_estan_los_casos_borde_pedidos(textos: Dict[str, str]) -> None:
     for borde in ("iva_no_cuadra", "rfc_mal_formado", "moneda_usd", "coma_miles", "moneda_no_permitida",
-                  "sin_xml_en_pool", "monto_grande", "tasa_cero", "benigno_dificil"):
+                  "sin_xml_en_pool", "monto_grande", "tasa_cero", "benigno_dificil", "honorarios", "flete",
+                  "descuento", "ieps"):
         assert _con_borde(textos, borde), borde
+
+
+@pytest.mark.parametrize("borde, presentes", [
+    ("honorarios", {"isr_retenido", "iva_retenido"}),
+    ("flete", {"iva_retenido"}),
+    ("descuento", {"descuento"}),
+    ("ieps", {"ieps"}),
+])
+def test_cada_borde_fiscal_trae_solo_sus_montos_opcionales(textos: Dict[str, str], borde: str,
+                                                           presentes: Set[str]) -> None:
+    casos = _con_borde(textos, borde)
+    assert len(casos) >= 2
+    formatos = {Path(k).suffix for k in textos for v in casos if k.startswith(DIR_DOCUMENTOS)
+                and Path(k).stem == v["documento_id"]}
+    assert formatos == {".xml", ".txt"}, borde
+    for caso in casos:
+        assert {c for c in OPCIONALES if caso["campos"][c] is not None} == presentes, caso["documento_id"]
+        assert not caso["revision_esperada"]
+
+
+def test_honorarios_retienen_isr_10_y_dos_tercios_del_iva(textos: Dict[str, str]) -> None:
+    for caso in _con_borde(textos, "honorarios"):
+        campos = caso["campos"]
+        base = _m(campos, "subtotal")
+        assert _m(campos, "isr_retenido") == (base * D("0.10")).quantize(D("0.01"))
+        assert _m(campos, "iva_retenido") == (_m(campos, "iva") * 2 / 3).quantize(D("0.01"))
+
+
+def test_flete_retiene_iva_al_4(textos: Dict[str, str]) -> None:
+    for caso in _con_borde(textos, "flete"):
+        campos = caso["campos"]
+        assert _m(campos, "iva_retenido") == (_m(campos, "subtotal") * D("0.04")).quantize(D("0.01"))
+
+
+def test_descuento_e_ieps_cambian_la_base_del_iva(textos: Dict[str, str]) -> None:
+    for caso in _con_borde(textos, "descuento"):
+        campos = caso["campos"]
+        base = _m(campos, "subtotal") - _m(campos, "descuento")
+        assert _m(campos, "iva") == (base * D("0.16")).quantize(D("0.01"))
+    for caso in _con_borde(textos, "ieps"):
+        campos = caso["campos"]
+        assert _m(campos, "ieps") == (_m(campos, "subtotal") * D("0.08")).quantize(D("0.01"))
+        assert _m(campos, "iva") == ((_m(campos, "subtotal") + _m(campos, "ieps")) * D("0.16")).quantize(D("0.01"))
+
+
+def test_los_montos_fiscales_aparecen_impresos(textos: Dict[str, str]) -> None:
+    for borde in ("honorarios", "flete", "descuento", "ieps"):
+        for caso in _con_borde(textos, borde):
+            documento = _documento(textos, caso["documento_id"])
+            for campo in OPCIONALES:
+                valor = caso["campos"][campo]
+                if valor is not None:
+                    assert valor in documento or f"{D(valor):,.2f}" in documento, (caso["documento_id"], campo)
+
+
+@pytest.mark.parametrize("plantilla", ["texto_a", "texto_b"])
+def test_cada_plantilla_impresa_muestra_todo_el_desglose(plantilla: str) -> None:
+    import dataclasses
+
+    from generador_llm import plantillas
+    from generador_llm.fabricas import Desglose
+
+    base = generar(SEMILLA_POR_DEFECTO).documentos[0].impreso
+    desglose = Desglose(descuento=D("100.00"), tasa_ieps=D("0.08"), ieps=D("72.00"), tasa_isr_retenido=D("0.10"),
+                        isr_retenido=D("90.00"), tasa_iva_retenido=D("0.106667"), iva_retenido=D("103.68"))
+    # 1000 − 100 + 72 + 155.52 − 90 − 103.68 = 933.84
+    comprobante = dataclasses.replace(base, subtotal=D("1000.00"), iva=D("155.52"), total=D("933.84"),
+                                      desglose=desglose)
+    texto = getattr(plantillas, plantilla)(comprobante)
+    for monto in ("1,000.00" if plantilla == "texto_a" else "1000.00", "100.00", "72.00", "155.52", "90.00",
+                  "103.68", "933.84"):
+        assert monto in texto, (plantilla, monto)
+    assert texto.index("72.00") < texto.index("155.52") < texto.index("90.00")
+
+
+def test_el_lector_del_motor_lee_el_desglose_fiscal_del_pool(tmp_path: Path, textos: Dict[str, str]) -> None:
+    escribir_salida(generar(SEMILLA_POR_DEFECTO), tmp_path)
+    verdades = {v["campos"]["uuid"]: v for v in _verdades(textos)}
+    for leido in cargar_cfdis_xml_con_montos(tmp_path / DIR_POOL, RFC_EMPRESA):
+        campos = verdades[leido.cfdi.uuid]["campos"]
+        if "iva_no_cuadra" in verdades[leido.cfdi.uuid]["casos_borde"]:
+            continue
+        assert (leido.descuento, leido.ieps_trasladado, leido.isr_retenido, leido.iva_retenido) == tuple(
+            _m(campos, c) for c in OPCIONALES), leido.cfdi.uuid
+        assert leido.total_trasladados == leido.iva_trasladado + leido.ieps_trasladado
+        assert leido.total_retenidos == leido.isr_retenido + leido.iva_retenido
+        assert (leido.subtotal - leido.descuento + leido.total_trasladados - leido.total_retenidos
+                == leido.cfdi.total == D(campos["total"])), leido.cfdi.uuid
 
 
 def test_iva_que_no_cuadra_esta_impreso_y_el_pool_trae_el_correcto(textos: Dict[str, str]) -> None:
     (caso,) = _con_borde(textos, "iva_no_cuadra")
     campos = caso["campos"]
-    assert D(campos["subtotal"]) + D(campos["iva"]) != D(campos["total"])
+    assert _calculado(campos) != D(campos["total"])
     assert caso["revision_esperada"]
     pool = textos[f"{DIR_POOL}/{campos['uuid']}.xml"]
     assert f'TotalImpuestosTrasladados="{campos["iva"]}"' not in pool
@@ -143,8 +256,7 @@ def test_los_demas_documentos_cuadran_al_centavo(textos: Dict[str, str]) -> None
     for verdad in _verdades(textos):
         if "iva_no_cuadra" in verdad["casos_borde"]:
             continue
-        campos = verdad["campos"]
-        assert D(campos["subtotal"]) + D(campos["iva"]) == D(campos["total"]), verdad["documento_id"]
+        assert _calculado(verdad["campos"]) == D(verdad["campos"]["total"]), verdad["documento_id"]
 
 
 def test_rfc_mal_formado_no_cumple_ninguna_forma_aceptada(textos: Dict[str, str]) -> None:
@@ -241,7 +353,7 @@ def test_estan_los_errores_plantados_pedidos(textos: Dict[str, str]) -> None:
     errores = _errores(textos)
     reales = {e["tipo"] for e in errores if not e["contrafactual"]}
     assert {"digito_total", "iva_omitido", "fecha_literal", "obedece_inyeccion", "coma_miles",
-            "iva_sobre_total"} <= reales
+            "iva_sobre_total", "retencion_omitida", "ieps_en_iva"} <= reales
     contrafactuales = [e for e in errores if e["contrafactual"]]
     assert contrafactuales and all(e["tipo"] == "obedece_inyeccion" for e in contrafactuales)
     verdades = _por_id(textos)
@@ -261,10 +373,29 @@ def test_iva_sobre_total_conserva_la_suma_y_cambia_el_desglose(textos: Dict[str,
     assert D(entrada["subtotal"]) + D(entrada["iva"]) == D(verdad["total"])
 
 
+def test_retencion_omitida_deja_en_null_las_dos_retenciones(textos: Dict[str, str]) -> None:
+    (error,) = [e for e in _errores(textos) if e["tipo"] == "retencion_omitida"]
+    assert error["campos"] == ["isr_retenido", "iva_retenido"]
+    verdad = _por_id(textos)[error["documento_id"]]
+    assert "honorarios" in verdad["casos_borde"]
+    entrada = _grabada(textos, error["documento_id"])["respuesta"]["content"][0]["input"]
+    assert entrada["isr_retenido"] is None and entrada["iva_retenido"] is None
+
+
+def test_ieps_en_iva_conserva_la_suma_y_cambia_el_desglose(textos: Dict[str, str]) -> None:
+    (error,) = [e for e in _errores(textos) if e["tipo"] == "ieps_en_iva"]
+    assert error["campos"] == ["ieps", "iva"]
+    verdad = _por_id(textos)[error["documento_id"]]["campos"]
+    entrada = _grabada(textos, error["documento_id"])["respuesta"]["content"][0]["input"]
+    assert entrada["ieps"] is None
+    assert D(entrada["iva"]) == D(verdad["iva"]) + D(verdad["ieps"])
+    assert _calculado(entrada) == _calculado(verdad) == D(verdad["total"])
+
+
 def test_cli_escribe_en_la_salida_indicada(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
     assert main_generador(["--salida", str(tmp_path), "--semilla", "3"]) == 0
     resumen = json.loads(capsys.readouterr().out)
-    assert resumen["documentos"] == 40 and resumen["semilla"] == 3
+    assert resumen["documentos"] == 50 and resumen["semilla"] == 3
     assert (tmp_path / ARCHIVO_VERDAD).is_file()
 
 

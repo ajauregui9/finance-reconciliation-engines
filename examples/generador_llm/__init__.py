@@ -1,9 +1,11 @@
 """Generador sintético determinista para el demo de extracción de CFDI con un LLM.
 
-    PYTHONPATH=examples python3 -m generador_llm            # reescribe examples/synthetic_llm/
-    PYTHONPATH=examples python3 -m generador_llm --salida /ruta --semilla 7
+    python3 -m generador_llm                          # reescribe examples/synthetic_llm/
+    python3 -m generador_llm --salida /ruta --semilla 7
 
-Escribe 40 documentos (CFDI XML y representaciones impresas en texto) con verdad
+(con el repo instalado: `pip install -e .`).
+
+Escribe 50 documentos (CFDI XML y representaciones impresas en texto) con verdad
 conocida, el pool de CFDIs conocidos, respuestas grabadas sintéticas con errores
 plantados y la lista de esos errores.
 """
@@ -21,7 +23,8 @@ from .escritura import (
 )
 from .fabricas import DatosLlm, DocumentoSintetico, generar
 
-CAMPOS = ("rfc_emisor", "rfc_receptor", "uuid", "fecha", "subtotal", "iva", "total", "moneda")
+CAMPOS = ("rfc_emisor", "rfc_receptor", "uuid", "fecha", "subtotal", "descuento", "iva", "ieps", "isr_retenido",
+          "iva_retenido", "total", "moneda")
 
 __all__ = [
     "ARCHIVO_ERRORES",

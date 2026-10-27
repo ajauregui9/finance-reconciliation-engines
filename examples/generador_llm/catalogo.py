@@ -23,6 +23,18 @@ PRIMER_DIA = date(2026, 3, 1)
 DIAS_DEL_PERIODO = 28
 TASA_GENERAL = Decimal("0.16")
 TASA_CERO_POR_CIENTO = Decimal("0")
+TASA_IEPS = Decimal("0.08")
+TASA_RETENCION_ISR = Decimal("0.10")
+# Honorarios: se retienen dos terceras partes del IVA. La tasa del XML (6 decimales) y la impresa
+# (10.6667%) son redondeos de 2/3 × 16%, así que base × tasa puede diferir un centavo del importe.
+FRACCION_IVA_RETENIDO = Decimal(2) / Decimal(3)
+TASA_RETENCION_IVA_HONORARIOS = Decimal("0.106667")
+TASA_RETENCION_IVA_FLETE = Decimal("0.04")
+FRACCION_DESCUENTO = Decimal("0.10")
+REGIMEN_MORAL = "601"
+REGIMEN_PROFESIONAL = "612"
+REGIMENES: Mapping[str, str] = {REGIMEN_MORAL: "General de Ley Personas Morales",
+                                REGIMEN_PROFESIONAL: "Personas Físicas con Actividades Empresariales y Profesionales"}
 # Tipos de cambio de ejemplo (redondos), con 4 decimales como en el XML.
 TIPOS_DE_CAMBIO: Mapping[str, Decimal] = {"USD": Decimal("17.5000"), "EUR": Decimal("19.0000")}
 
@@ -41,6 +53,7 @@ class Proveedor:
     rfc: str
     nombre: str
     conceptos: Tuple[str, ...]
+    regimen: str = REGIMEN_MORAL
 
 
 PROVEEDORES: Tuple[Proveedor, ...] = (
@@ -66,6 +79,14 @@ PROVEEDOR_EUROS = Proveedor("RFC_PROV_IMPORTADORA", "REFACCIONES EUROPEAS DEL CE
                             ("Refacciones importadas para la línea de empaque",))
 PROVEEDOR_TASA_CERO = Proveedor("RFC_PROV_ABARROTES", "ABARROTES LA CANASTA SA DE CV",
                                 ("Garrafones de agua y fruta para el comedor",))
+# Honorarios de una persona física con actividad profesional.
+PROVEEDOR_HONORARIOS = Proveedor("RFC_PROF_ASESORIA", "ASESORIA CONTABLE INDEPENDIENTE",
+                                 ("Honorarios por asesoría contable del mes", "Honorarios por revisión fiscal"),
+                                 REGIMEN_PROFESIONAL)
+# La retención de IVA del 4% aplica al autotransporte de bienes: solo el concepto de flete.
+PROVEEDOR_FLETE = Proveedor("RFC_PROV_TRANSPORTE", "TRANSPORTES RUTA NORTE SA DE CV", ("Flete local de mercancía",))
+PROVEEDOR_IEPS = Proveedor("RFC_PROV_BOTANAS", "DISTRIBUIDORA DE BOTANAS DEL NORTE SA DE CV",
+                           ("Botanas y galletas para el comedor",))
 
 NOTAS_BENIGNAS: Tuple[str, ...] = (
     "Entrega en almacén central.",

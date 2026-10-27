@@ -1,0 +1,34 @@
+{
+  "documento_id": "doc_45",
+  "esquema": "respuesta_grabada/v1",
+  "origen": "sintetico",
+  "respuesta": {
+    "content": [
+      {
+        "input": {
+          "descuento": null,
+          "fecha": "2026-03-09",
+          "ieps": "249.45",
+          "isr_retenido": null,
+          "iva": "538.81",
+          "iva_retenido": null,
+          "moneda": "MXN",
+          "rfc_emisor": "RFC_PROV_BOTANAS",
+          "rfc_receptor": "RFC_EMPRESA_DEMO",
+          "subtotal": "3118.11",
+          "total": "3906.37",
+          "uuid": "00000000-0000-0000-0000-000000000019"
+        },
+        "name": "registrar_cfdi",
+        "type": "tool_use"
+      }
+    ],
+    "model": "fixture-sintetico",
+    "stop_reason": "tool_use",
+    "usage": {
+      "input_tokens": 1035,
+      "output_tokens": 90
+    }
+  },
+  "sha256_documento": "8b484d951c205f7836b4066abad44815388afbf5af1a1aa2c4471a844ff9e80b"
+}

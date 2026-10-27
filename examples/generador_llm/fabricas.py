@@ -5,6 +5,11 @@ de CFDIs conocidos) y el `impreso` (lo que muestra el documento que lee el model
 difieren en los casos borde que alteran la impresión: IVA que no cuadra y RFC mal formado.
 La verdad de la evaluación sale del impreso: mide si el modelo leyó bien, no si el
 documento es correcto.
+
+El desglose fiscal sigue la identidad del CFDI: total = subtotal − descuento + IVA + IEPS −
+ISR retenido − IVA retenido. El IEPS se calcula sobre el subtotal menos el descuento y el IVA
+sobre esa base más el IEPS. Un monto que no aplica es cero en el comprobante y null en la
+verdad.
 """
 from __future__ import annotations
 
@@ -20,7 +25,11 @@ from .casos import (
     BORDES_CON_REVISION,
     CASOS,
     COMA_MILES,
+    DESCUENTO,
     FECHA_DD_MM_AAAA,
+    FLETE,
+    HONORARIOS,
+    IEPS,
     IVA_NO_CUADRA,
     MONEDA_NO_PERMITIDA,
     MONEDA_USD,
@@ -38,6 +47,8 @@ from .catalogo import (
     CENTAVOS_MILES,
     CENTAVOS_NORMAL,
     DIAS_DEL_PERIODO,
+    FRACCION_DESCUENTO,
+    FRACCION_IVA_RETENIDO,
     NOTAS_BENIGNAS,
     PRIMER_DIA,
     PRIMER_FOLIO,
@@ -45,11 +56,18 @@ from .catalogo import (
     PROVEEDOR_DIFICIL,
     PROVEEDOR_DOLARES,
     PROVEEDOR_EUROS,
+    PROVEEDOR_FLETE,
+    PROVEEDOR_HONORARIOS,
+    PROVEEDOR_IEPS,
     PROVEEDOR_TASA_CERO,
     PROVEEDORES,
     RFC_EMPRESA,
     TASA_CERO_POR_CIENTO,
     TASA_GENERAL,
+    TASA_IEPS,
+    TASA_RETENCION_ISR,
+    TASA_RETENCION_IVA_FLETE,
+    TASA_RETENCION_IVA_HONORARIOS,
     TIPOS_DE_CAMBIO,
     ULTIMA_HORA,
     ULTIMO_FOLIO,
@@ -58,12 +76,30 @@ from .catalogo import (
 from .inyecciones import INYECCIONES, efecto_de
 
 CENTAVO = Decimal("0.01")
+CERO = Decimal("0.00")
 UN_PESO = Decimal("1.00")
 MIL = Decimal("1000")
 MAXIMO_NUMERO_UUID = 99
 SERIE_POR_PLANTILLA = {XML: "F", TEXTO_A: "A", TEXTO_B: "B"}
 
 Campos = Tuple[Tuple[str, Optional[str]], ...]
+
+
+@dataclass(frozen=True)
+class Desglose:
+    """Descuento, impuestos y retenciones del comprobante (cero si no aplican) y sus tasas."""
+
+    descuento: Decimal = CERO
+    tasa_ieps: Decimal = CERO
+    ieps: Decimal = CERO
+    tasa_isr_retenido: Decimal = CERO
+    isr_retenido: Decimal = CERO
+    tasa_iva_retenido: Decimal = CERO
+    iva_retenido: Decimal = CERO
+
+    @property
+    def retenidos(self) -> Decimal:
+        return self.isr_retenido + self.iva_retenido
 
 
 @dataclass(frozen=True)
@@ -81,6 +117,20 @@ class Comprobante:
     iva: Decimal
     total: Decimal
     nota: str
+    desglose: Desglose = Desglose()
+
+    @property
+    def base(self) -> Decimal:
+        """El importe gravado: subtotal menos descuento."""
+        return self.subtotal - self.desglose.descuento
+
+    @property
+    def base_iva(self) -> Decimal:
+        return self.base + self.desglose.ieps
+
+    @property
+    def trasladados(self) -> Decimal:
+        return self.iva + self.desglose.ieps
 
 
 @dataclass(frozen=True)
@@ -97,15 +147,20 @@ class DocumentoSintetico:
 
     @property
     def verdad(self) -> Campos:
-        """Los ocho campos tal como aparecen en el documento, en formato canónico."""
+        """Los doce campos tal como aparecen en el documento, en formato canónico (null si no aplica)."""
         c = self.impreso
+        d = c.desglose
         return (
             ("rfc_emisor", c.emisor.rfc),
             ("rfc_receptor", RFC_EMPRESA),
             ("uuid", c.uuid),
             ("fecha", c.emision.date().isoformat()),
             ("subtotal", texto_monto(c.subtotal)),
+            ("descuento", texto_opcional(d.descuento)),
             ("iva", texto_monto(c.iva)),
+            ("ieps", texto_opcional(d.ieps)),
+            ("isr_retenido", texto_opcional(d.isr_retenido)),
+            ("iva_retenido", texto_opcional(d.iva_retenido)),
             ("total", texto_monto(c.total)),
             ("moneda", c.moneda),
         )
@@ -121,8 +176,31 @@ def texto_monto(monto: Decimal) -> str:
     return f"{monto.quantize(CENTAVO, rounding=ROUND_HALF_UP):.2f}"
 
 
-def _iva(subtotal: Decimal, tasa: Decimal) -> Decimal:
-    return (subtotal * tasa).quantize(CENTAVO, rounding=ROUND_HALF_UP)
+def texto_opcional(monto: Decimal) -> Optional[str]:
+    return None if monto == 0 else texto_monto(monto)
+
+
+def _importe(base: Decimal, tasa: Decimal) -> Decimal:
+    return (base * tasa).quantize(CENTAVO, rounding=ROUND_HALF_UP)
+
+
+def _desglose(caso: Caso, subtotal: Decimal, tasa: Decimal) -> Tuple[Desglose, Decimal]:
+    """El desglose fiscal del caso y el IVA trasladado (que depende del descuento y del IEPS)."""
+    descuento = _importe(subtotal, FRACCION_DESCUENTO) if DESCUENTO in caso.bordes else CERO
+    base = subtotal - descuento
+    tasa_ieps = TASA_IEPS if IEPS in caso.bordes else CERO
+    ieps = _importe(base, tasa_ieps)
+    iva = _importe(base + ieps, tasa)
+    desglose = Desglose(descuento=descuento, tasa_ieps=tasa_ieps, ieps=ieps)
+    if HONORARIOS in caso.bordes:
+        iva_retenido = (iva * FRACCION_IVA_RETENIDO).quantize(CENTAVO, rounding=ROUND_HALF_UP)
+        desglose = dataclasses.replace(desglose, tasa_isr_retenido=TASA_RETENCION_ISR,
+                                       isr_retenido=_importe(base, TASA_RETENCION_ISR),
+                                       tasa_iva_retenido=TASA_RETENCION_IVA_HONORARIOS, iva_retenido=iva_retenido)
+    if FLETE in caso.bordes:
+        desglose = dataclasses.replace(desglose, tasa_iva_retenido=TASA_RETENCION_IVA_FLETE,
+                                       iva_retenido=_importe(base, TASA_RETENCION_IVA_FLETE))
+    return desglose, iva
 
 
 def _uuid_sintetico(numero: int) -> str:
@@ -131,7 +209,8 @@ def _uuid_sintetico(numero: int) -> str:
 
 def _proveedor(caso: Caso, azar: random.Random) -> Proveedor:
     especiales = {BENIGNO_DIFICIL: PROVEEDOR_DIFICIL, TASA_CERO: PROVEEDOR_TASA_CERO,
-                  MONEDA_NO_PERMITIDA: PROVEEDOR_EUROS, MONEDA_USD: PROVEEDOR_DOLARES}
+                  MONEDA_NO_PERMITIDA: PROVEEDOR_EUROS, MONEDA_USD: PROVEEDOR_DOLARES,
+                  HONORARIOS: PROVEEDOR_HONORARIOS, FLETE: PROVEEDOR_FLETE, IEPS: PROVEEDOR_IEPS}
     for borde in caso.bordes:
         if borde in especiales:
             return especiales[borde]
@@ -160,15 +239,15 @@ def _timbrado(caso: Caso, uuid: str, azar: random.Random) -> Comprobante:
     minimo, maximo = _rango_centavos(caso)
     subtotal = Decimal(azar.randint(minimo, maximo)) * CENTAVO
     tasa = TASA_CERO_POR_CIENTO if TASA_CERO in caso.bordes else TASA_GENERAL
-    iva = _iva(subtotal, tasa)
+    desglose, iva = _desglose(caso, subtotal, tasa)
     dia = PRIMER_DIA + timedelta(days=azar.randrange(DIAS_DEL_PERIODO))
     hora = time(azar.randint(PRIMERA_HORA, ULTIMA_HORA), azar.randrange(60), azar.randrange(60))
     concepto, nota = _concepto_y_nota(caso, proveedor, azar)
     return Comprobante(
         uuid=uuid, serie=SERIE_POR_PLANTILLA[caso.plantilla], folio=azar.randint(PRIMER_FOLIO, ULTIMO_FOLIO),
         emision=datetime.combine(dia, hora), emisor=proveedor, concepto=concepto, moneda=caso.moneda,
-        tipo_cambio=TIPOS_DE_CAMBIO.get(caso.moneda), subtotal=subtotal, tasa=tasa, iva=iva, total=subtotal + iva,
-        nota=nota,
+        tipo_cambio=TIPOS_DE_CAMBIO.get(caso.moneda), subtotal=subtotal, tasa=tasa, iva=iva,
+        total=subtotal - desglose.descuento + iva + desglose.ieps - desglose.retenidos, nota=nota, desglose=desglose,
     )
 
 

@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<cfdi:Comprobante xmlns:cfdi="http://www.sat.gob.mx/cfd/4" xmlns:tfd="http://www.sat.gob.mx/TimbreFiscalDigital" Version="4.0" Serie="F" Folio="4464" Fecha="2026-03-27T16:57:07" SubTotal="11208.96" Moneda="MXN" Total="13002.39" TipoDeComprobante="I" Exportacion="01" MetodoPago="PUE" FormaPago="03" LugarExpedicion="06600">
-  <cfdi:Emisor Rfc="RFC_PROV_CAFETERIA" Nombre="CAFETERIA EL GRANO DE ORO SA DE CV" RegimenFiscal="601"/>
+<cfdi:Comprobante xmlns:cfdi="http://www.sat.gob.mx/cfd/4" xmlns:tfd="http://www.sat.gob.mx/TimbreFiscalDigital" Version="4.0" Serie="F" Folio="7107" Fecha="2026-03-26T16:32:17" SubTotal="23648.69" Moneda="MXN" Total="27432.48" TipoDeComprobante="I" Exportacion="01" MetodoPago="PUE" FormaPago="03" LugarExpedicion="06600">
+  <cfdi:Emisor Rfc="RFC_PROV_PAPELERIA" Nombre="PAPELERIA LA PLUMA FINA SA DE CV" RegimenFiscal="601"/>
   <cfdi:Receptor Rfc="RFC_EMPRESA_DEMO" Nombre="EMPRESA DEMO SA DE CV" DomicilioFiscalReceptor="06600" RegimenFiscalReceptor="601" UsoCFDI="G03"/>
   <cfdi:Conceptos>
-    <cfdi:Concepto ClaveProdServ="80141600" Cantidad="1" ClaveUnidad="E48" Descripcion="Servicio de cafetería para junta" ValorUnitario="11208.96" Importe="11208.96" ObjetoImp="02">
-      <cfdi:Impuestos><cfdi:Traslados><cfdi:Traslado Base="11208.96" Impuesto="002" TipoFactor="Tasa" TasaOCuota="0.160000" Importe="1793.43"/></cfdi:Traslados></cfdi:Impuestos>
+    <cfdi:Concepto ClaveProdServ="80141600" Cantidad="1" ClaveUnidad="E48" Descripcion="Hojas blancas tamaño carta" ValorUnitario="23648.69" Importe="23648.69" ObjetoImp="02">
+      <cfdi:Impuestos><cfdi:Traslados><cfdi:Traslado Base="23648.69" Impuesto="002" TipoFactor="Tasa" TasaOCuota="0.160000" Importe="3783.79"/></cfdi:Traslados></cfdi:Impuestos>
     </cfdi:Concepto>
   </cfdi:Conceptos>
-  <cfdi:Impuestos TotalImpuestosTrasladados="1793.43">
-    <cfdi:Traslados><cfdi:Traslado Base="11208.96" Impuesto="002" TipoFactor="Tasa" TasaOCuota="0.160000" Importe="1793.43"/></cfdi:Traslados>
+  <cfdi:Impuestos TotalImpuestosTrasladados="3783.79">
+    <cfdi:Traslados><cfdi:Traslado Base="23648.69" Impuesto="002" TipoFactor="Tasa" TasaOCuota="0.160000" Importe="3783.79"/></cfdi:Traslados>
   </cfdi:Impuestos>
-  <cfdi:Complemento><tfd:TimbreFiscalDigital Version="1.1" UUID="00000000-0000-0000-0000-000000000030" FechaTimbrado="2026-03-27T17:00:07" RfcProvCertif="RFC_PAC_DEMO" SelloCFD="SINTETICO" NoCertificadoSAT="SINTETICO" SelloSAT="SINTETICO"/></cfdi:Complemento>
+  <cfdi:Complemento><tfd:TimbreFiscalDigital Version="1.1" UUID="00000000-0000-0000-0000-000000000040" FechaTimbrado="2026-03-26T16:35:17" RfcProvCertif="RFC_PAC_DEMO" SelloCFD="SINTETICO" NoCertificadoSAT="SINTETICO" SelloSAT="SINTETICO"/></cfdi:Complemento>
 </cfdi:Comprobante>

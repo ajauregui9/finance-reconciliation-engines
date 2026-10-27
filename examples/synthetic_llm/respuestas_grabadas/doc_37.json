@@ -6,14 +6,18 @@
     "content": [
       {
         "input": {
-          "fecha": "14/03/2026",
-          "iva": "2141.94",
+          "descuento": null,
+          "fecha": "2026-03-06",
+          "ieps": null,
+          "isr_retenido": null,
+          "iva": "2980.45",
+          "iva_retenido": null,
           "moneda": "MXN",
-          "rfc_emisor": "RFC_PROV_MANTENIMIENTO",
+          "rfc_emisor": "RFC_PROV_TRANSPORTE",
           "rfc_receptor": "RFC_EMPRESA_DEMO",
-          "subtotal": "13387.11",
-          "total": "15529.05",
-          "uuid": "00000000-0000-0000-0000-000000000045"
+          "subtotal": "18627.79",
+          "total": "21608.24",
+          "uuid": "00000000-0000-0000-0000-000000000039"
         },
         "name": "registrar_cfdi",
         "type": "tool_use"
@@ -22,9 +26,9 @@
     "model": "fixture-sintetico",
     "stop_reason": "tool_use",
     "usage": {
-      "input_tokens": 702,
-      "output_tokens": 81
+      "input_tokens": 981,
+      "output_tokens": 90
     }
   },
-  "sha256_documento": "8b45fd7121c425643dff73b4c2db61f899f4f74a4f5931ede7f9d5cca605a13d"
+  "sha256_documento": "639a2534604c3d6bb8f492d1c65a25fc28955f2386ce944a51b2dc2414ca334c"
 }

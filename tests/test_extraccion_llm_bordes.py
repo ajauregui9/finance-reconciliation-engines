@@ -14,7 +14,7 @@ from extraccion_llm.documentos import cargar_verdad, documento_desde_texto, huel
 from extraccion_llm.errores import InsumoInvalido
 from extraccion_llm.evaluacion import evaluar
 from extraccion_llm.grabadas import grabada_desde_dict
-from extraccion_llm.modelo import REVISION_HUMANA, Campos, Uso
+from extraccion_llm.modelo import CAMPOS, REVISION_HUMANA, Campos, Uso
 from extraccion_llm.pipeline import Corrida, Extraida, ejecutar
 from extraccion_llm.pool import cargar_pool
 from extraccion_llm.reporte import (
@@ -65,7 +65,7 @@ def test_verdad_sin_salto_final_se_lee_completa(tmp_path: Path) -> None:
     original = (DATOS_POR_DEFECTO / "verdad.jsonl").read_text(encoding="utf-8")
     ruta = tmp_path / "verdad.jsonl"
     ruta.write_text(original.rstrip("\n"), encoding="utf-8")
-    assert len(cargar_verdad(ruta)) == 40
+    assert len(cargar_verdad(ruta)) == 50
 
 
 def test_huella_de_archivo_inexistente(tmp_path: Path) -> None:
@@ -75,7 +75,7 @@ def test_huella_de_archivo_inexistente(tmp_path: Path) -> None:
 
 def test_campo_desconocido() -> None:
     with pytest.raises(KeyError, match="desconocido"):
-        Campos(*(None,) * 8).valor("estado")
+        Campos(*(None,) * len(CAMPOS)).valor("estado")
 
 
 # ----------------------------------------------------------------- respuestas
@@ -128,7 +128,7 @@ def test_sdk_sin_clase_anthropic() -> None:
 
 
 def test_cliente_que_no_se_puede_crear() -> None:
-    def falla() -> Any:
+    def falla(**opciones: Any) -> Any:
         raise RuntimeError("sin red")
 
     with pytest.raises(InsumoInvalido, match="no se pudo crear el cliente.*sin red"):

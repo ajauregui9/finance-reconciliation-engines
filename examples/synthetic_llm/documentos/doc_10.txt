@@ -1,9 +1,24 @@
-SERVICIOS DE NUBE ALTIPLANO SA DE CV | RFC RFC_PROV_NUBE
-Factura B8897    Fecha: 06/03/2026
-Cliente: EMPRESA DEMO SA DE CV    RFC cliente: RFC_EMPRESA_DEMO
-UUID 00000000-0000-0000-0000-000000000008
-Concepto: Suscripción mensual de almacenamiento
-Importe sin IVA ........ 24700.76 MXN
-IVA (16 %) ......... 3952.12
-TOTAL A PAGAR .......... 28652.88 MXN
-Notas: Mercancía revisada al momento de la entrega.
+FACTURA ELECTRÓNICA · CFDI 4.0
+Representación impresa de un CFDI
+================================================================
+EMISOR     LIMPIEZA INTEGRAL DEL BAJIO SA DE CV
+           RFC: RFC_PROV_LIMPIEZA
+           Régimen fiscal: 601 General de Ley Personas Morales
+RECEPTOR   EMPRESA DEMO SA DE CV
+           RFC: RFC_EMPRESA_DEMO
+           Uso del CFDI: G03 Gastos en general
+----------------------------------------------------------------
+Folio fiscal (UUID):  00000000-0000-0000-0000-000000000055
+Serie y folio:        A-3675
+Fecha de emisión:     2026-03-27 17:00:36
+Moneda:               MXN
+----------------------------------------------------------------
+Cant.  Unidad  Descripción
+1      E48     Material de limpieza
+                                         Importe  14,812.06
+----------------------------------------------------------------
+                                        Subtotal  $ 14,812.06
+                              IVA trasladado 16%  $ 2,368.93
+                                           Total  $ 17,181.99 MXN
+Observaciones: Gracias por su preferencia.
+Página 1 de 1

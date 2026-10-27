@@ -6,8 +6,10 @@ description: CFDI field extraction with Claude through forced tool use, screened
 # LLM extraction QC
 
 ## When to use
-- Extract issuer RFC, receiver RFC, UUID, date, subtotal, VAT, total and currency from CFDI XML
-  or from the text of a printed invoice, without trusting the model's output.
+- Extract issuer RFC, receiver RFC, UUID, date, subtotal, discount, VAT, IEPS, ISR and VAT
+  withheld, total and currency from CFDI XML or from the text of a printed invoice, without
+  trusting the model's output. Fee invoices, freight, discounts and IEPS add up through the
+  full CFDI identity.
 - Measure per-field precision and recall of an extraction model against known answers.
 - Check how many planted prompt injections the guard flags before any model call.
 
@@ -20,7 +22,9 @@ description: CFDI field extraction with Claude through forced tool use, screened
    environment, `--modo vivo` (add `--grabar <dir>` to re-record fixtures). Keep the cost caps
    (`--max-documentos`, `--max-tokens`) low on a first run.
 4. Exit code `3` means a cost cap stopped the run; nothing was written. Exit code `2` means an
-   input, the key, the SDK or the API failed; read stderr.
+   input, the key (missing or rejected with 401/403), the SDK or the client failed; read
+   stderr. Transient API errors (429, 5xx, timeouts) are retried with backoff; a document that
+   still gets no answer goes to review with `error_api` and the run continues.
 
 ## Rules
 - Recorded-mode metrics come from synthetic fixtures: they validate the evaluation pipeline,

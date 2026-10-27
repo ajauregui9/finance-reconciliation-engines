@@ -15,7 +15,7 @@ from typing import Any, Dict, List, Optional, Sequence
 
 import pytest
 
-from extraccion_llm.config import Config, Limites, cargar_config, con_ajustes, config_desde_dict
+from extraccion_llm.config import Config, Limites, Reintentos, cargar_config, con_ajustes, config_desde_dict
 from extraccion_llm.costo import Consumo, usd_estimado, verificar_documentos, verificar_tokens
 from extraccion_llm.documentos import Documento, cargar_documentos, cargar_verdad, documento_desde_texto
 from extraccion_llm.errores import InsumoInvalido, TopeExcedido
@@ -214,7 +214,7 @@ def test_respuesta_del_sdk_sin_uso_legible() -> None:
 
 def test_las_grabadas_sinteticas_se_leen_y_validan() -> None:
     grabadas = cargar_grabadas(GRABADAS)
-    assert len(grabadas) == 40
+    assert len(grabadas) == 50
     assert {g.origen for g in grabadas.values()} == {"sintetico"}
 
 
@@ -278,7 +278,7 @@ def test_documentos_sinteticos(config: Config) -> None:
     documentos = cargar_documentos(DOCUMENTOS)
     assert [d.documento_id for d in documentos] == sorted(d.documento_id for d in documentos)
     assert {d.formato for d in documentos} == {"cfdi_xml", "representacion_impresa"}
-    assert len(cargar_verdad(VERDAD)) == 40
+    assert len(cargar_verdad(VERDAD)) == 50
 
 
 @pytest.mark.parametrize("nombre, contenido, mensaje", [
@@ -359,7 +359,7 @@ def test_crear_cliente_importa_el_sdk_de_forma_perezosa() -> None:
 
     def importador(nombre: str) -> Any:
         importados.append(nombre)
-        return SimpleNamespace(Anthropic=lambda: "cliente")
+        return SimpleNamespace(Anthropic=lambda **opciones: "cliente")
 
     assert crear_cliente_sdk(importador) == "cliente"  # type: ignore[comparison-overlap]
     assert importados == ["anthropic"]
@@ -387,7 +387,7 @@ def test_extractor_vivo_llama_y_graba(tmp_path: Path, config: Config, documento:
     cruda = json.loads((GRABADAS / f"{documento.documento_id}.json").read_text(encoding="utf-8"))["respuesta"]
     cliente = ClienteFalso(MensajesFalsos(_como_sdk(cruda)))
     pedido = solicitud(documento, config)
-    extraida = ExtractorVivo(cliente, grabar_en=tmp_path).extraer(documento, pedido)
+    extraida = ExtractorVivo(cliente, config.reintentos, grabar_en=tmp_path).extraer(documento, pedido)
     assert extraida.origen == "vivo" and cliente.messages.pedidos == [pedido]
     (grabada,) = cargar_grabadas(tmp_path).values()
     assert grabada.origen == "vivo" and grabada.sha256_documento == documento.sha256
@@ -396,14 +396,16 @@ def test_extractor_vivo_llama_y_graba(tmp_path: Path, config: Config, documento:
 
 def test_extractor_vivo_sin_grabar_no_escribe(tmp_path: Path, config: Config, documento: Documento) -> None:
     cruda = _respuesta_cruda()
-    ExtractorVivo(ClienteFalso(MensajesFalsos(_como_sdk(cruda)))).extraer(documento, solicitud(documento, config))
+    extractor = ExtractorVivo(ClienteFalso(MensajesFalsos(_como_sdk(cruda))), config.reintentos)
+    extractor.extraer(documento, solicitud(documento, config))
     assert not any(tmp_path.iterdir())
 
 
-def test_error_de_la_api_detiene_con_mensaje(config: Config, documento: Documento) -> None:
-    falsos = MensajesFalsos(_como_sdk(_respuesta_cruda()), falla=RuntimeError("401 sin permiso"))
-    with pytest.raises(InsumoInvalido, match="la API respondió con error.*401"):
-        ExtractorVivo(ClienteFalso(falsos)).extraer(documento, solicitud(documento, config))
+def test_un_error_del_cliente_que_no_es_de_la_api_detiene_con_mensaje(config: Config, documento: Documento) -> None:
+    # Los errores de la API (estado HTTP, conexión) se prueban en test_extraccion_llm_reintentos.py.
+    falsos = MensajesFalsos(_como_sdk(_respuesta_cruda()), falla=RuntimeError("defecto del cliente"))
+    with pytest.raises(InsumoInvalido, match="error inesperado del cliente.*RuntimeError"):
+        ExtractorVivo(ClienteFalso(falsos), config.reintentos).extraer(documento, solicitud(documento, config))
 
 
 # ----------------------------------------------------------------- costo
@@ -459,6 +461,19 @@ def test_usd_estimado_con_precios_de_la_config(config: Config) -> None:
     (lambda d: d["precios_usd_por_millon"].update(entrada="-1"), "entrada"),
     (lambda d: d["precios_usd_por_millon"].update(salida="caro"), "salida"),
     (lambda d: d["precios_usd_por_millon"].update(salida=25.0), "salida"),
+    (lambda d: d.update(tolerancia_cuadre=0.01), "tolerancia_cuadre"),
+    (lambda d: d.update(tolerancia_cuadre="0.11"), "tolerancia_cuadre"),
+    (lambda d: d.update(tolerancia_cuadre="-0.01"), "tolerancia_cuadre"),
+    (lambda d: d.update(tolerancia_cuadre="0.001"), "tolerancia_cuadre"),
+    (lambda d: d.pop("reintentos"), "reintentos"),
+    (lambda d: d["reintentos"].update(otro=1), "reintentos"),
+    (lambda d: d["reintentos"].update(max_reintentos=-1), "max_reintentos"),
+    (lambda d: d["reintentos"].update(max_reintentos=11), "max_reintentos"),
+    (lambda d: d["reintentos"].update(max_reintentos=True), "max_reintentos"),
+    (lambda d: d["reintentos"].update(espera_inicial_s=0), "espera_inicial_s"),
+    (lambda d: d["reintentos"].update(espera_inicial_s="1"), "espera_inicial_s"),
+    (lambda d: d["reintentos"].update(espera_maxima_s=0.5), "espera_maxima_s"),
+    (lambda d: d["reintentos"].update(espera_maxima_s=301), "espera_maxima_s"),
 ])
 def test_config_invalida(cambio: Any, mensaje: str) -> None:
     datos = _crudo_config()
@@ -476,6 +491,21 @@ def test_config_que_no_es_objeto_o_no_se_lee(tmp_path: Path) -> None:
     roto.write_text("{", encoding="utf-8")
     with pytest.raises(InsumoInvalido, match="JSON"):
         cargar_config(roto)
+
+
+def test_config_v1_se_rechaza_por_su_esquema() -> None:
+    datos = _crudo_config()
+    datos["esquema"] = "config_extraccion_llm/v1"
+    del datos["reintentos"], datos["tolerancia_cuadre"]
+    with pytest.raises(InsumoInvalido, match="config_extraccion_llm/v2"):
+        config_desde_dict(datos)
+
+
+def test_reintentos_de_la_config_de_ejemplo(config: Config) -> None:
+    assert config.reintentos == Reintentos(max_reintentos=3, espera_inicial_s=1.0, espera_maxima_s=30.0)
+    datos = _crudo_config()
+    datos["reintentos"] = {"max_reintentos": 0, "espera_inicial_s": 2, "espera_maxima_s": 2}
+    assert config_desde_dict(datos).reintentos == Reintentos(0, 2.0, 2.0)
 
 
 def test_temperatura_nula_es_valida() -> None:

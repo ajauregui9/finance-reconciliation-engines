@@ -96,7 +96,7 @@ def _correr(argv: List[str], entorno: Optional[Dict[str, str]] = None, fabrica: 
 def test_modo_grabado_por_omision_escribe_json_y_markdown(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
     assert _correr(["--salida", str(tmp_path)]) == 0
     reporte = _reporte(tmp_path)
-    assert reporte["esquema"] == "evaluacion_extraccion_llm/v1"
+    assert reporte["esquema"] == "evaluacion_extraccion_llm/v2"
     assert reporte["modo"] == "grabado" and reporte["modelo"] == "claude-opus-5-5"
     assert reporte["origenes_respuesta"] == ["sintetico"]
     assert reporte["modelos_respuesta"] == ["fixture-sintetico"]
@@ -104,26 +104,30 @@ def test_modo_grabado_por_omision_escribe_json_y_markdown(tmp_path: Path, capsys
     markdown = (tmp_path / ARCHIVO_MD).read_text(encoding="utf-8")
     assert reporte["advertencia"] in markdown
     resumen = json.loads(capsys.readouterr().out)
-    assert resumen["decisiones"] == {"concordante": 24, "revision_humana": 16}
+    assert resumen["decisiones"] == {"concordante": 32, "revision_humana": 18}
 
 
 def test_contenido_del_reporte(tmp_path: Path) -> None:
     assert _correr(["--salida", str(tmp_path)]) == 0
     reporte = _reporte(tmp_path)
-    assert reporte["decisiones"]["concordante"] == 24
+    assert reporte["decisiones"]["concordante"] == 32
     assert reporte["decisiones"]["por_motivo"]["bloqueado_por_guardia"] == 6
     assert reporte["guardia"]["tasa_deteccion"] == "0.8571"
-    assert reporte["metricas"]["total"] == {"vp": 31, "fp": 3, "fn": 3, "precision": "0.9118", "recall": "0.9118"}
+    assert reporte["metricas"]["total"] == {"vp": 41, "fp": 3, "fn": 3, "precision": "0.9318", "recall": "0.9318"}
+    assert reporte["metricas"]["iva_retenido"] == {"vp": 4, "fp": 0, "fn": 1, "precision": "1.0000",
+                                                   "recall": "0.8000"}
     assert reporte["seguridad"] == {"concordantes_con_error": [], "revision_esperada_sin_revision": []}
     consumo = reporte["consumo"]
-    assert consumo["documentos_enviados"] == 34 == len(consumo["por_documento"])
+    assert consumo["documentos_enviados"] == 44 == len(consumo["por_documento"])
     assert consumo["tokens_totales"] == consumo["tokens_entrada"] + consumo["tokens_salida"]
     assert re.fullmatch(r"\d+\.\d{6}", consumo["usd_estimado"])
     assert len(reporte["grabadas_sin_usar"]) == 6
-    assert len(reporte["discrepancias_motor"]) == 10
-    assert {d["documento_id"] for d in reporte["documentos"]} == {f"doc_{n:02d}" for n in range(1, 41)}
-    assert reporte["insumos"]["pool"]["registros"] == 39
+    assert len(reporte["discrepancias_motor"]) == 14
+    assert {d["documento_id"] for d in reporte["documentos"]} == {f"doc_{n:02d}" for n in range(1, 51)}
+    assert reporte["insumos"]["pool"]["registros"] == 49
     assert reporte["parametros"]["precios_usd_por_millon"] == {"entrada": "5.00", "salida": "25.00"}
+    assert reporte["parametros"]["tolerancia_cuadre"] == "0.01"
+    assert all(len(d["propuesta"]) == 12 for d in reporte["documentos"] if d["propuesta"] is not None)
     texto = (tmp_path / ARCHIVO_JSON).read_text(encoding="utf-8")
     assert str(tmp_path) not in texto and str(DATOS_POR_DEFECTO) not in texto
 
@@ -268,7 +272,7 @@ def test_guard_que_no_carga_invalida_la_corrida(tmp_path: Path, capsys: pytest.C
 def test_tope_de_documentos_sale_con_3_sin_reporte(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
     assert _correr(["--salida", str(tmp_path), "--max-documentos", "10"]) == 3
     error = capsys.readouterr().err
-    assert "tope" in error and "34 documentos" in error
+    assert "tope" in error and "44 documentos" in error
     assert not any(tmp_path.iterdir())
 
 
@@ -289,12 +293,12 @@ def test_modo_vivo_con_cliente_falso_y_regrabado(tmp_path: Path) -> None:
     argv = ["--salida", str(vivo), "--modo", "vivo", "--grabar", str(regrabadas)]
     assert _correr(argv, ENTORNO_CON_LLAVE, fabrica) == 0
     (cliente,) = fabrica.clientes
-    assert len(cliente.messages.pedidos) == 34
+    assert len(cliente.messages.pedidos) == 44
     assert all(p["tool_choice"]["type"] == "tool" for p in cliente.messages.pedidos)
     reporte_vivo = _reporte(vivo)
     assert reporte_vivo["modo"] == "vivo" and reporte_vivo["origenes_respuesta"] == ["vivo"]
     assert "no la exactitud de Claude" not in reporte_vivo["advertencia"]
-    assert len(list(regrabadas.glob("*.json"))) == 34
+    assert len(list(regrabadas.glob("*.json"))) == 44
     assert _correr(["--salida", str(replay), "--grabadas", str(regrabadas)]) == 0
     reporte_replay = _reporte(replay)
     assert reporte_replay["origenes_respuesta"] == ["vivo"] and reporte_replay["grabadas_sin_usar"] == []

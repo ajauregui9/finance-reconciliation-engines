@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cfdi:Comprobante xmlns:cfdi="http://www.sat.gob.mx/cfd/4" xmlns:tfd="http://www.sat.gob.mx/TimbreFiscalDigital" Version="4.0" Serie="F" Folio="3415" Fecha="2026-03-19T14:35:40" SubTotal="5235.17" Moneda="MXN" Total="5863.39" TipoDeComprobante="I" Exportacion="01" MetodoPago="PUE" FormaPago="03" LugarExpedicion="06600">
+  <cfdi:Emisor Rfc="RFC_PROV_TRANSPORTE" Nombre="TRANSPORTES RUTA NORTE SA DE CV" RegimenFiscal="601"/>
+  <cfdi:Receptor Rfc="RFC_EMPRESA_DEMO" Nombre="EMPRESA DEMO SA DE CV" DomicilioFiscalReceptor="06600" RegimenFiscalReceptor="601" UsoCFDI="G03"/>
+  <cfdi:Conceptos>
+    <cfdi:Concepto ClaveProdServ="80141600" Cantidad="1" ClaveUnidad="E48" Descripcion="Flete local de mercancía" ValorUnitario="5235.17" Importe="5235.17" ObjetoImp="02">
+      <cfdi:Impuestos><cfdi:Traslados><cfdi:Traslado Base="5235.17" Impuesto="002" TipoFactor="Tasa" TasaOCuota="0.160000" Importe="837.63"/></cfdi:Traslados><cfdi:Retenciones><cfdi:Retencion Base="5235.17" Impuesto="002" TipoFactor="Tasa" TasaOCuota="0.040000" Importe="209.41"/></cfdi:Retenciones></cfdi:Impuestos>
+    </cfdi:Concepto>
+  </cfdi:Conceptos>
+  <cfdi:Impuestos TotalImpuestosRetenidos="209.41" TotalImpuestosTrasladados="837.63">
+    <cfdi:Retenciones><cfdi:Retencion Impuesto="002" Importe="209.41"/></cfdi:Retenciones>
+    <cfdi:Traslados><cfdi:Traslado Base="5235.17" Impuesto="002" TipoFactor="Tasa" TasaOCuota="0.160000" Importe="837.63"/></cfdi:Traslados>
+  </cfdi:Impuestos>
+  <cfdi:Complemento><tfd:TimbreFiscalDigital Version="1.1" UUID="00000000-0000-0000-0000-000000000065" FechaTimbrado="2026-03-19T14:38:40" RfcProvCertif="RFC_PAC_DEMO" SelloCFD="SINTETICO" NoCertificadoSAT="SINTETICO" SelloSAT="SINTETICO"/></cfdi:Complemento>
+</cfdi:Comprobante>

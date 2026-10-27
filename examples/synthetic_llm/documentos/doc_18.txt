@@ -1,0 +1,24 @@
+FACTURA ELECTRÓNICA · CFDI 4.0
+Representación impresa de un CFDI
+================================================================
+EMISOR     CAFETERIA EL GRANO DE ORO SA DE CV
+           RFC: RFC_PROV_CAFETERIA
+           Régimen fiscal: 601 General de Ley Personas Morales
+RECEPTOR   EMPRESA DEMO SA DE CV
+           RFC: RFC_EMPRESA_DEMO
+           Uso del CFDI: G03 Gastos en general
+----------------------------------------------------------------
+Folio fiscal (UUID):  00000000-0000-0000-0000-000000000037
+Serie y folio:        A-8495
+Fecha de emisión:     2026-03-27 16:18:12
+Moneda:               MXN
+----------------------------------------------------------------
+Cant.  Unidad  Descripción
+1      E48     Servicio de cafetería para junta
+                                         Importe  20,168.62
+----------------------------------------------------------------
+                                        Subtotal  $ 20,168.62
+                              IVA trasladado 16%  $ 3,226.98
+                                           Total  $ 23,395.60 MXN
+Observaciones: Pago en una sola exhibición.
+Página 1 de 1

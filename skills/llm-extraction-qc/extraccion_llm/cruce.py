@@ -1,7 +1,7 @@
 """Cruce de la propuesta del modelo contra la lectura determinista del pool de CFDIs conocidos.
 
 El UUID propuesto localiza el CFDI (sin distinguir mayúsculas); luego se comparan con
-`mismo_valor` los campos que el motor lee (`CAMPOS_DEL_MOTOR`, los ocho). Así, un subtotal y
+`mismo_valor` los campos que el motor lee (`CAMPOS_DEL_MOTOR`, los doce). Así, un subtotal y
 un IVA alterados que conservan su suma (invisibles para la regla de cuadre) discrepan aquí.
 Sin UUID válido o sin CFDI en el pool no hay respaldo.
 """

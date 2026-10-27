@@ -1,0 +1,24 @@
+FACTURA ELECTRÓNICA · CFDI 4.0
+Representación impresa de un CFDI
+================================================================
+EMISOR     MANTENIMIENTO INDUSTRIAL DEL GOLFO SA DE CV
+           RFC: RFC_PROV_MANTENIMIENTO
+           Régimen fiscal: 601 General de Ley Personas Morales
+RECEPTOR   EMPRESA DEMO SA DE CV
+           RFC: RFC_EMPRESA_DEMO
+           Uso del CFDI: G03 Gastos en general
+----------------------------------------------------------------
+Folio fiscal (UUID):  00000000-0000-0000-0000-000000000020
+Serie y folio:        A-4681
+Fecha de emisión:     2026-03-15 19:44:25
+Moneda:               MXN
+----------------------------------------------------------------
+Cant.  Unidad  Descripción
+1      E48     Reparación de montacargas
+                                         Importe  20,152.70
+----------------------------------------------------------------
+                                        Subtotal  $ 20,152.70
+                              IVA trasladado 16%  $ 3,224.43
+                                           Total  $ 23,377.13 MXN
+Observaciones: Entrega en almacén central.
+Página 1 de 1

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cfdi:Comprobante xmlns:cfdi="http://www.sat.gob.mx/cfd/4" xmlns:tfd="http://www.sat.gob.mx/TimbreFiscalDigital" Version="4.0" Serie="F" Folio="5129" Fecha="2026-03-14T16:14:24" SubTotal="10932.09" Moneda="MXN" Total="10421.92" TipoDeComprobante="I" Exportacion="01" MetodoPago="PUE" FormaPago="03" LugarExpedicion="06600">
+  <cfdi:Emisor Rfc="RFC_PROF_ASESORIA" Nombre="ASESORIA CONTABLE INDEPENDIENTE" RegimenFiscal="612"/>
+  <cfdi:Receptor Rfc="RFC_EMPRESA_DEMO" Nombre="EMPRESA DEMO SA DE CV" DomicilioFiscalReceptor="06600" RegimenFiscalReceptor="601" UsoCFDI="G03"/>
+  <cfdi:Conceptos>
+    <cfdi:Concepto ClaveProdServ="80141600" Cantidad="1" ClaveUnidad="E48" Descripcion="Honorarios por revisión fiscal" ValorUnitario="10932.09" Importe="10932.09" ObjetoImp="02">
+      <cfdi:Impuestos><cfdi:Traslados><cfdi:Traslado Base="10932.09" Impuesto="002" TipoFactor="Tasa" TasaOCuota="0.160000" Importe="1749.13"/></cfdi:Traslados><cfdi:Retenciones><cfdi:Retencion Base="10932.09" Impuesto="001" TipoFactor="Tasa" TasaOCuota="0.100000" Importe="1093.21"/><cfdi:Retencion Base="10932.09" Impuesto="002" TipoFactor="Tasa" TasaOCuota="0.106667" Importe="1166.09"/></cfdi:Retenciones></cfdi:Impuestos>
+    </cfdi:Concepto>
+  </cfdi:Conceptos>
+  <cfdi:Impuestos TotalImpuestosRetenidos="2259.30" TotalImpuestosTrasladados="1749.13">
+    <cfdi:Retenciones><cfdi:Retencion Impuesto="001" Importe="1093.21"/><cfdi:Retencion Impuesto="002" Importe="1166.09"/></cfdi:Retenciones>
+    <cfdi:Traslados><cfdi:Traslado Base="10932.09" Impuesto="002" TipoFactor="Tasa" TasaOCuota="0.160000" Importe="1749.13"/></cfdi:Traslados>
+  </cfdi:Impuestos>
+  <cfdi:Complemento><tfd:TimbreFiscalDigital Version="1.1" UUID="00000000-0000-0000-0000-000000000016" FechaTimbrado="2026-03-14T16:17:24" RfcProvCertif="RFC_PAC_DEMO" SelloCFD="SINTETICO" NoCertificadoSAT="SINTETICO" SelloSAT="SINTETICO"/></cfdi:Complemento>
+</cfdi:Comprobante>

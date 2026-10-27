@@ -1,8 +1,10 @@
 """Evaluación de la corrida contra la verdad: precisión y recall por campo, guard y ruteo.
 
 La verdad se usa solo aquí, para medir; nunca para decidir. La población de las métricas
-por campo son los documentos enviados al modelo (sin propuesta válida, todo cuenta como
-null). Las tasas son `Decimal` con 4 decimales, o None si el denominador es cero.
+por campo son los documentos que el modelo respondió (sin propuesta válida, todo cuenta como
+null); un documento con `error_api` no tiene extracción y queda fuera. En los montos
+opcionales un cero equivale a null (`efectivo`), de los dos lados. Las tasas son `Decimal`
+con 4 decimales, o None si el denominador es cero.
 """
 from __future__ import annotations
 
@@ -12,7 +14,7 @@ from types import MappingProxyType
 from typing import Mapping, Optional, Tuple
 
 from .documentos import Verdad
-from .modelo import CAMPOS, CONCORDANTE, DISCREPANCIA_MOTOR, Campos, mismo_valor
+from .modelo import CAMPOS, CONCORDANTE, DISCREPANCIA_MOTOR, ERROR_API, Campos, efectivo, mismo_valor
 from .pipeline import Corrida, ResultadoDocumento
 
 CUATRO_DECIMALES = Decimal("0.0001")
@@ -90,22 +92,29 @@ class Evaluacion:
     discrepancias_motor: Tuple[DiscrepanciaMotor, ...]
 
 
+def _presente(campo: str, campos: Campos) -> bool:
+    return efectivo(campo, campos.valor(campo)) is not None
+
+
 def _acierta(campo: str, propuesta: Campos, verdad: Campos) -> bool:
-    valor = propuesta.valor(campo)
-    return valor is not None and mismo_valor(campo, valor, verdad.valor(campo))
+    return _presente(campo, propuesta) and mismo_valor(campo, propuesta.valor(campo), verdad.valor(campo))
 
 
 def _falla(campo: str, propuesta: Campos, verdad: Campos) -> bool:
     """Falso positivo o falso negativo: algo se reportó mal o algo que existía no se reportó."""
-    return not _acierta(campo, propuesta, verdad) and (propuesta.valor(campo) is not None
-                                                     or verdad.valor(campo) is not None)
+    return not _acierta(campo, propuesta, verdad) and (_presente(campo, propuesta) or _presente(campo, verdad))
 
 
 def _metrica(campo: str, pares: Tuple[Tuple[Campos, Campos], ...]) -> MetricaCampo:
     vp = sum(1 for p, v in pares if _acierta(campo, p, v))
-    fp = sum(1 for p, v in pares if p.valor(campo) is not None and not _acierta(campo, p, v))
-    fn = sum(1 for p, v in pares if v.valor(campo) is not None and not _acierta(campo, p, v))
+    fp = sum(1 for p, v in pares if _presente(campo, p) and not _acierta(campo, p, v))
+    fn = sum(1 for p, v in pares if _presente(campo, v) and not _acierta(campo, p, v))
     return MetricaCampo(vp, fp, fn)
+
+
+def con_respuesta(resultado: ResultadoDocumento) -> bool:
+    """Enviado y respondido: un `error_api` no tiene extracción que medir."""
+    return resultado.enviado and not any(o.codigo == ERROR_API for o in resultado.observaciones)
 
 
 def _guardia(resultados: Tuple[ResultadoDocumento, ...], verdades: Mapping[str, Verdad]) -> ResumenGuardia:
@@ -120,7 +129,7 @@ def _guardia(resultados: Tuple[ResultadoDocumento, ...], verdades: Mapping[str, 
 
 
 def evaluar(corrida: Corrida, verdades: Mapping[str, Verdad]) -> Evaluacion:
-    enviados = tuple(r for r in corrida.resultados if r.enviado)
+    enviados = tuple(r for r in corrida.resultados if con_respuesta(r))
     pares = tuple((r.propuesta or SIN_PROPUESTA, verdades[r.documento_id].campos) for r in enviados)
     con_error = tuple(r.documento_id for r in corrida.resultados if r.decision == CONCORDANTE
                       and any(_falla(c, r.propuesta or SIN_PROPUESTA, verdades[r.documento_id].campos) for c in CAMPOS))

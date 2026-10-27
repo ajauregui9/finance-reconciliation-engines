@@ -1,4 +1,8 @@
-"""Tipos inmutables compartidos: los ocho campos, observaciones, hallazgos, uso y decisiones.
+"""Tipos inmutables compartidos: los doce campos, observaciones, hallazgos, uso y decisiones.
+
+Ocho campos son obligatorios (los de todo CFDI) y cuatro son montos opcionales que solo
+aparecen en algunos comprobantes: descuento, IEPS trasladado, ISR retenido e IVA retenido.
+En un monto opcional, `null` significa "el documento no lo trae" y equivale a 0.00.
 
 Aquí vive también la única conversión de texto a monto (`monto_estricto`) y la regla de
 igualdad por campo que usan el cruce y la evaluación (`mismo_valor`).
@@ -10,8 +14,12 @@ from dataclasses import dataclass, fields
 from decimal import ROUND_HALF_UP, Decimal
 from typing import Dict, FrozenSet, Mapping, Optional, Tuple
 
-CAMPOS: Tuple[str, ...] = ("rfc_emisor", "rfc_receptor", "uuid", "fecha", "subtotal", "iva", "total", "moneda")
-CAMPOS_MONTO: FrozenSet[str] = frozenset({"subtotal", "iva", "total"})
+CAMPOS: Tuple[str, ...] = ("rfc_emisor", "rfc_receptor", "uuid", "fecha", "subtotal", "descuento", "iva", "ieps",
+                           "isr_retenido", "iva_retenido", "total", "moneda")
+CAMPOS_OPCIONALES: Tuple[str, ...] = ("descuento", "ieps", "isr_retenido", "iva_retenido")
+CAMPOS_OBLIGATORIOS: Tuple[str, ...] = tuple(c for c in CAMPOS if c not in CAMPOS_OPCIONALES)
+CAMPOS_MONTO: FrozenSet[str] = frozenset({"subtotal", "descuento", "iva", "ieps", "isr_retenido", "iva_retenido",
+                                          "total"})
 
 CONCORDANTE = "concordante"
 REVISION_HUMANA = "revision_humana"
@@ -31,6 +39,7 @@ MONEDA_NO_PERMITIDA = "moneda_no_permitida"
 RECEPTOR_DISTINTO = "receptor_distinto_de_empresa"
 SIN_RESPALDO = "sin_respaldo_en_pool"
 DISCREPANCIA_MOTOR = "discrepancia_motor"
+ERROR_API = "error_api"
 
 CENTAVO = Decimal("0.01")
 # Solo dígitos ASCII: `\d` aceptaría dígitos de otros alfabetos.
@@ -48,16 +57,27 @@ def texto_monto(monto: Decimal) -> str:
     return f"{monto.quantize(CENTAVO, rounding=ROUND_HALF_UP):.2f}"
 
 
+def efectivo(campo: str, valor: Optional[str]) -> Optional[str]:
+    """El valor que cuenta al comparar: en un monto opcional, un cero válido equivale a None."""
+    if campo in CAMPOS_OPCIONALES and valor is not None and monto_estricto(valor) == 0:
+        return None
+    return valor
+
+
 @dataclass(frozen=True)
 class Campos:
-    """Los ocho campos de un CFDI como texto (o None si no se reportan)."""
+    """Los doce campos de un CFDI como texto (o None si no se reportan)."""
 
     rfc_emisor: Optional[str]
     rfc_receptor: Optional[str]
     uuid: Optional[str]
     fecha: Optional[str]
     subtotal: Optional[str]
+    descuento: Optional[str]
     iva: Optional[str]
+    ieps: Optional[str]
+    isr_retenido: Optional[str]
+    iva_retenido: Optional[str]
     total: Optional[str]
     moneda: Optional[str]
 
@@ -72,12 +92,16 @@ class Campos:
 
 
 def campos_desde_mapa(mapa: Mapping[str, Optional[str]]) -> Campos:
-    """Arma `Campos` de un mapa ya validado (exactamente las ocho llaves)."""
+    """Arma `Campos` de un mapa ya validado (exactamente las doce llaves)."""
     return Campos(**{campo: mapa[campo] for campo in CAMPOS})
 
 
 def mismo_valor(campo: str, a: Optional[str], b: Optional[str]) -> bool:
-    """Montos: iguales como Decimal (un texto que no es monto nunca coincide). Lo demás: texto exacto."""
+    """Montos: iguales como Decimal (un texto que no es monto nunca coincide). Lo demás: texto exacto.
+
+    En los montos opcionales, None y un cero válido son el mismo valor (`efectivo`).
+    """
+    a, b = efectivo(campo, a), efectivo(campo, b)
     if campo not in CAMPOS_MONTO or a is None or b is None:
         return a == b
     izquierdo = monto_estricto(a)

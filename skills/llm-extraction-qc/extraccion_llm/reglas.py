@@ -2,11 +2,17 @@
 
 Cada falla es una `Observacion`; ninguna regla corrige un valor. Las observaciones salen en
 el orden de los campos y luego las que cruzan campos (cuadre, receptor).
+
+El cuadre es la identidad del CFDI: subtotal − descuento + IVA + IEPS − ISR retenido − IVA
+retenido = total, dentro de `tolerancia_cuadre` (redondeo de centavos). Un monto opcional en
+`null` vale cero; si algún monto presente no es válido, el cuadre no se evalúa (ya hay una
+observación `monto_invalido`).
 """
 from __future__ import annotations
 
 import re
 from datetime import date
+from decimal import Decimal
 from typing import List, Optional, Tuple
 
 from .config import Config
@@ -14,6 +20,7 @@ from .modelo import (
     CAMPO_AUSENTE,
     CAMPOS,
     CAMPOS_MONTO,
+    CAMPOS_OPCIONALES,
     FECHA_INVALIDA,
     MONEDA_NO_PERMITIDA,
     MONTO_INVALIDO,
@@ -34,6 +41,10 @@ FORMA_RFC_MARCADOR = re.compile(r"RFC_[A-Z0-9_]{3,}")
 FORMA_UUID = re.compile(r"[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}")
 FORMA_FECHA = re.compile(r"[0-9]{4}-[0-9]{2}-[0-9]{2}")
 CAMPOS_RFC = ("rfc_emisor", "rfc_receptor")
+# Signo de cada monto en la identidad del CFDI (el total es el lado derecho).
+SIGNOS_CUADRE: Tuple[Tuple[str, int], ...] = (("subtotal", 1), ("descuento", -1), ("iva", 1), ("ieps", 1),
+                                              ("isr_retenido", -1), ("iva_retenido", -1))
+CERO = Decimal("0.00")
 
 
 def rfc_valido(rfc: str, acepta_marcador: bool) -> bool:
@@ -70,12 +81,25 @@ def _forma(campo: str, valor: str, config: Config) -> Optional[Observacion]:
     return None
 
 
-def _cuadre(propuesta: Campos) -> Optional[Observacion]:
-    subtotal, iva, total = (monto_estricto(propuesta.valor(c)) for c in ("subtotal", "iva", "total"))
-    if subtotal is None or iva is None or total is None or subtotal + iva == total:
+def _monto_del_cuadre(propuesta: Campos, campo: str) -> Optional[Decimal]:
+    """El monto como Decimal; un opcional en null vale cero. None si no se puede cuadrar."""
+    valor = propuesta.valor(campo)
+    if valor is None and campo in CAMPOS_OPCIONALES:
+        return CERO
+    return monto_estricto(valor)
+
+
+def _cuadre(propuesta: Campos, tolerancia: Decimal) -> Optional[Observacion]:
+    montos = [_monto_del_cuadre(propuesta, campo) for campo, _ in SIGNOS_CUADRE]
+    total = monto_estricto(propuesta.total)
+    if total is None or any(m is None for m in montos):
+        return None
+    calculado = sum((signo * m for (_, signo), m in zip(SIGNOS_CUADRE, montos) if m is not None), CERO)
+    if abs(calculado - total) <= tolerancia:
         return None
     return Observacion(NO_CUADRA, "total",
-                       f"subtotal + iva = {texto_monto(subtotal + iva)} y el total es {texto_monto(total)}")
+                       f"subtotal − descuento + iva + ieps − isr_retenido − iva_retenido = {texto_monto(calculado)} "
+                       f"y el total es {texto_monto(total)} (tolerancia {tolerancia})")
 
 
 def _receptor(propuesta: Campos, config: Config) -> Optional[Observacion]:
@@ -90,9 +114,9 @@ def validar(propuesta: Campos, config: Config) -> Tuple[Observacion, ...]:
     observaciones: List[Optional[Observacion]] = []
     for campo in CAMPOS:
         valor = propuesta.valor(campo)
-        if valor is None:
-            observaciones.append(Observacion(CAMPO_AUSENTE, campo, f"{campo}: el modelo no lo reportó"))
-        else:
+        if valor is not None:
             observaciones.append(_forma(campo, valor, config))
-    observaciones += [_cuadre(propuesta), _receptor(propuesta, config)]
+        elif campo not in CAMPOS_OPCIONALES:
+            observaciones.append(Observacion(CAMPO_AUSENTE, campo, f"{campo}: el modelo no lo reportó"))
+    observaciones += [_cuadre(propuesta, config.tolerancia_cuadre), _receptor(propuesta, config)]
     return tuple(o for o in observaciones if o is not None)

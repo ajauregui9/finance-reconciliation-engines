@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<cfdi:Comprobante xmlns:cfdi="http://www.sat.gob.mx/cfd/4" xmlns:tfd="http://www.sat.gob.mx/TimbreFiscalDigital" Version="4.0" Serie="A" Folio="5367" Fecha="2026-03-10T08:22:09" SubTotal="7053.71" Moneda="MXN" Total="8182.30" TipoDeComprobante="I" Exportacion="01" MetodoPago="PUE" FormaPago="03" LugarExpedicion="06600">
-  <cfdi:Emisor Rfc="RFC_PROV_NUBE" Nombre="SERVICIOS DE NUBE ALTIPLANO SA DE CV" RegimenFiscal="601"/>
+<cfdi:Comprobante xmlns:cfdi="http://www.sat.gob.mx/cfd/4" xmlns:tfd="http://www.sat.gob.mx/TimbreFiscalDigital" Version="4.0" Serie="A" Folio="8030" Fecha="2026-03-01T12:29:36" SubTotal="1239.79" Moneda="MXN" Total="1438.16" TipoDeComprobante="I" Exportacion="01" MetodoPago="PUE" FormaPago="03" LugarExpedicion="06600">
+  <cfdi:Emisor Rfc="RFC_PROV_TRANSPORTE" Nombre="TRANSPORTES RUTA NORTE SA DE CV" RegimenFiscal="601"/>
   <cfdi:Receptor Rfc="RFC_EMPRESA_DEMO" Nombre="EMPRESA DEMO SA DE CV" DomicilioFiscalReceptor="06600" RegimenFiscalReceptor="601" UsoCFDI="G03"/>
   <cfdi:Conceptos>
-    <cfdi:Concepto ClaveProdServ="80141600" Cantidad="1" ClaveUnidad="E48" Descripcion="Suscripción mensual de almacenamiento" ValorUnitario="7053.71" Importe="7053.71" ObjetoImp="02">
-      <cfdi:Impuestos><cfdi:Traslados><cfdi:Traslado Base="7053.71" Impuesto="002" TipoFactor="Tasa" TasaOCuota="0.160000" Importe="1128.59"/></cfdi:Traslados></cfdi:Impuestos>
+    <cfdi:Concepto ClaveProdServ="80141600" Cantidad="1" ClaveUnidad="E48" Descripcion="Flete local de mercancía" ValorUnitario="1239.79" Importe="1239.79" ObjetoImp="02">
+      <cfdi:Impuestos><cfdi:Traslados><cfdi:Traslado Base="1239.79" Impuesto="002" TipoFactor="Tasa" TasaOCuota="0.160000" Importe="198.37"/></cfdi:Traslados></cfdi:Impuestos>
     </cfdi:Concepto>
   </cfdi:Conceptos>
-  <cfdi:Impuestos TotalImpuestosTrasladados="1128.59">
-    <cfdi:Traslados><cfdi:Traslado Base="7053.71" Impuesto="002" TipoFactor="Tasa" TasaOCuota="0.160000" Importe="1128.59"/></cfdi:Traslados>
+  <cfdi:Impuestos TotalImpuestosTrasladados="198.37">
+    <cfdi:Traslados><cfdi:Traslado Base="1239.79" Impuesto="002" TipoFactor="Tasa" TasaOCuota="0.160000" Importe="198.37"/></cfdi:Traslados>
   </cfdi:Impuestos>
-  <cfdi:Complemento><tfd:TimbreFiscalDigital Version="1.1" UUID="00000000-0000-0000-0000-000000000027" FechaTimbrado="2026-03-10T08:25:09" RfcProvCertif="RFC_PAC_DEMO" SelloCFD="SINTETICO" NoCertificadoSAT="SINTETICO" SelloSAT="SINTETICO"/></cfdi:Complemento>
+  <cfdi:Complemento><tfd:TimbreFiscalDigital Version="1.1" UUID="00000000-0000-0000-0000-000000000027" FechaTimbrado="2026-03-01T12:32:36" RfcProvCertif="RFC_PAC_DEMO" SelloCFD="SINTETICO" NoCertificadoSAT="SINTETICO" SelloSAT="SINTETICO"/></cfdi:Complemento>
 </cfdi:Comprobante>

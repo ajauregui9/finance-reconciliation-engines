@@ -1,14 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<cfdi:Comprobante xmlns:cfdi="http://www.sat.gob.mx/cfd/4" xmlns:tfd="http://www.sat.gob.mx/TimbreFiscalDigital" Version="4.0" Serie="A" Folio="1948" Fecha="2026-03-18T13:33:47" SubTotal="9796.98" Moneda="MXN" Total="11364.50" TipoDeComprobante="I" Exportacion="01" MetodoPago="PUE" FormaPago="03" LugarExpedicion="06600">
-  <cfdi:Emisor Rfc="RFC_PROV_NUBE" Nombre="SERVICIOS DE NUBE ALTIPLANO SA DE CV" RegimenFiscal="601"/>
+<cfdi:Comprobante xmlns:cfdi="http://www.sat.gob.mx/cfd/4" xmlns:tfd="http://www.sat.gob.mx/TimbreFiscalDigital" Version="4.0" Serie="F" Folio="8951" Fecha="2026-03-07T09:32:49" SubTotal="5505.11" Moneda="MXN" Total="5248.21" TipoDeComprobante="I" Exportacion="01" MetodoPago="PUE" FormaPago="03" LugarExpedicion="06600">
+  <cfdi:Emisor Rfc="RFC_PROF_ASESORIA" Nombre="ASESORIA CONTABLE INDEPENDIENTE" RegimenFiscal="612"/>
   <cfdi:Receptor Rfc="RFC_EMPRESA_DEMO" Nombre="EMPRESA DEMO SA DE CV" DomicilioFiscalReceptor="06600" RegimenFiscalReceptor="601" UsoCFDI="G03"/>
   <cfdi:Conceptos>
-    <cfdi:Concepto ClaveProdServ="80141600" Cantidad="1" ClaveUnidad="E48" Descripcion="Suscripción mensual de almacenamiento" ValorUnitario="9796.98" Importe="9796.98" ObjetoImp="02">
-      <cfdi:Impuestos><cfdi:Traslados><cfdi:Traslado Base="9796.98" Impuesto="002" TipoFactor="Tasa" TasaOCuota="0.160000" Importe="1567.52"/></cfdi:Traslados></cfdi:Impuestos>
+    <cfdi:Concepto ClaveProdServ="80141600" Cantidad="1" ClaveUnidad="E48" Descripcion="Honorarios por revisión fiscal" ValorUnitario="5505.11" Importe="5505.11" ObjetoImp="02">
+      <cfdi:Impuestos><cfdi:Traslados><cfdi:Traslado Base="5505.11" Impuesto="002" TipoFactor="Tasa" TasaOCuota="0.160000" Importe="880.82"/></cfdi:Traslados><cfdi:Retenciones><cfdi:Retencion Base="5505.11" Impuesto="001" TipoFactor="Tasa" TasaOCuota="0.100000" Importe="550.51"/><cfdi:Retencion Base="5505.11" Impuesto="002" TipoFactor="Tasa" TasaOCuota="0.106667" Importe="587.21"/></cfdi:Retenciones></cfdi:Impuestos>
     </cfdi:Concepto>
   </cfdi:Conceptos>
-  <cfdi:Impuestos TotalImpuestosTrasladados="1567.52">
-    <cfdi:Traslados><cfdi:Traslado Base="9796.98" Impuesto="002" TipoFactor="Tasa" TasaOCuota="0.160000" Importe="1567.52"/></cfdi:Traslados>
+  <cfdi:Impuestos TotalImpuestosRetenidos="1137.72" TotalImpuestosTrasladados="880.82">
+    <cfdi:Retenciones><cfdi:Retencion Impuesto="001" Importe="550.51"/><cfdi:Retencion Impuesto="002" Importe="587.21"/></cfdi:Retenciones>
+    <cfdi:Traslados><cfdi:Traslado Base="5505.11" Impuesto="002" TipoFactor="Tasa" TasaOCuota="0.160000" Importe="880.82"/></cfdi:Traslados>
   </cfdi:Impuestos>
-  <cfdi:Complemento><tfd:TimbreFiscalDigital Version="1.1" UUID="00000000-0000-0000-0000-000000000038" FechaTimbrado="2026-03-18T13:36:47" RfcProvCertif="RFC_PAC_DEMO" SelloCFD="SINTETICO" NoCertificadoSAT="SINTETICO" SelloSAT="SINTETICO"/></cfdi:Complemento>
+  <cfdi:Complemento><tfd:TimbreFiscalDigital Version="1.1" UUID="00000000-0000-0000-0000-000000000038" FechaTimbrado="2026-03-07T09:35:49" RfcProvCertif="RFC_PAC_DEMO" SelloCFD="SINTETICO" NoCertificadoSAT="SINTETICO" SelloSAT="SINTETICO"/></cfdi:Complemento>
 </cfdi:Comprobante>

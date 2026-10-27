@@ -24,9 +24,12 @@ from extraccion_llm.pool import Pool, cargar_pool
 from extraccion_llm.reglas import validar
 from extraccion_llm.rutas import CONFIG_POR_DEFECTO, DATOS_POR_DEFECTO
 
-UUID_A = "00000000-0000-0000-0000-000000000007"
 TRASPASO = Decimal("10.00")
 ERRORES = json.loads((DATOS_POR_DEFECTO / "errores_plantados.json").read_text(encoding="utf-8"))["errores"]
+# Bordes que solo cambian la forma impresa: el CFDI es un caso limpio con IVA como único impuesto.
+BORDES_DE_FORMATO = {"fecha_dd_mm_aaaa", "coma_miles"}
+UUID_A = next(str(v.campos.uuid) for v in cargar_verdad(DATOS_POR_DEFECTO / "verdad.jsonl")
+              if set(v.casos_borde) <= BORDES_DE_FORMATO and v.inyeccion is None)
 
 
 @pytest.fixture(scope="module")
@@ -89,7 +92,7 @@ def test_el_pool_trae_subtotal_e_iva_del_lector_del_motor(pool: Pool, verdades: 
         assert _monto(motor.subtotal) == _monto(verdad.campos.subtotal), verdad.documento_id
         if "iva_no_cuadra" not in verdad.casos_borde:
             assert _monto(motor.iva) == _monto(verdad.campos.iva), verdad.documento_id
-    assert comparados == len(pool.cfdis) == 39
+    assert comparados == len(pool.cfdis) == 49
 
 
 def test_el_pool_usa_el_iva_impreso_en_el_xml_y_no_el_recalculado(pool: Pool,

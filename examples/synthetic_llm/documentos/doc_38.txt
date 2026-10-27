@@ -1,0 +1,26 @@
+FACTURA ELECTRÓNICA · CFDI 4.0
+Representación impresa de un CFDI
+================================================================
+EMISOR     ASESORIA CONTABLE INDEPENDIENTE
+           RFC: RFC_PROF_ASESORIA
+           Régimen fiscal: 612 Personas Físicas con Actividades Empresariales y Profesionales
+RECEPTOR   EMPRESA DEMO SA DE CV
+           RFC: RFC_EMPRESA_DEMO
+           Uso del CFDI: G03 Gastos en general
+----------------------------------------------------------------
+Folio fiscal (UUID):  00000000-0000-0000-0000-000000000050
+Serie y folio:        A-4684
+Fecha de emisión:     2026-03-01 12:38:18
+Moneda:               MXN
+----------------------------------------------------------------
+Cant.  Unidad  Descripción
+1      E48     Honorarios por asesoría contable del mes
+                                         Importe  16,469.77
+----------------------------------------------------------------
+                                        Subtotal  $ 16,469.77
+                              IVA trasladado 16%  $ 2,635.16
+                                ISR retenido 10%  $ 1,646.98
+                           IVA retenido 10.6667%  $ 1,756.77
+                                           Total  $ 15,701.18 MXN
+Observaciones: Pago en una sola exhibición.
+Página 1 de 1

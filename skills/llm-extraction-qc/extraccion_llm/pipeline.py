@@ -4,7 +4,8 @@
    envía al modelo y va a `revision_humana` (ver la spec: decisión del guard).
 2. Antes de la primera llamada se verifica el tope de documentos.
 3. Se llama al modelo en orden de id; después de cada respuesta se suma su uso y se
-   verifica el tope de tokens.
+   verifica el tope de tokens. Si la API no responde un documento (`FallaApiDocumento`),
+   ese documento va a `revision_humana` con `error_api` y el lote sigue.
 4. La propuesta pasa por las reglas y por el cruce con el pool. Sin ninguna observación
    queda `concordante`; con cualquiera, `revision_humana`.
 """
@@ -19,8 +20,10 @@ from .config import Config
 from .costo import Consumo, verificar_documentos, verificar_tokens
 from .cruce import cruzar
 from .documentos import Documento
+from .errores import FallaApiDocumento
 from .herramienta import interpretar, solicitud
-from .modelo import BLOQUEADO_POR_GUARDIA, CONCORDANTE, REVISION_HUMANA, Campos, Hallazgo, Observacion, Uso
+from .modelo import BLOQUEADO_POR_GUARDIA, CONCORDANTE, ERROR_API, REVISION_HUMANA, Campos, Hallazgo, Observacion
+from .modelo import Uso
 from .pool import Pool
 from .reglas import validar
 from .respuesta import Extraida
@@ -65,6 +68,13 @@ def _bloqueado(documento: Documento, hallazgos: Tuple[Hallazgo, ...]) -> Resulta
                               None, None, None, REVISION_HUMANA)
 
 
+def _fallido(documento: Documento, falla: FallaApiDocumento) -> ResultadoDocumento:
+    """Enviado sin respuesta: no hay propuesta ni uso, y una persona lo captura."""
+    observacion = Observacion(ERROR_API, None, str(falla))
+    return ResultadoDocumento(documento.documento_id, documento.formato, (), True, None, (observacion,), None, None,
+                              None, REVISION_HUMANA)
+
+
 def _decidido(documento: Documento, extraida: Extraida, pool: Pool, config: Config) -> ResultadoDocumento:
     propuesta, observaciones = interpretar(extraida.respuesta)
     if propuesta is not None:
@@ -86,7 +96,11 @@ def ejecutar(documentos: Sequence[Documento], pool: Pool, extractor: Extractor, 
                                                  for d in ordenados if hallazgos[d.documento_id]}
     consumo = Consumo()
     for documento in a_enviar:
-        extraida = extractor.extraer(documento, solicitud(documento, config))
+        try:
+            extraida = extractor.extraer(documento, solicitud(documento, config))
+        except FallaApiDocumento as falla:
+            resultados[documento.documento_id] = _fallido(documento, falla)
+            continue
         consumo = consumo.sumar(documento.documento_id, extraida.respuesta.uso)
         verificar_tokens(consumo, config.limites)
         resultados[documento.documento_id] = _decidido(documento, extraida, pool, config)

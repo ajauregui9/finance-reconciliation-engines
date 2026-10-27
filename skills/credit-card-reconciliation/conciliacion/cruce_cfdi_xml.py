@@ -5,8 +5,10 @@ referencias externas). Si la biblioteca no está instalada, la lectura falla con
 `DependenciaFaltante`: no existe un lector alternativo. Cada comprobante se
 traduce al mismo registro que `cfdis.jsonl` y pasa por la misma validación.
 
-`cargar_cfdis_xml_con_montos` lee además `SubTotal` y el IVA trasladado del comprobante
-(montos que el cruce cargo ↔ CFDI no usa), sin validar que cuadren con `Total`.
+`cargar_cfdis_xml_con_montos` lee además el desglose fiscal del comprobante (montos que el
+cruce cargo ↔ CFDI no usa): `SubTotal`, `Descuento`, los traslados por impuesto (IVA 002,
+IEPS 003), las retenciones por impuesto (ISR 001, IVA 002) y los totales declarados de
+traslados y retenciones. Solo lee: no valida que el desglose cuadre con `Total`.
 """
 from __future__ import annotations
 
@@ -17,7 +19,7 @@ from datetime import datetime
 from decimal import ROUND_HALF_UP, Decimal
 from pathlib import Path
 from types import ModuleType
-from typing import Any, Callable, Dict, Optional, Tuple, Type, TypeVar, cast
+from typing import Any, Callable, Dict, Mapping, Optional, Tuple, Type, TypeVar, cast
 
 from .cruce_cfdi_insumos import a_monto, cfdi_desde_dict, verificar_unicos
 from .cruce_cfdi_modelo import MONEDA_LOCAL, Cfdi, InsumoInvalido
@@ -27,9 +29,16 @@ ESPACIO_TIMBRE = "http://www.sat.gob.mx/TimbreFiscalDigital"
 MONEDA_SIN_VALOR = "XXX"
 DIEZMILESIMO = Decimal("0.0001")
 CENTAVO = Decimal("0.01")
-SIN_IVA = Decimal("0.00")
+CERO = Decimal("0.00")
+IMPUESTO_ISR = "001"
 IMPUESTO_IVA = "002"
+IMPUESTO_IEPS = "003"
 FACTOR_EXENTO = "Exento"
+# Nodos de impuestos del comprobante: (lista, elemento, artículo para el mensaje de error).
+TRASLADOS = ("Traslados", "Traslado", "del")
+RETENCIONES = ("Retenciones", "Retencion", "de la")
+CAMPOS_IMPUESTOS = ("iva_trasladado", "ieps_trasladado", "total_trasladados", "isr_retenido", "iva_retenido",
+                    "total_retenidos")
 
 T = TypeVar("T")
 
@@ -40,14 +49,27 @@ class DependenciaFaltante(RuntimeError):
 
 @dataclass(frozen=True)
 class CfdiConMontos:
-    """Un CFDI con su `SubTotal` y su IVA trasladado, en la moneda del comprobante."""
+    """Un CFDI con su desglose fiscal, en la moneda del comprobante (0.00 si el concepto no aparece).
+
+    `iva_trasladado`, `ieps_trasladado`, `isr_retenido` e `iva_retenido` suman los nodos del
+    impuesto correspondiente; `total_trasladados` y `total_retenidos` son los atributos
+    declarados del nodo Impuestos o, si faltan, la suma de todos sus nodos.
+    """
 
     cfdi: Cfdi
     subtotal: Decimal
+    descuento: Decimal
     iva_trasladado: Decimal
+    ieps_trasladado: Decimal
+    total_trasladados: Decimal
+    isr_retenido: Decimal
+    iva_retenido: Decimal
+    total_retenidos: Decimal
 
 
 _Errores = Tuple[Type[BaseException], ...]
+# (Impuesto, Importe) de cada traslado o retención.
+_Importes = Tuple[Tuple[str, Decimal], ...]
 
 
 def _parser_seguro() -> Tuple[ModuleType, _Errores]:
@@ -136,24 +158,56 @@ def _monto_no_negativo(texto: Optional[str], campo: str) -> Decimal:
     return monto
 
 
-def _importe_iva(traslado: Any, archivo: str) -> Decimal:
-    """Un traslado exento no lleva `Importe` y aporta cero; cualquier otro lo exige."""
-    if traslado.get("TipoFactor") == FACTOR_EXENTO and traslado.get("Importe") is None:
-        return SIN_IVA
-    return _monto_no_negativo(_atributo(traslado, "Importe", archivo), f"{archivo}: Importe del Traslado de IVA")
+def _importe(nodo: Any, elemento: str, articulo: str, archivo: str) -> Decimal:
+    """Un traslado `Exento` no lleva `Importe` y aporta cero; cualquier otro nodo lo exige."""
+    texto = nodo.get("Importe")
+    if texto is None and nodo.get("TipoFactor") == FACTOR_EXENTO:
+        return CERO
+    campo = f"{archivo}: Importe {articulo} {elemento} {nodo.get('Impuesto')}"
+    if texto is None:
+        raise InsumoInvalido(f"{campo}: falta el atributo")
+    return _monto_no_negativo(str(texto), campo)
 
 
-def _iva_trasladado(raiz: Any, archivo: str) -> Decimal:
-    """`TotalImpuestosTrasladados` del nodo Impuestos del comprobante o, si falta, sus traslados 002."""
+def _importes(impuestos: Any, espacio: str, nodos: Tuple[str, str, str], archivo: str) -> _Importes:
+    """(Impuesto, Importe) de cada traslado o retención hijo del nodo Impuestos."""
+    lista, elemento, articulo = nodos
+    hallados = impuestos.findall(f"{{{espacio}}}{lista}/{{{espacio}}}{elemento}")
+    return tuple((str(n.get("Impuesto")), _importe(n, elemento, articulo, archivo)) for n in hallados)
+
+
+def _del_impuesto(importes: _Importes, impuesto: str) -> Decimal:
+    return sum((monto for clave, monto in importes if clave == impuesto), CERO)
+
+
+def _total_declarado(impuestos: Any, atributo: str, importes: _Importes, archivo: str) -> Decimal:
+    declarado = _atributo(impuestos, atributo, archivo, obligatorio=False)
+    if declarado is not None:
+        return _monto_no_negativo(declarado, f"{archivo}: {atributo}")
+    return sum((monto for _, monto in importes), CERO)
+
+
+def _impuestos(raiz: Any, archivo: str) -> Mapping[str, Decimal]:
+    """Traslados y retenciones del nodo Impuestos hijo directo del comprobante (nunca los de concepto)."""
     espacio = _espacio(raiz)
     impuestos = raiz.find(f"{{{espacio}}}Impuestos")
     if impuestos is None:
-        return SIN_IVA
-    declarado = _atributo(impuestos, "TotalImpuestosTrasladados", archivo, obligatorio=False)
-    if declarado is not None:
-        return _monto_no_negativo(declarado, f"{archivo}: TotalImpuestosTrasladados")
-    traslados = impuestos.findall(f"{{{espacio}}}Traslados/{{{espacio}}}Traslado")
-    return sum((_importe_iva(t, archivo) for t in traslados if t.get("Impuesto") == IMPUESTO_IVA), SIN_IVA)
+        return {campo: CERO for campo in CAMPOS_IMPUESTOS}
+    traslados = _importes(impuestos, espacio, TRASLADOS, archivo)
+    retenciones = _importes(impuestos, espacio, RETENCIONES, archivo)
+    return {
+        "iva_trasladado": _del_impuesto(traslados, IMPUESTO_IVA),
+        "ieps_trasladado": _del_impuesto(traslados, IMPUESTO_IEPS),
+        "total_trasladados": _total_declarado(impuestos, "TotalImpuestosTrasladados", traslados, archivo),
+        "isr_retenido": _del_impuesto(retenciones, IMPUESTO_ISR),
+        "iva_retenido": _del_impuesto(retenciones, IMPUESTO_IVA),
+        "total_retenidos": _total_declarado(impuestos, "TotalImpuestosRetenidos", retenciones, archivo),
+    }
+
+
+def _descuento(raiz: Any, archivo: str) -> Decimal:
+    texto = _atributo(raiz, "Descuento", archivo, obligatorio=False)
+    return CERO if texto is None else _monto_no_negativo(texto, f"{archivo}: Descuento")
 
 
 def _leer_uno(ruta: Path, arbol: ModuleType, errores: _Errores, armar: Callable[[Any, str], T]) -> T:
@@ -196,12 +250,12 @@ def cargar_cfdis_xml(directorio: Path, rfc_empresa: str) -> Tuple[Cfdi, ...]:
 
 
 def cargar_cfdis_xml_con_montos(directorio: Path, rfc_empresa: str) -> Tuple[CfdiConMontos, ...]:
-    """Como `cargar_cfdis_xml`, más `SubTotal` (obligatorio) y el IVA trasladado de cada comprobante."""
+    """Como `cargar_cfdis_xml`, más el desglose fiscal de cada comprobante (`SubTotal` es obligatorio)."""
 
     def armar(raiz: Any, archivo: str) -> CfdiConMontos:
         cfdi = cfdi_desde_dict(_registro(raiz, archivo, rfc_empresa))
         subtotal = _monto_no_negativo(_atributo(raiz, "SubTotal", archivo), f"{archivo}: SubTotal")
-        return CfdiConMontos(cfdi, subtotal, _iva_trasladado(raiz, archivo))
+        return CfdiConMontos(cfdi, subtotal, _descuento(raiz, archivo), **_impuestos(raiz, archivo))
 
     return _cargar(directorio, armar, lambda leido: leido.cfdi.uuid)
 

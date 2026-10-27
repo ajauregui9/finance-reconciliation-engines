@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cfdi:Comprobante xmlns:cfdi="http://www.sat.gob.mx/cfd/4" xmlns:tfd="http://www.sat.gob.mx/TimbreFiscalDigital" Version="4.0" Serie="B" Folio="1884" Fecha="2026-03-12T15:00:49" SubTotal="1741.90" Moneda="MXN" Total="2020.60" TipoDeComprobante="I" Exportacion="01" MetodoPago="PUE" FormaPago="03" LugarExpedicion="06600">
+  <cfdi:Emisor Rfc="RFC_PROV_MANTENIMIENTO" Nombre="MANTENIMIENTO INDUSTRIAL DEL GOLFO SA DE CV" RegimenFiscal="601"/>
+  <cfdi:Receptor Rfc="RFC_EMPRESA_DEMO" Nombre="EMPRESA DEMO SA DE CV" DomicilioFiscalReceptor="06600" RegimenFiscalReceptor="601" UsoCFDI="G03"/>
+  <cfdi:Conceptos>
+    <cfdi:Concepto ClaveProdServ="80141600" Cantidad="1" ClaveUnidad="E48" Descripcion="Mantenimiento preventivo de aire acondicionado" ValorUnitario="1741.90" Importe="1741.90" ObjetoImp="02">
+      <cfdi:Impuestos><cfdi:Traslados><cfdi:Traslado Base="1741.90" Impuesto="002" TipoFactor="Tasa" TasaOCuota="0.160000" Importe="278.70"/></cfdi:Traslados></cfdi:Impuestos>
+    </cfdi:Concepto>
+  </cfdi:Conceptos>
+  <cfdi:Impuestos TotalImpuestosTrasladados="278.70">
+    <cfdi:Traslados><cfdi:Traslado Base="1741.90" Impuesto="002" TipoFactor="Tasa" TasaOCuota="0.160000" Importe="278.70"/></cfdi:Traslados>
+  </cfdi:Impuestos>
+  <cfdi:Complemento><tfd:TimbreFiscalDigital Version="1.1" UUID="00000000-0000-0000-0000-000000000073" FechaTimbrado="2026-03-12T15:03:49" RfcProvCertif="RFC_PAC_DEMO" SelloCFD="SINTETICO" NoCertificadoSAT="SINTETICO" SelloSAT="SINTETICO"/></cfdi:Complemento>
+</cfdi:Comprobante>

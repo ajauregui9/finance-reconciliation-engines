@@ -1,9 +1,0 @@
-MANTENIMIENTO INDUSTRIAL DEL GOLFO SA DE CV | RFC RFC_PROV_MANTENIMIENTO
-Factura B2743    Fecha: 05/03/2026
-Cliente: EMPRESA DEMO SA DE CV    RFC cliente: RFC_EMPRESA_DEMO
-UUID 00000000-0000-0000-0000-000000000087
-Concepto: Mantenimiento preventivo de aire acondicionado
-Importe sin IVA ........ 4775.87 MXN
-IVA (16 %) ......... 764.14
-TOTAL A PAGAR .......... 5540.01 MXN
-Notas: Pago en una sola exhibición.

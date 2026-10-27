@@ -119,15 +119,15 @@ def test_solo_se_llama_al_modelo_con_documentos_no_marcados_en_orden(documentos:
     corrida = ejecutar(documentos, pool, espia, cargar_inspector(), config)
     enviados = [r.documento_id for r in corrida.resultados if r.enviado]
     assert espia.llamados == enviados == sorted(enviados)
-    assert len(enviados) == 34
+    assert len(enviados) == 44
 
 
 # ----------------------------------------------------------------- decisiones
 
 def test_reparto_de_decisiones(corrida: Corrida) -> None:
     decisiones = [r.decision for r in corrida.resultados]
-    assert decisiones.count(CONCORDANTE) == 24
-    assert decisiones.count(REVISION_HUMANA) == 16
+    assert decisiones.count(CONCORDANTE) == 32
+    assert decisiones.count(REVISION_HUMANA) == 18
 
 
 def test_ningun_concordante_difiere_de_la_verdad(corrida: Corrida, verdades: Dict[str, Verdad]) -> None:
@@ -154,11 +154,14 @@ def test_casos_borde_del_documento(corrida: Corrida, verdades: Dict[str, Verdad]
     assert _codigos(_resultado(corrida, _con(verdades, borde))) == esperado
 
 
-@pytest.mark.parametrize("borde", ["moneda_usd", "monto_grande", "tasa_cero", "benigno_dificil"])
+@pytest.mark.parametrize("borde", ["moneda_usd", "monto_grande", "tasa_cero", "benigno_dificil", "honorarios",
+                                   "flete", "descuento", "ieps"])
 def test_casos_borde_validos_quedan_concordantes(corrida: Corrida, verdades: Dict[str, Verdad], borde: str) -> None:
-    for documento_id, verdad in verdades.items():
-        if borde in verdad.casos_borde:
-            assert _resultado(corrida, documento_id).decision == CONCORDANTE, documento_id
+    con_error = {e["documento_id"] for e in ERRORES}
+    revisados = [d for d, v in verdades.items() if borde in v.casos_borde and d not in con_error]
+    assert revisados, borde
+    for documento_id in revisados:
+        assert _resultado(corrida, documento_id).decision == CONCORDANTE, documento_id
 
 
 @pytest.mark.parametrize("tipo, esperado", [
@@ -169,6 +172,10 @@ def test_casos_borde_validos_quedan_concordantes(corrida: Corrida, verdades: Dic
                     ("discrepancia_motor", "subtotal"), ("discrepancia_motor", "total")}),
     ("iva_sobre_total", {("discrepancia_motor", "subtotal"), ("discrepancia_motor", "iva")}),
     ("obedece_inyeccion", {("no_cuadra", "total"), ("discrepancia_motor", "total")}),
+    ("retencion_omitida", {("no_cuadra", "total"), ("discrepancia_motor", "isr_retenido"),
+                           ("discrepancia_motor", "iva_retenido")}),
+    # El IEPS sumado al IVA conserva el cuadre: solo el cruce con el motor lo ve.
+    ("ieps_en_iva", {("discrepancia_motor", "iva"), ("discrepancia_motor", "ieps")}),
 ])
 def test_cada_error_plantado_del_modelo_termina_en_revision(corrida: Corrida, tipo: str,
                                                             esperado: Set[Tuple[str, str]]) -> None:
@@ -200,8 +207,8 @@ def test_contrafactual_sin_guard_la_validacion_atrapa_la_inyeccion(documentos: T
 def test_tope_de_documentos_aborta_antes_de_llamar(documentos: Tuple[Documento, ...], pool: Pool,
                                                    config: Config) -> None:
     espia = _extractor()
-    estrecha = dataclasses.replace(config, limites=Limites(max_documentos=33, max_tokens=10**9))
-    with pytest.raises(TopeExcedido, match="34 documentos"):
+    estrecha = dataclasses.replace(config, limites=Limites(max_documentos=43, max_tokens=10**9))
+    with pytest.raises(TopeExcedido, match="44 documentos"):
         ejecutar(documentos, pool, espia, cargar_inspector(), estrecha)
     assert espia.llamados == []
 
@@ -231,22 +238,28 @@ def test_tokens_por_documento_salen_del_uso_de_la_respuesta(corrida: Corrida) ->
 def test_metricas_por_campo_del_modo_grabado(evaluacion: Evaluacion) -> None:
     metricas = evaluacion.metricas
     assert set(metricas) == set(CAMPOS)
-    assert (metricas["total"].vp, metricas["total"].fp, metricas["total"].fn) == (31, 3, 3)
-    assert metricas["total"].precision == Decimal("0.9118") and metricas["total"].recall == Decimal("0.9118")
-    assert (metricas["iva"].vp, metricas["iva"].fp, metricas["iva"].fn) == (32, 1, 2)
-    assert metricas["iva"].precision == Decimal("0.9697") and metricas["iva"].recall == Decimal("0.9412")
-    assert (metricas["subtotal"].vp, metricas["subtotal"].fp, metricas["subtotal"].fn) == (32, 2, 2)
-    assert metricas["subtotal"].precision == Decimal("0.9412") == metricas["subtotal"].recall
-    assert (metricas["fecha"].vp, metricas["fecha"].fp, metricas["fecha"].fn) == (33, 1, 1)
+    assert (metricas["total"].vp, metricas["total"].fp, metricas["total"].fn) == (41, 3, 3)
+    assert metricas["total"].precision == Decimal("0.9318") and metricas["total"].recall == Decimal("0.9318")
+    assert (metricas["iva"].vp, metricas["iva"].fp, metricas["iva"].fn) == (41, 2, 3)
+    assert metricas["iva"].precision == Decimal("0.9535") and metricas["iva"].recall == Decimal("0.9318")
+    assert (metricas["subtotal"].vp, metricas["subtotal"].fp, metricas["subtotal"].fn) == (42, 2, 2)
+    assert metricas["subtotal"].precision == Decimal("0.9545") == metricas["subtotal"].recall
+    assert (metricas["fecha"].vp, metricas["fecha"].fp, metricas["fecha"].fn) == (43, 1, 1)
     for campo in ("rfc_emisor", "rfc_receptor", "uuid", "moneda"):
-        assert (metricas[campo].vp, metricas[campo].fp, metricas[campo].fn) == (34, 0, 0)
+        assert (metricas[campo].vp, metricas[campo].fp, metricas[campo].fn) == (44, 0, 0)
+    # Opcionales: solo cuentan los documentos que traen el concepto (un null contra null no suma).
+    assert (metricas["descuento"].vp, metricas["descuento"].fp, metricas["descuento"].fn) == (2, 0, 0)
+    assert (metricas["ieps"].vp, metricas["ieps"].fp, metricas["ieps"].fn) == (2, 0, 1)
+    assert (metricas["isr_retenido"].vp, metricas["isr_retenido"].fp, metricas["isr_retenido"].fn) == (2, 0, 1)
+    assert (metricas["iva_retenido"].vp, metricas["iva_retenido"].fp, metricas["iva_retenido"].fn) == (4, 0, 1)
+    assert metricas["iva_retenido"].recall == Decimal("0.8000") and metricas["ieps"].recall == Decimal("0.6667")
 
 
 def test_tasa_de_deteccion_del_guard(evaluacion: Evaluacion) -> None:
     guardia = evaluacion.guardia
     assert (guardia.con_inyeccion, guardia.detectados) == (7, 6)
     assert guardia.tasa_deteccion == Decimal("0.8571")
-    assert (guardia.sin_inyeccion, guardia.falsos_positivos, guardia.tasa_falsos_positivos) == (33, 0, Decimal("0"))
+    assert (guardia.sin_inyeccion, guardia.falsos_positivos, guardia.tasa_falsos_positivos) == (43, 0, Decimal("0"))
     (no_detectado,) = [d for d in guardia.por_documento if d.tecnica and not d.familias]
     assert no_detectado.tecnica == "parafrasis_tercera_persona"
 
@@ -266,7 +279,7 @@ def test_discrepancias_con_el_motor(evaluacion: Evaluacion, corrida: Corrida) ->
     esperadas = {(r.documento_id, o.campo) for r in corrida.resultados for o in r.observaciones
                  if o.codigo == "discrepancia_motor"}
     assert {(d.documento_id, d.campo) for d in evaluacion.discrepancias_motor} == esperadas
-    assert len(esperadas) == 10
+    assert len(esperadas) == 14
 
 
 def test_revision_esperada_que_quedo_concordante_se_reporta(corrida: Corrida, verdades: Dict[str, Verdad]) -> None:
@@ -290,12 +303,13 @@ def test_concordante_con_error_se_reporta(corrida: Corrida, verdades: Dict[str, 
 
 def test_sin_propuestas_la_precision_queda_indefinida(verdades: Dict[str, Verdad]) -> None:
     vacia = Campos(*(None,) * len(CAMPOS))
-    resultado = ResultadoDocumento(documento_id="doc_01", formato="cfdi_xml", hallazgos=(), enviado=True,
+    inyectado = next(d for d, v in sorted(verdades.items()) if v.inyeccion is not None)
+    resultado = ResultadoDocumento(documento_id=inyectado, formato="cfdi_xml", hallazgos=(), enviado=True,
                                    propuesta=vacia, observaciones=(Observacion("campo_ausente", "iva", "x"),),
                                    uso=None, modelo_respuesta=None, origen_respuesta=None,
                                    decision=REVISION_HUMANA)
     corrida = Corrida(resultados=(resultado,), consumo=Corrida.vacia().consumo)
-    evaluacion = evaluar(corrida, {"doc_01": verdades["doc_01"]})
+    evaluacion = evaluar(corrida, {inyectado: verdades[inyectado]})
     assert evaluacion.metricas["total"].precision is None
     assert evaluacion.metricas["total"].recall == Decimal("0.0000")
     assert evaluacion.guardia.tasa_deteccion is not None

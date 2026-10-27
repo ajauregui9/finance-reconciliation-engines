@@ -1,9 +1,10 @@
 """CLI del demo: `python3 skills/llm-extraction-qc/run_llm_extraction.py --salida <dir> [opciones]`.
 
-Códigos de salida: 0 = reporte escrito; 2 = argumento, config, insumo o entorno inválido
-(incluye falta de `ANTHROPIC_API_KEY` o del SDK en modo vivo y errores de la API);
-3 = tope de documentos o de tokens excedido (no se escribe reporte). Contrato en
-`specs/extraccion_llm.md`.
+Códigos de salida: 0 = reporte escrito (un documento que la API no respondió va a revisión
+con `error_api`); 2 = argumento, config, insumo o entorno inválido (incluye falta de
+`ANTHROPIC_API_KEY` o del SDK en modo vivo, una llave que la API rechaza y un error del cliente
+que no es de la API); 3 = tope de documentos o de tokens excedido (no se escribe reporte).
+Contrato en `specs/extraccion_llm.md`.
 """
 from __future__ import annotations
 
@@ -33,6 +34,7 @@ from .evaluacion import evaluar
 from .grabadas import ExtractorGrabado, cargar_grabadas, huella_grabadas
 from .pipeline import Extractor, Inspector, ejecutar
 from .pool import Pool, cargar_pool
+from .reintentos import Reloj
 from .reporte import armar_reporte, texto_json, texto_markdown
 from .respuesta import ClienteSdk
 from .rutas import ARCHIVO_VERDAD, CONFIG_POR_DEFECTO, DATOS_POR_DEFECTO, DIR_DOCUMENTOS, DIR_GRABADAS, DIR_POOL
@@ -94,9 +96,14 @@ def _insumos(args: argparse.Namespace, documentos: Sequence[Documento], verdades
     }
 
 
-def _extractor(args: argparse.Namespace, fabrica: FabricaCliente) -> Tuple[Extractor, Optional[Mapping[str, Any]]]:
+def _avisar(mensaje: str) -> None:
+    sys.stderr.write(f"Aviso: {mensaje}\n")
+
+
+def _extractor(args: argparse.Namespace, config: Config, fabrica: FabricaCliente,
+               reloj: Reloj) -> Tuple[Extractor, Optional[Mapping[str, Any]]]:
     if args.modo == MODO_VIVO:
-        return ExtractorVivo(fabrica(), args.grabar), None
+        return ExtractorVivo(fabrica(), config.reintentos, args.grabar, reloj, _avisar), None
     grabadas = cargar_grabadas(args.grabadas)
     return ExtractorGrabado(grabadas), grabadas
 
@@ -107,7 +114,7 @@ def _config(args: argparse.Namespace) -> Config:
 
 
 def _correr(args: argparse.Namespace, config: Config, entorno: Mapping[str, str], fabrica: FabricaCliente,
-            cargar_guardia: CargadorGuardia) -> int:
+            cargar_guardia: CargadorGuardia, reloj: Reloj) -> int:
     _carpeta(args.salida, "de salida")
     if args.modo == MODO_VIVO:
         exigir_api_key(entorno)
@@ -118,7 +125,7 @@ def _correr(args: argparse.Namespace, config: Config, entorno: Mapping[str, str]
     verificar_alineacion(documentos, verdades)
     pool = cargar_pool(args.pool, config.rfc_empresa)
     inspector = _guardia(cargar_guardia)
-    extractor, grabadas = _extractor(args, fabrica)
+    extractor, grabadas = _extractor(args, config, fabrica, reloj)
     corrida = ejecutar(documentos, pool, extractor, inspector, config)
     evaluacion = evaluar(corrida, {v.documento_id: v for v in verdades})
     enviados = {r.documento_id for r in corrida.resultados if r.enviado}
@@ -152,7 +159,7 @@ def _invalido(error: InsumoInvalido) -> int:
 
 def main(argv: Optional[Sequence[str]] = None, entorno: Optional[Mapping[str, str]] = None,
          fabrica_cliente: Optional[FabricaCliente] = None,
-         cargar_guardia: CargadorGuardia = cargar_inspector) -> int:
+         cargar_guardia: CargadorGuardia = cargar_inspector, reloj: Optional[Reloj] = None) -> int:
     args = _argumentos(argv)
     entorno_efectivo = os.environ if entorno is None else entorno
     fabrica = crear_cliente_sdk if fabrica_cliente is None else fabrica_cliente
@@ -161,7 +168,7 @@ def main(argv: Optional[Sequence[str]] = None, entorno: Optional[Mapping[str, st
     except InsumoInvalido as exc:
         return _invalido(exc)
     try:
-        return _correr(args, config, entorno_efectivo, fabrica, cargar_guardia)
+        return _correr(args, config, entorno_efectivo, fabrica, cargar_guardia, Reloj() if reloj is None else reloj)
     except TopeExcedido as exc:
         sys.stderr.write(_mensaje_tope(exc, config.precios))
         return CODIGO_TOPE

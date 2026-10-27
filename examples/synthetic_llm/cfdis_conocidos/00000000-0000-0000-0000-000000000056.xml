@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cfdi:Comprobante xmlns:cfdi="http://www.sat.gob.mx/cfd/4" xmlns:tfd="http://www.sat.gob.mx/TimbreFiscalDigital" Version="4.0" Serie="F" Folio="6096" Fecha="2026-03-14T12:56:49" SubTotal="18041.77" Moneda="EUR" TipoCambio="19.0000" Total="20928.45" TipoDeComprobante="I" Exportacion="01" MetodoPago="PUE" FormaPago="03" LugarExpedicion="06600">
+  <cfdi:Emisor Rfc="RFC_PROV_IMPORTADORA" Nombre="REFACCIONES EUROPEAS DEL CENTRO SA DE CV" RegimenFiscal="601"/>
+  <cfdi:Receptor Rfc="RFC_EMPRESA_DEMO" Nombre="EMPRESA DEMO SA DE CV" DomicilioFiscalReceptor="06600" RegimenFiscalReceptor="601" UsoCFDI="G03"/>
+  <cfdi:Conceptos>
+    <cfdi:Concepto ClaveProdServ="80141600" Cantidad="1" ClaveUnidad="E48" Descripcion="Refacciones importadas para la línea de empaque" ValorUnitario="18041.77" Importe="18041.77" ObjetoImp="02">
+      <cfdi:Impuestos><cfdi:Traslados><cfdi:Traslado Base="18041.77" Impuesto="002" TipoFactor="Tasa" TasaOCuota="0.160000" Importe="2886.68"/></cfdi:Traslados></cfdi:Impuestos>
+    </cfdi:Concepto>
+  </cfdi:Conceptos>
+  <cfdi:Impuestos TotalImpuestosTrasladados="2886.68">
+    <cfdi:Traslados><cfdi:Traslado Base="18041.77" Impuesto="002" TipoFactor="Tasa" TasaOCuota="0.160000" Importe="2886.68"/></cfdi:Traslados>
+  </cfdi:Impuestos>
+  <cfdi:Complemento><tfd:TimbreFiscalDigital Version="1.1" UUID="00000000-0000-0000-0000-000000000056" FechaTimbrado="2026-03-14T12:59:49" RfcProvCertif="RFC_PAC_DEMO" SelloCFD="SINTETICO" NoCertificadoSAT="SINTETICO" SelloSAT="SINTETICO"/></cfdi:Complemento>
+</cfdi:Comprobante>

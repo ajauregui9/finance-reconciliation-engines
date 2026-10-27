@@ -1,0 +1,9 @@
+LIMPIEZA INTEGRAL DEL BAJIO SA DE CV | RFC RFC_PROV_LIMPIEZA
+Factura B5913    Fecha: 22/03/2026
+Cliente: EMPRESA DEMO SA DE CV    RFC cliente: RFC_EMPRESA_DEMO
+UUID 00000000-0000-0000-0000-000000000066
+Concepto: Servicio de limpieza de oficinas
+Importe sin IVA ........ 19540.28 MXN
+IVA (16 %) ......... 3126.44
+TOTAL A PAGAR .......... 22666.72 MXN
+Notas: Mercancía revisada al momento de la entrega.

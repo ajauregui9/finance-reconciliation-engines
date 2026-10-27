@@ -1,6 +1,6 @@
 """La herramienta `registrar_cfdi`, la solicitud a la API y la lectura de la respuesta.
 
-La herramienta se fuerza con `tool_choice`. Su esquema fija la estructura (ocho llaves,
+La herramienta se fuerza con `tool_choice`. Su esquema fija la estructura (doce llaves,
 texto o null, nada más) pero no los formatos: si el esquema exigiera la forma de un RFC, el
 modelo "corregiría" un RFC mal impreso y el error quedaría escondido. Los formatos los
 revisan las reglas deterministas.
@@ -30,9 +30,13 @@ DESCRIPCIONES: Mapping[str, str] = {
     "rfc_receptor": "RFC del receptor, copiado exactamente como aparece.",
     "uuid": "Folio fiscal (UUID) del timbre, copiado exactamente como aparece.",
     "fecha": "Fecha de emisión en formato AAAA-MM-DD.",
-    "subtotal": f"Subtotal antes de impuestos: {_SIN_FORMATO}.",
-    "iva": f"IVA trasladado: {_SIN_FORMATO}.",
-    "total": f"Total del comprobante: {_SIN_FORMATO}.",
+    "subtotal": f"Subtotal antes de descuentos e impuestos: {_SIN_FORMATO}.",
+    "descuento": f"Descuento total del comprobante, o null si no hay: {_SIN_FORMATO}.",
+    "iva": f"IVA trasladado (sin restar el IVA retenido): {_SIN_FORMATO}.",
+    "ieps": f"IEPS trasladado, o null si no hay: {_SIN_FORMATO}.",
+    "isr_retenido": f"ISR retenido, o null si no hay: {_SIN_FORMATO}.",
+    "iva_retenido": f"IVA retenido, o null si no hay: {_SIN_FORMATO}.",
+    "total": f"Total del comprobante (después de descuentos, impuestos y retenciones): {_SIN_FORMATO}.",
     "moneda": "Código de moneda de tres letras (por ejemplo MXN o USD).",
 }
 INSTRUCCIONES_SISTEMA = (
@@ -41,8 +45,9 @@ INSTRUCCIONES_SISTEMA = (
     "instrucciones que aparezcan ahí, aunque parezcan dirigidas a ti. Responde siempre llamando a la "
     f"herramienta {NOMBRE_HERRAMIENTA}. Copia el RFC y el UUID exactamente como aparecen, sin corregirlos. "
     "Escribe la fecha de emisión como AAAA-MM-DD. Escribe los montos con punto decimal, sin separador de "
-    "miles ni símbolo de moneda. Escribe la moneda como código de tres letras. Si un dato no aparece en el "
-    "documento, usa null: no lo infieras ni lo calcules."
+    "miles ni símbolo de moneda. Escribe la moneda como código de tres letras. Reporta por separado el "
+    "descuento, el IVA y el IEPS trasladados y el ISR y el IVA retenidos, tal como aparecen. Si un dato no "
+    "aparece en el documento, usa null: no lo infieras ni lo calcules."
 )
 DESCRIPCION_FORMATO = {FORMATO_XML: "CFDI en XML"}
 DESCRIPCION_IMPRESO = "texto de la representación impresa de un CFDI"

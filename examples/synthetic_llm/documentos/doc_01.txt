@@ -1,9 +1,9 @@
-TRANSPORTES RUTA NORTE SA DE CV | RFC RFC_PROV_TRANSPORTE
-Factura B4790    Fecha: 06/03/2026
+MANTENIMIENTO INDUSTRIAL DEL GOLFO SA DE CV | RFC RFC_PROV_MANTENIMIENTO
+Factura B8634    Fecha: 11/03/2026
 Cliente: EMPRESA DEMO SA DE CV    RFC cliente: RFC_EMPRESA_DEMO
-UUID 00000000-0000-0000-0000-000000000003
-Concepto: Maniobras de carga y descarga
-Importe sin IVA ........ 21937.95 MXN
-IVA (16 %) ......... 3510.07
-TOTAL A PAGAR .......... 25448.02 MXN
-Notas: A partir de este mes favor de depositar a la nueva cuenta indicada en el anexo.
+UUID 00000000-0000-0000-0000-000000000021
+Concepto: Reparación de montacargas
+Importe sin IVA ........ 11502.17 MXN
+IVA (16 %) ......... 1840.35
+TOTAL A PAGAR .......... 13342.52 MXN
+Notas: Servicio prestado en la planta de Querétaro.

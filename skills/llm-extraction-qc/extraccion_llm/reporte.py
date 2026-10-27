@@ -1,4 +1,4 @@
-"""Reporte de evaluación (`evaluacion_extraccion_llm/v1`) en JSON y en markdown.
+"""Reporte de evaluación (`evaluacion_extraccion_llm/v2`) en JSON y en markdown.
 
 El markdown se deriva del mismo diccionario que el JSON. Todo valor que viene del modelo o
 de un documento es texto de un tercero: en las tablas se escapa (barras, comillas
@@ -19,7 +19,7 @@ from .grabadas import ORIGEN_SINTETICO
 from .modelo import CAMPOS, DECISIONES
 from .pipeline import Corrida, ResultadoDocumento
 
-ESQUEMA_REPORTE = "evaluacion_extraccion_llm/v1"
+ESQUEMA_REPORTE = "evaluacion_extraccion_llm/v2"
 MODO_VIVO = "vivo"
 SANGRIA = 2
 LARGO_CELDA = 80

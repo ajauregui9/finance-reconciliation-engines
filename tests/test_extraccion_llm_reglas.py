@@ -1,5 +1,8 @@
 """Reglas deterministas, lectura del pool de CFDIs conocidos y cruce propuesta ↔ motor.
 
+El cuadre es la identidad completa del CFDI: subtotal − descuento + IVA + IEPS − ISR retenido
+− IVA retenido = total. Los cuatro montos opcionales en `null` valen cero.
+
 Los RFC de prueba son marcadores `RFC_*` o los genéricos del SAT: ningún valor con forma
 de RFC real aparece en el repo.
 """
@@ -9,21 +12,36 @@ import dataclasses
 import shutil
 from decimal import Decimal
 from pathlib import Path
-from typing import Tuple
+from typing import Dict, Set, Tuple
 
 import pytest
 
 from extraccion_llm.config import Config, cargar_config, config_desde_dict, config_a_dict
 from extraccion_llm.cruce import cruzar
+from extraccion_llm.documentos import Verdad, cargar_verdad
 from extraccion_llm.errores import InsumoInvalido
-from extraccion_llm.modelo import Campos, Observacion, mismo_valor, monto_estricto
+from extraccion_llm.modelo import CAMPOS, CAMPOS_OBLIGATORIOS, CAMPOS_OPCIONALES, Campos, Observacion, efectivo
+from extraccion_llm.modelo import mismo_valor, monto_estricto
 from extraccion_llm.pool import Pool, cargar_pool
 from extraccion_llm.reglas import validar
 from extraccion_llm.rutas import CONFIG_POR_DEFECTO, DATOS_POR_DEFECTO
 
 POOL = DATOS_POR_DEFECTO / "cfdis_conocidos"
-UUID_A = "00000000-0000-0000-0000-000000000007"
 EMPRESA = "RFC_EMPRESA_DEMO"
+UUID_A = "00000000-0000-0000-0000-000000000007"
+VERDADES: Tuple[Verdad, ...] = cargar_verdad(DATOS_POR_DEFECTO / "verdad.jsonl")
+# Bordes que solo cambian la forma impresa: el CFDI es un caso limpio.
+BORDES_DE_FORMATO = {"fecha_dd_mm_aaaa", "coma_miles"}
+
+
+def _uuid_limpio() -> str:
+    """El UUID de un documento limpio (sin inyección ni borde fiscal) que está en el pool."""
+    return next(str(v.campos.uuid) for v in VERDADES
+                if set(v.casos_borde) <= BORDES_DE_FORMATO and v.inyeccion is None)
+
+
+def _verdad_con(borde: str) -> Verdad:
+    return next(v for v in VERDADES if borde in v.casos_borde)
 
 
 @pytest.fixture(scope="module")
@@ -38,7 +56,8 @@ def pool() -> Pool:
 
 def _campos(**cambios: object) -> Campos:
     base = Campos(rfc_emisor="RFC_PROV_LIMPIEZA", rfc_receptor=EMPRESA, uuid=UUID_A, fecha="2026-03-15",
-                  subtotal="1000.00", iva="160.00", total="1160.00", moneda="MXN")
+                  subtotal="1000.00", descuento=None, iva="160.00", ieps=None, isr_retenido=None,
+                  iva_retenido=None, total="1160.00", moneda="MXN")
     return dataclasses.replace(base, **cambios)  # type: ignore[arg-type]
 
 
@@ -73,6 +92,26 @@ def test_mismo_valor_compara_montos_como_decimal_y_lo_demas_como_texto() -> None
     assert mismo_valor("iva", None, None)
     assert mismo_valor("fecha", "2026-03-15", "2026-03-15")
     assert not mismo_valor("rfc_emisor", "RFC_PROV_A ", "RFC_PROV_A")
+
+
+def test_el_esquema_tiene_doce_campos_ocho_obligatorios() -> None:
+    assert CAMPOS == ("rfc_emisor", "rfc_receptor", "uuid", "fecha", "subtotal", "descuento", "iva", "ieps",
+                      "isr_retenido", "iva_retenido", "total", "moneda")
+    assert set(CAMPOS_OBLIGATORIOS) | set(CAMPOS_OPCIONALES) == set(CAMPOS)
+    assert set(CAMPOS_OPCIONALES) == {"descuento", "ieps", "isr_retenido", "iva_retenido"}
+
+
+@pytest.mark.parametrize("campo", ["descuento", "ieps", "isr_retenido", "iva_retenido"])
+def test_un_monto_opcional_en_cero_equivale_a_null(campo: str) -> None:
+    assert efectivo(campo, "0.00") is None and efectivo(campo, "0") is None
+    assert efectivo(campo, "12.50") == "12.50" and efectivo(campo, "1,000.00") == "1,000.00"
+    assert mismo_valor(campo, None, "0.00") and mismo_valor(campo, "0", None)
+    assert not mismo_valor(campo, None, "10.00")
+
+
+def test_un_monto_obligatorio_en_cero_no_equivale_a_null() -> None:
+    assert efectivo("iva", "0.00") == "0.00"
+    assert not mismo_valor("iva", None, "0.00")
 
 
 # ----------------------------------------------------------------- reglas
@@ -118,10 +157,51 @@ def test_monto_con_coma_de_miles_es_invalido_y_no_se_cuadra(config: Config) -> N
     assert _codigos(observaciones) == (("monto_invalido", "subtotal"), ("monto_invalido", "total"))
 
 
-def test_subtotal_mas_iva_debe_dar_el_total_al_centavo(config: Config) -> None:
-    (observacion,) = validar(_campos(total="1160.01"), config)
+def test_subtotal_mas_iva_debe_dar_el_total_dentro_de_la_tolerancia(config: Config) -> None:
+    assert config.tolerancia_cuadre == Decimal("0.01")
+    assert validar(_campos(total="1160.01"), config) == ()
+    (observacion,) = validar(_campos(total="1160.02"), config)
     assert (observacion.codigo, observacion.campo) == ("no_cuadra", "total")
-    assert "1160.00" in observacion.detalle and "1160.01" in observacion.detalle
+    assert "1160.00" in observacion.detalle and "1160.02" in observacion.detalle
+    assert "0.01" in observacion.detalle
+
+
+def test_sin_tolerancia_el_cuadre_es_exacto_al_centavo(config: Config) -> None:
+    exacta = dataclasses.replace(config, tolerancia_cuadre=Decimal("0.00"))
+    assert _codigos(validar(_campos(total="1160.01"), exacta)) == (("no_cuadra", "total"),)
+
+
+@pytest.mark.parametrize("cambios", [
+    # Honorarios: ISR retenido 10% e IVA retenido dos terceras partes del IVA.
+    {"isr_retenido": "100.00", "iva_retenido": "106.67", "total": "953.33"},
+    # Flete: IVA retenido 4%.
+    {"iva_retenido": "40.00", "total": "1120.00"},
+    # Descuento antes de impuestos: el IVA se calcula sobre el subtotal menos el descuento.
+    {"descuento": "100.00", "iva": "144.00", "total": "1044.00"},
+    # IEPS 8%: el IVA se calcula sobre el subtotal más el IEPS.
+    {"ieps": "80.00", "iva": "172.80", "total": "1252.80"},
+    # Todo junto.
+    {"descuento": "150.00", "ieps": "68.00", "iva": "146.88", "isr_retenido": "85.00", "iva_retenido": "97.92",
+     "total": "881.96"},
+])
+def test_cuadre_completo_con_descuento_ieps_y_retenciones(config: Config, cambios: Dict[str, str]) -> None:
+    assert validar(_campos(**cambios), config) == ()
+
+
+def test_una_retencion_omitida_no_cuadra(config: Config) -> None:
+    (observacion,) = validar(_campos(iva_retenido="106.67", total="953.33"), config)
+    assert (observacion.codigo, observacion.campo) == ("no_cuadra", "total")
+    assert "1053.33" in observacion.detalle and "953.33" in observacion.detalle
+
+
+def test_un_monto_opcional_mal_formado_es_invalido_y_no_se_cuadra(config: Config) -> None:
+    observaciones = validar(_campos(isr_retenido="$100.00", total="1060.00"), config)
+    assert _codigos(observaciones) == (("monto_invalido", "isr_retenido"),)
+
+
+def test_un_monto_opcional_en_null_no_es_campo_ausente(config: Config) -> None:
+    assert validar(_campos(descuento=None, ieps=None, isr_retenido=None, iva_retenido=None), config) == ()
+    assert validar(_campos(descuento="0.00", isr_retenido="0"), config) == ()
 
 
 def test_cuadre_con_montos_sin_decimales(config: Config) -> None:
@@ -133,9 +213,9 @@ def test_campo_ausente_no_dispara_el_cuadre(config: Config) -> None:
 
 
 def test_todos_los_campos_ausentes(config: Config) -> None:
-    vacia = Campos(None, None, None, None, None, None, None, None)
+    vacia = Campos(*(None,) * len(CAMPOS))
     observaciones = validar(vacia, config)
-    assert [o.codigo for o in observaciones] == ["campo_ausente"] * 8
+    assert [(o.codigo, o.campo) for o in observaciones] == [("campo_ausente", c) for c in CAMPOS_OBLIGATORIOS]
 
 
 @pytest.mark.parametrize("moneda", ["EUR", "usd", "PESOS"])
@@ -150,16 +230,32 @@ def test_usd_esta_permitido_en_la_config_de_ejemplo(config: Config) -> None:
 # ----------------------------------------------------------------- pool
 
 def test_el_pool_sintetico_se_lee_completo(pool: Pool) -> None:
-    assert len(pool.cfdis) == 39
+    assert len(pool.cfdis) == 49
     assert len(pool.sha256) == 64
-    cfdi = pool.cfdis[UUID_A]
-    assert cfdi.rfc_receptor == EMPRESA and cfdi.uuid == UUID_A
+    uuid = _uuid_limpio()
+    cfdi = pool.cfdis[uuid]
+    assert cfdi.rfc_receptor == EMPRESA and cfdi.uuid == uuid
     assert monto_estricto(cfdi.total) is not None
+    assert (cfdi.descuento, cfdi.ieps, cfdi.isr_retenido, cfdi.iva_retenido) == (None,) * 4
 
 
 def test_el_lector_del_motor_trae_subtotal_e_iva(pool: Pool) -> None:
     assert all(monto_estricto(c.subtotal) is not None and monto_estricto(c.iva) is not None
                for c in pool.cfdis.values())
+
+
+@pytest.mark.parametrize("borde, presentes", [
+    ("honorarios", {"isr_retenido", "iva_retenido"}),
+    ("flete", {"iva_retenido"}),
+    ("descuento", {"descuento"}),
+    ("ieps", {"ieps"}),
+])
+def test_el_pool_trae_el_desglose_fiscal_del_xml(pool: Pool, borde: str, presentes: Set[str]) -> None:
+    verdad = _verdad_con(borde)
+    motor = pool.cfdis[str(verdad.campos.uuid)]
+    assert {c for c in CAMPOS_OPCIONALES if motor.valor(c) is not None} == presentes
+    for campo in CAMPOS:
+        assert mismo_valor(campo, motor.valor(campo), verdad.campos.valor(campo)), (borde, campo)
 
 
 def test_pool_en_dolares_conserva_el_total_en_su_moneda(pool: Pool) -> None:
@@ -213,7 +309,7 @@ def test_pool_sin_defusedxml_falla_con_mensaje_claro(tmp_path: Path, monkeypatch
 # ----------------------------------------------------------------- cruce
 
 def _del_pool(pool: Pool) -> Campos:
-    return pool.cfdis[UUID_A]
+    return pool.cfdis[_uuid_limpio()]
 
 
 def test_propuesta_igual_al_motor_no_tiene_observaciones(pool: Pool) -> None:
@@ -247,6 +343,25 @@ def test_subtotal_e_iva_tambien_se_cruzan_con_el_motor(pool: Pool) -> None:
     assert _codigos(cruzar(propuesta, pool)) == (("discrepancia_motor", "subtotal"), ("discrepancia_motor", "iva"))
 
 
+def test_una_retencion_que_el_motor_no_tiene_discrepa(pool: Pool) -> None:
+    propuesta = dataclasses.replace(_del_pool(pool), isr_retenido="10.00")
+    observaciones = cruzar(propuesta, pool)
+    assert _codigos(observaciones) == (("discrepancia_motor", "isr_retenido"),)
+    assert (observaciones[0].propuesta, observaciones[0].motor) == ("10.00", None)
+
+
+def test_un_opcional_en_cero_coincide_con_el_motor_sin_el_concepto(pool: Pool) -> None:
+    propuesta = dataclasses.replace(_del_pool(pool), descuento="0.00", ieps="0")
+    assert cruzar(propuesta, pool) == ()
+
+
+def test_honorarios_sin_retenciones_discrepan_con_el_motor(pool: Pool) -> None:
+    motor = pool.cfdis[str(_verdad_con("honorarios").campos.uuid)]
+    propuesta = dataclasses.replace(motor, isr_retenido=None, iva_retenido=None)
+    assert _codigos(cruzar(propuesta, pool)) == (("discrepancia_motor", "isr_retenido"),
+                                                 ("discrepancia_motor", "iva_retenido"))
+
+
 def test_cruce_compara_montos_como_decimal(pool: Pool) -> None:
     motor = _del_pool(pool)
     sin_ceros = str(Decimal(str(motor.total)).normalize())
@@ -259,4 +374,5 @@ def test_config_de_ejemplo(config: Config) -> None:
     assert config.modelo == "claude-opus-5-5"
     assert config.monedas_permitidas == ("MXN", "USD")
     assert config.precios.entrada_por_millon == Decimal("5.00")
+    assert config.tolerancia_cuadre == Decimal("0.01")
     assert config_desde_dict(config_a_dict(config)) == config

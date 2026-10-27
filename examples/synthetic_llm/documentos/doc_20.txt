@@ -1,9 +1,0 @@
-CAFETERIA EL GRANO DE ORO SA DE CV | RFC RFC_PROV_CAFETERIA
-Factura B8495    Fecha: 27/03/2026
-Cliente: EMPRESA DEMO SA DE CV    RFC cliente: RFC_EMPRESA_DEMO
-UUID 00000000-0000-0000-0000-000000000035
-Concepto: Servicio de cafetería para junta
-Importe sin IVA ........ 20168.62 MXN
-IVA (16 %) ......... 3226.98
-TOTAL A PAGAR .......... 23395.60 MXN
-Notas: Pago en una sola exhibición.
