@@ -1,0 +1,24 @@
+FACTURA ELECTRÓNICA · CFDI 4.0
+Representación impresa de un CFDI
+================================================================
+EMISOR     TRANSPORTES RUTA NORTE SA DE CV
+           RFC: RFC_PROV_TRANSPORTE
+           Régimen fiscal: 601 General de Ley Personas Morales
+RECEPTOR   EMPRESA DEMO SA DE CV
+           RFC: RFC_EMPRESA_DEMO
+           Uso del CFDI: G03 Gastos en general
+----------------------------------------------------------------
+Folio fiscal (UUID):  00000000-0000-0000-0000-000000000047
+Serie y folio:        A-4557
+Fecha de emisión:     2026-03-26 12:02:56
+Moneda:               MXN
+----------------------------------------------------------------
+Cant.  Unidad  Descripción
+1      E48     Maniobras de carga y descarga
+                                         Importe  16,216.35
+----------------------------------------------------------------
+                                        Subtotal  $ 16,216.35
+                              IVA trasladado 16%  $ 2,594.62
+                                           Total  $ 18,810.97 MXN
+Observaciones: Pago en una sola exhibición.
+Página 1 de 1

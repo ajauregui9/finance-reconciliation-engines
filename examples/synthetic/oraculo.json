@@ -1,0 +1,5028 @@
+{
+  "cargos": [
+    {
+      "cargo_id": "ALFA-0001",
+      "casos": [
+        "libro_no_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT71BE-F4F6-403A-AFDD-1B1841EA8616"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": null,
+        "motivo_sin_cruce": "sin_candidato",
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0002",
+      "casos": [
+        "libro_no_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT4E91-A935-4E0F-B616-3269013CFF00"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": null,
+        "motivo_sin_cruce": "sin_candidato",
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0003",
+      "casos": [
+        "fuera_ventana_inferior",
+        "libro_registrado"
+      ],
+      "cfdi": {
+        "esperados": [],
+        "evidencia": null,
+        "motivo_sin_cruce": "fuera_de_ventana",
+        "prohibidos": [
+          "SINTF70E-2952-4306-A1F6-91D6725B938E"
+        ]
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0013",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0004",
+      "casos": [
+        "libro_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINTD226-CEE9-4916-A896-46DAD3703E2A"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0012",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0005",
+      "casos": [
+        "libro_no_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT69F6-6775-4FA9-9A8E-82188569DA6F"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": null,
+        "motivo_sin_cruce": "sin_candidato",
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0006",
+      "casos": [
+        "empate_grupo",
+        "libro_registrado"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINTECD5-6CDA-412E-9217-6A8EF5E32C23"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": "EMP-04",
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0022",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0007",
+      "casos": [
+        "empate_grupo",
+        "libro_registrado"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT1BB3-1457-4CD5-8398-44883507356A"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": "EMP-04",
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0023",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0008",
+      "casos": [
+        "empate_grupo",
+        "libro_registrado"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT9942-E557-4C3A-B224-85B45BFB6F92"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": "EMP-04",
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0024",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0009",
+      "casos": [
+        "libro_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINTEA75-DD0E-44B1-92F4-0EC2A3A80A10"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0027",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0010",
+      "casos": [
+        "libro_nomina_distractor",
+        "nomina_distractor"
+      ],
+      "cfdi": {
+        "esperados": [],
+        "evidencia": null,
+        "motivo_sin_cruce": "sin_candidato",
+        "prohibidos": [
+          "SINT2735-E560-443A-B836-3694260876AD"
+        ]
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": null,
+        "motivo_sin_cruce": "sin_candidato",
+        "prohibidos": [
+          "AS-0031"
+        ],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0011",
+      "casos": [
+        "libro_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINTBFD1-AAA3-46A0-9E39-99E5D2D39C51"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0040",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0012",
+      "casos": [
+        "libro_cubeta",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT5D84-4757-42E4-AA3C-13C313A10C96"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0025",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": true,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0013",
+      "casos": [
+        "libro_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINTAF1D-E605-4525-8DCB-15B4BCF7629F"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0037",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0014",
+      "casos": [
+        "libro_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT32DA-0F3B-4B34-9EBA-1E04352C60B8"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0041",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0015",
+      "casos": [
+        "libro_registrado",
+        "monto_tolerancia"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT0EE0-4B4E-4477-9FA8-9EC1B2D1C21C"
+        ],
+        "evidencia": "monto_tolerancia",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0044",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0016",
+      "casos": [
+        "pago_tarjeta"
+      ],
+      "cfdi": {
+        "esperados": [],
+        "evidencia": null,
+        "motivo_sin_cruce": "no_aplica",
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": null,
+        "motivo_sin_cruce": "no_aplica",
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0017",
+      "casos": [
+        "libro_registrado",
+        "rfc_generico_receptor_duplicado"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT4893-EC5B-4A19-A50A-9FEB069A2393"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": [
+          "SINTA9D4-1393-4CCA-A3D7-76CC98FCDEE5"
+        ]
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0035",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0018",
+      "casos": [
+        "libro_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINTE4C8-D572-4636-BCE7-043717975CC0"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0039",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0019",
+      "casos": [
+        "libro_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINTD58E-37FF-4C30-9ADA-3F6917636FAE"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0047",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0020",
+      "casos": [
+        "libro_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT91F8-6DCD-4AF3-9085-6AEB825E0E05"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0053",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0021",
+      "casos": [
+        "libro_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT74CE-F79C-4FD8-9466-4210391EC4A2"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0057",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0022",
+      "casos": [
+        "libro_registrado",
+        "suma_2",
+        "suma_con_distractor"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINTC0D3-7C87-4792-8F4B-58F36C2F6EB3",
+          "SINTC885-1904-40AC-9B0F-3BD42DF66789"
+        ],
+        "evidencia": "suma",
+        "motivo_sin_cruce": null,
+        "prohibidos": [
+          "SINTDC30-F35F-489F-B140-12AED4CAE7B0"
+        ]
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0056",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0023",
+      "casos": [
+        "libro_registrado",
+        "rfc_generico_emisor_suma"
+      ],
+      "cfdi": {
+        "esperados": [],
+        "evidencia": null,
+        "motivo_sin_cruce": "solo_rfc_generico",
+        "prohibidos": [
+          "SINT5366-054F-47C0-8586-791B313336C2",
+          "SINTC5C8-314D-489E-A393-4A3F41967690"
+        ]
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0051",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0024",
+      "casos": [
+        "libro_registrado",
+        "suma_3"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINTAF3F-9A75-44D0-8F69-52B494A60028",
+          "SINTB8F6-3B7F-4260-AC4A-9172E859B98C",
+          "SINTFF70-57E1-41C5-941B-5A49E05B344B"
+        ],
+        "evidencia": "suma",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0043",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0025",
+      "casos": [
+        "compra_con_reembolso",
+        "libro_no_registrado"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINTEBE3-3523-4F65-8BB9-47FE6B3B7C69"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": null,
+        "motivo_sin_cruce": "sin_candidato",
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0026",
+      "casos": [
+        "libro_no_registrado",
+        "rfc_generico_receptor_unico"
+      ],
+      "cfdi": {
+        "esperados": [],
+        "evidencia": null,
+        "motivo_sin_cruce": "solo_rfc_generico",
+        "prohibidos": [
+          "SINTBC72-CEA9-457F-AC34-50B496A8AD89"
+        ]
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": null,
+        "motivo_sin_cruce": "sin_candidato",
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0027",
+      "casos": [
+        "libro_no_registrado",
+        "monto_tolerancia"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINTDA18-89E7-4249-A415-224674ED53E3"
+        ],
+        "evidencia": "monto_tolerancia",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": null,
+        "motivo_sin_cruce": "sin_candidato",
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0028",
+      "casos": [
+        "libro_cubeta",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT0234-BF17-4C68-94A0-685F3756D89D"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0054",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": true,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0029",
+      "casos": [
+        "libro_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT97A5-937F-44D6-B5A0-4ED92CA84DB4"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0071",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0030",
+      "casos": [
+        "libro_cubeta",
+        "ventana_borde_inferior"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT7A61-1475-4E91-9F58-2ED85C80EFEA"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0059",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": true,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0031",
+      "casos": [
+        "libro_no_registrado",
+        "suma_2"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT30CE-CC95-45E0-8B43-46276DF79B2D",
+          "SINT3749-B22B-47B8-B81C-4801E3703A4D"
+        ],
+        "evidencia": "suma",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": null,
+        "motivo_sin_cruce": "sin_candidato",
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0032",
+      "casos": [
+        "libro_no_registrado",
+        "sin_cfdi"
+      ],
+      "cfdi": {
+        "esperados": [],
+        "evidencia": null,
+        "motivo_sin_cruce": "sin_candidato",
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": null,
+        "motivo_sin_cruce": "sin_candidato",
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0033",
+      "casos": [
+        "empate_grupo",
+        "libro_registrado"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT194E-054B-47F5-9395-21090F93A2A8"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": "EMP-01",
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0064",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0034",
+      "casos": [
+        "empate_grupo",
+        "libro_registrado"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT7C13-A4C1-4DD9-9CA0-488B5462E2CB"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": "EMP-01",
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0065",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0035",
+      "casos": [
+        "libro_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT7693-AFBF-4A79-9BB9-0A2BAB734565"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0081",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": {
+          "asiento_id": "AS-0081",
+          "veredicto": "registrado"
+        }
+      }
+    },
+    {
+      "cargo_id": "ALFA-0036",
+      "casos": [
+        "fuera_ventana_inferior",
+        "libro_registrado"
+      ],
+      "cfdi": {
+        "esperados": [],
+        "evidencia": null,
+        "motivo_sin_cruce": "fuera_de_ventana",
+        "prohibidos": [
+          "SINT5936-BDFA-44F5-9301-4C534BF8DACC"
+        ]
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0060",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0037",
+      "casos": [
+        "libro_descartado_por_nombre",
+        "sin_cfdi"
+      ],
+      "cfdi": {
+        "esperados": [],
+        "evidencia": null,
+        "motivo_sin_cruce": "sin_candidato",
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": null,
+        "motivo_sin_cruce": "descartado_por_nombre",
+        "prohibidos": [
+          "AS-0066"
+        ],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0038",
+      "casos": [
+        "libro_no_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINTF0E2-A946-44E6-A156-27C14A72F145"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": null,
+        "motivo_sin_cruce": "sin_candidato",
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0039",
+      "casos": [
+        "libro_no_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT7997-5ADB-4B47-8481-20BA2C266094"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": null,
+        "motivo_sin_cruce": "sin_candidato",
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0040",
+      "casos": [
+        "libro_registrado",
+        "nota_credito_reembolso",
+        "reembolso_total"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINTB5EA-16C3-4737-B4A8-3BE452030B85"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0080",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0041",
+      "casos": [
+        "libro_registrado",
+        "sin_cfdi"
+      ],
+      "cfdi": {
+        "esperados": [],
+        "evidencia": null,
+        "motivo_sin_cruce": "sin_candidato",
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0066",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0042",
+      "casos": [
+        "libro_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT82B3-9369-4D13-AFD6-44280AD76224"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0091",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0043",
+      "casos": [
+        "libro_no_registrado",
+        "monto_tolerancia"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT86FE-9878-41BD-8CE1-1588D935CEAC"
+        ],
+        "evidencia": "monto_tolerancia",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": null,
+        "motivo_sin_cruce": "sin_candidato",
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0044",
+      "casos": [
+        "libro_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINTB7A5-DDE0-4B2E-AEA0-08413C4E098B"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0099",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0045",
+      "casos": [
+        "libro_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT09F6-8EE2-4988-A1FE-07729FBB3B25"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0076",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0046",
+      "casos": [
+        "libro_no_registrado",
+        "ventana_borde_superior"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINTB9BD-B1C6-4FD4-9511-8474799C64D6"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": null,
+        "motivo_sin_cruce": "sin_candidato",
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": {
+          "asiento_id": null,
+          "veredicto": "no_registrado"
+        }
+      }
+    },
+    {
+      "cargo_id": "ALFA-0047",
+      "casos": [
+        "libro_registrado",
+        "usd_sin_cfdi"
+      ],
+      "cfdi": {
+        "esperados": [],
+        "evidencia": null,
+        "motivo_sin_cruce": "sin_candidato",
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0105",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0048",
+      "casos": [
+        "libro_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINTCC91-C3A2-4352-895B-162C231E81F2"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0112",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0049",
+      "casos": [
+        "libro_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT4036-4B37-4F75-8EE6-491257D569C2"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0110",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0050",
+      "casos": [
+        "libro_no_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINTFC97-8FDB-4957-9523-49D5D453CAC5"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": null,
+        "motivo_sin_cruce": "sin_candidato",
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0051",
+      "casos": [
+        "libro_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT3E52-5F6D-4EA8-B432-2F4364C0CD52"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0124",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0052",
+      "casos": [
+        "libro_nomina_distractor",
+        "nomina_distractor"
+      ],
+      "cfdi": {
+        "esperados": [],
+        "evidencia": null,
+        "motivo_sin_cruce": "sin_candidato",
+        "prohibidos": [
+          "SINTD1FF-46C6-491D-B355-0276181D7BCD"
+        ]
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": null,
+        "motivo_sin_cruce": "sin_candidato",
+        "prohibidos": [
+          "AS-0107"
+        ],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0053",
+      "casos": [
+        "empate_grupo",
+        "libro_registrado"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT705F-6FB2-4EE6-9493-0C66D9FAF859"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": "EMP-02",
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0108",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0054",
+      "casos": [
+        "empate_grupo",
+        "libro_registrado"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT9013-C8FF-44B7-9E90-38761EFD8671"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": "EMP-02",
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0109",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0055",
+      "casos": [
+        "fuera_ventana_superior",
+        "libro_no_registrado"
+      ],
+      "cfdi": {
+        "esperados": [],
+        "evidencia": null,
+        "motivo_sin_cruce": "fuera_de_ventana",
+        "prohibidos": [
+          "SINTDBFD-896A-4C98-9AC9-472A257645DB"
+        ]
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": null,
+        "motivo_sin_cruce": "sin_candidato",
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0056",
+      "casos": [
+        "libro_no_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINTF731-2425-4EA6-B7A3-424715F5AA3F"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": null,
+        "motivo_sin_cruce": "sin_candidato",
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0057",
+      "casos": [
+        "libro_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT897E-2CF0-47C9-A198-3F9E781FE2C1"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0121",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0058",
+      "casos": [
+        "libro_no_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT97A1-4CD2-4526-8CBD-8470FDDC37B0"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": null,
+        "motivo_sin_cruce": "sin_candidato",
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0059",
+      "casos": [
+        "libro_no_registrado",
+        "sin_cfdi"
+      ],
+      "cfdi": {
+        "esperados": [],
+        "evidencia": null,
+        "motivo_sin_cruce": "sin_candidato",
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": null,
+        "motivo_sin_cruce": "sin_candidato",
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0060",
+      "casos": [
+        "libro_no_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT455A-F237-4B90-828D-975B001C307C"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": null,
+        "motivo_sin_cruce": "sin_candidato",
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0061",
+      "casos": [
+        "empate_monto_fechas_distintas",
+        "libro_registrado"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINTB81E-A46A-4272-A6D2-7F10D7A33ABA"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": [
+          "SINT30BF-DD03-4892-8077-65B34C7E143B"
+        ]
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0111",
+        "motivo_sin_cruce": null,
+        "prohibidos": [
+          "AS-0141"
+        ],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0062",
+      "casos": [
+        "empate_monto_fecha_comercios_distintos",
+        "libro_registrado"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT1D94-D148-4695-9B01-5176A9463B8C"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": [
+          "SINT81B1-8514-4414-A94C-4A161243935B"
+        ]
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0118",
+        "motivo_sin_cruce": null,
+        "prohibidos": [
+          "AS-0119"
+        ],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0063",
+      "casos": [
+        "libro_cubeta_fecha_lejana",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT0680-D87F-464E-9D74-62ED26D82CBA"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": null,
+        "motivo_sin_cruce": "cubeta_evidencia_insuficiente",
+        "prohibidos": [
+          "AS-0007"
+        ],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0064",
+      "casos": [
+        "libro_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINTC97D-2901-4AAD-9C6D-11E57548F6CA"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": "motor_con_cruce",
+        "esperado": "AS-0115",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": {
+          "asiento_id": null,
+          "veredicto": "no_registrado"
+        }
+      }
+    },
+    {
+      "cargo_id": "ALFA-0065",
+      "casos": [
+        "libro_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT8BB4-D9E1-40D9-BED5-08B95FCDACEA"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0120",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0066",
+      "casos": [
+        "libro_registrado",
+        "suma_2"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT4942-BBF7-4F46-AAEC-46EFB1FF0E0F",
+          "SINTEBF2-B549-4FF6-B44E-59E6E0911D93"
+        ],
+        "evidencia": "suma",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0113",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0067",
+      "casos": [
+        "empate_monto_fecha_comercios_distintos",
+        "libro_registrado"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT81B1-8514-4414-A94C-4A161243935B"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": [
+          "SINT1D94-D148-4695-9B01-5176A9463B8C"
+        ]
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0119",
+        "motivo_sin_cruce": null,
+        "prohibidos": [
+          "AS-0118"
+        ],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0068",
+      "casos": [
+        "libro_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT9418-65C1-41B0-97F2-2D5BF42698E2"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0123",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0069",
+      "casos": [
+        "libro_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINTE234-AAFC-434A-8145-1EBC909EFDA0"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0125",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0070",
+      "casos": [
+        "libro_registrado",
+        "usd_sin_cfdi"
+      ],
+      "cfdi": {
+        "esperados": [],
+        "evidencia": null,
+        "motivo_sin_cruce": "sin_candidato",
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0131",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0071",
+      "casos": [
+        "fila_ininterpretable"
+      ],
+      "cfdi": {
+        "esperados": [],
+        "evidencia": null,
+        "motivo_sin_cruce": "fila_ininterpretable",
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": null,
+        "motivo_sin_cruce": "fila_ininterpretable",
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0072",
+      "casos": [
+        "libro_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT36A3-9ACD-4B60-87AB-3FE470E3D822"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0150",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0073",
+      "casos": [
+        "libro_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINTD4BF-ED2D-4DDA-88F2-7F48697D50DB"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0156",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0074",
+      "casos": [
+        "libro_no_registrado",
+        "nota_credito_neta"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT09F5-7421-4052-9190-41642017CACA",
+          "SINT2A1E-3D4A-4599-AC96-4520CF576AAB"
+        ],
+        "evidencia": "suma",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": null,
+        "motivo_sin_cruce": "sin_candidato",
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0075",
+      "casos": [
+        "libro_cubeta",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT72A4-48F1-404B-9A74-8B923CECD71F"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0135",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": true,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0076",
+      "casos": [
+        "libro_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT0818-7790-453E-BA01-967A6CD9AC33"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0151",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0077",
+      "casos": [
+        "libro_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT3C16-BA98-4E64-AD27-8A64AEAC38E9"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0152",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0078",
+      "casos": [
+        "empate_monto_fechas_distintas",
+        "libro_registrado"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT30BF-DD03-4892-8077-65B34C7E143B"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": [
+          "SINTB81E-A46A-4272-A6D2-7F10D7A33ABA"
+        ]
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0141",
+        "motivo_sin_cruce": null,
+        "prohibidos": [
+          "AS-0111"
+        ],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0079",
+      "casos": [
+        "libro_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT2079-0637-4D38-9AD0-0A07EEBF394E"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": "motor_con_cruce",
+        "esperado": "AS-0142",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": {
+          "asiento_id": null,
+          "veredicto": "no_registrado"
+        }
+      }
+    },
+    {
+      "cargo_id": "ALFA-0080",
+      "casos": [
+        "libro_cubeta",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT0137-87AA-4725-9D94-3ECE5D8384A1"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0147",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": true,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0081",
+      "casos": [
+        "libro_no_registrado",
+        "monto_tolerancia"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT1682-DD8E-475C-BA41-2053A064575B"
+        ],
+        "evidencia": "monto_tolerancia",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": null,
+        "motivo_sin_cruce": "sin_candidato",
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0082",
+      "casos": [
+        "libro_registrado",
+        "ventana_borde_superior"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT2AA0-81A5-4CA5-94D5-09136D61E719"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0159",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0083",
+      "casos": [
+        "libro_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT6CFA-C5B1-41A9-B11D-6A9F9C68953F"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0162",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0084",
+      "casos": [
+        "libro_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT6530-C2D5-44CF-9A3C-96B8EBBE2B6F"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0161",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0085",
+      "casos": [
+        "libro_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT7E8F-F4F8-4B9C-AA5C-015F46937D2B"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0170",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0086",
+      "casos": [
+        "libro_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINTF6EC-4C36-4FAA-937D-2D32FDD112EB"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0164",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0087",
+      "casos": [
+        "libro_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT3ADF-2091-4AD8-9B4F-29091FE5FA27"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0165",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0088",
+      "casos": [
+        "libro_descartado_por_nombre",
+        "sin_cfdi"
+      ],
+      "cfdi": {
+        "esperados": [],
+        "evidencia": null,
+        "motivo_sin_cruce": "sin_candidato",
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": null,
+        "motivo_sin_cruce": "descartado_por_nombre",
+        "prohibidos": [
+          "AS-0167"
+        ],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0089",
+      "casos": [
+        "fuera_de_tolerancia",
+        "libro_registrado"
+      ],
+      "cfdi": {
+        "esperados": [],
+        "evidencia": null,
+        "motivo_sin_cruce": "fuera_de_tolerancia",
+        "prohibidos": [
+          "SINT31CB-CFF9-4F87-A982-1705B0CACC67"
+        ]
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0172",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0090",
+      "casos": [
+        "libro_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT2210-0D09-440C-A8D1-07BDAC8F1F56"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0175",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0091",
+      "casos": [
+        "libro_registrado",
+        "sin_cfdi"
+      ],
+      "cfdi": {
+        "esperados": [],
+        "evidencia": null,
+        "motivo_sin_cruce": "sin_candidato",
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0167",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0092",
+      "casos": [
+        "libro_registrado",
+        "ventana_borde_inferior"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINTADC3-B065-4140-AFC4-155422A33FAC"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0174",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0093",
+      "casos": [
+        "libro_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINTE88F-40A2-4BD4-AE94-527EAB195B47"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0168",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "ALFA-0094",
+      "casos": [
+        "libro_registrado",
+        "monto_tolerancia"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINTDA8D-E3C4-4947-8152-8E1C6D5B169C"
+        ],
+        "evidencia": "monto_tolerancia",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0183",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0001",
+      "casos": [
+        "libro_registrado",
+        "monto_tolerancia"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINTA38B-5780-4AC1-A3DB-1C0E89443638"
+        ],
+        "evidencia": "monto_tolerancia",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0008",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0002",
+      "casos": [
+        "fuera_de_tolerancia",
+        "libro_registrado"
+      ],
+      "cfdi": {
+        "esperados": [],
+        "evidencia": null,
+        "motivo_sin_cruce": "fuera_de_tolerancia",
+        "prohibidos": [
+          "SINT3981-7DE9-4699-915B-22652DA736C9"
+        ]
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0014",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0003",
+      "casos": [
+        "libro_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT5B05-816F-4C0E-96D5-2DFB84492CD4"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0011",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0004",
+      "casos": [
+        "libro_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINTF6A5-F7C1-4BA6-BD6D-085466546794"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0010",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0005",
+      "casos": [
+        "libro_registrado",
+        "usd_sin_cfdi"
+      ],
+      "cfdi": {
+        "esperados": [],
+        "evidencia": null,
+        "motivo_sin_cruce": "sin_candidato",
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0019",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0006",
+      "casos": [
+        "libro_registrado",
+        "usd_moneda_original"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT6DE8-B824-48D6-B6EB-31A87FAB688D"
+        ],
+        "evidencia": "moneda_original",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0021",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0007",
+      "casos": [
+        "fila_ininterpretable"
+      ],
+      "cfdi": {
+        "esperados": [],
+        "evidencia": null,
+        "motivo_sin_cruce": "fila_ininterpretable",
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": null,
+        "motivo_sin_cruce": "fila_ininterpretable",
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0008",
+      "casos": [
+        "libro_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT58CA-25AC-4817-952D-175025FDB58C"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0017",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0009",
+      "casos": [
+        "libro_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT563E-BC38-4E09-A4B8-3EBC817AF708"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0033",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0010",
+      "casos": [
+        "empate_monto_fechas_distintas",
+        "libro_registrado"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINTD701-739A-41BB-BC26-058C89BDF1EA"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": [
+          "SINT5473-5B8B-48B3-8B62-518A99185881"
+        ]
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0016",
+        "motivo_sin_cruce": null,
+        "prohibidos": [
+          "AS-0034"
+        ],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0011",
+      "casos": [
+        "libro_nomina_distractor",
+        "nomina_distractor"
+      ],
+      "cfdi": {
+        "esperados": [],
+        "evidencia": null,
+        "motivo_sin_cruce": "sin_candidato",
+        "prohibidos": [
+          "SINT3A5D-4F04-428F-BE86-29564EF4FF42"
+        ]
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": null,
+        "motivo_sin_cruce": "sin_candidato",
+        "prohibidos": [
+          "AS-0015"
+        ],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0012",
+      "casos": [
+        "libro_no_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT2448-3DAC-4F05-93F1-8AD452958C0A"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": null,
+        "motivo_sin_cruce": "sin_candidato",
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0013",
+      "casos": [
+        "libro_registrado",
+        "suma_2"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT3791-4138-4213-A58E-2D98D441300F",
+          "SINTED4C-894C-46F2-BDC8-7D38D0CC5AE4"
+        ],
+        "evidencia": "suma",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0030",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0014",
+      "casos": [
+        "libro_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT3D96-DADE-4045-91F5-0654DFD0B7A2"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0032",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0015",
+      "casos": [
+        "libro_no_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINTFC9F-AA44-4E09-AC47-9F6552D5BED2"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": null,
+        "motivo_sin_cruce": "sin_candidato",
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0016",
+      "casos": [
+        "libro_registrado",
+        "nota_credito_neta"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT030C-01E7-4035-962A-2E4144DCE3CD",
+          "SINT2149-0B0B-44E0-A29E-047553B294D1"
+        ],
+        "evidencia": "suma",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0026",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0017",
+      "casos": [
+        "libro_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT4373-2A6A-4CD5-AC10-8493888F0E67"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0029",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0018",
+      "casos": [
+        "libro_registrado",
+        "suma_2"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINTC2B1-B19C-43DA-A876-1EE6FB1231B3",
+          "SINTE120-FD2C-4008-9680-928A14688727"
+        ],
+        "evidencia": "suma",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0020",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0019",
+      "casos": [
+        "libro_registrado",
+        "usd_sin_cfdi"
+      ],
+      "cfdi": {
+        "esperados": [],
+        "evidencia": null,
+        "motivo_sin_cruce": "sin_candidato",
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0028",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0020",
+      "casos": [
+        "pago_tarjeta"
+      ],
+      "cfdi": {
+        "esperados": [],
+        "evidencia": null,
+        "motivo_sin_cruce": "no_aplica",
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": null,
+        "motivo_sin_cruce": "no_aplica",
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0021",
+      "casos": [
+        "libro_no_registrado",
+        "suma_3",
+        "suma_con_distractor"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT3F04-572F-4558-B313-5B9636BC94C6",
+          "SINT8CB1-CC5E-4B33-939D-8AE4FAC8DA51",
+          "SINTD317-3934-44F4-983A-59F9DF4AE72B"
+        ],
+        "evidencia": "suma",
+        "motivo_sin_cruce": null,
+        "prohibidos": [
+          "SINTAFB6-2814-402C-A7A9-3259CEF3113A"
+        ]
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": null,
+        "motivo_sin_cruce": "sin_candidato",
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0022",
+      "casos": [
+        "libro_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINTA006-74F4-4CD7-9146-55E1314F85D5"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0038",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0023",
+      "casos": [
+        "libro_no_registrado",
+        "sin_cfdi"
+      ],
+      "cfdi": {
+        "esperados": [],
+        "evidencia": null,
+        "motivo_sin_cruce": "sin_candidato",
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": null,
+        "motivo_sin_cruce": "sin_candidato",
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0024",
+      "casos": [
+        "libro_no_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINTD57D-EE44-40F1-A26F-39F6DAB926F2"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": null,
+        "motivo_sin_cruce": "sin_candidato",
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0025",
+      "casos": [
+        "libro_registrado",
+        "usd_sin_cfdi"
+      ],
+      "cfdi": {
+        "esperados": [],
+        "evidencia": null,
+        "motivo_sin_cruce": "sin_candidato",
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0048",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0026",
+      "casos": [
+        "empate_monto_fechas_distintas",
+        "libro_registrado"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT5473-5B8B-48B3-8B62-518A99185881"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": [
+          "SINTD701-739A-41BB-BC26-058C89BDF1EA"
+        ]
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0034",
+        "motivo_sin_cruce": null,
+        "prohibidos": [
+          "AS-0016"
+        ],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0027",
+      "casos": [
+        "libro_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT7B05-BC1A-4819-AAB3-31D52A83FB1D"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0049",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0028",
+      "casos": [
+        "libro_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT80A3-ACC4-4F7A-A92F-26C06FD3FCB4"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0042",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0029",
+      "casos": [
+        "compra_con_reembolso",
+        "libro_registrado"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINTD304-9F92-40F6-9511-279539D862B0"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0036",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0030",
+      "casos": [
+        "fuera_de_tolerancia",
+        "libro_registrado"
+      ],
+      "cfdi": {
+        "esperados": [],
+        "evidencia": null,
+        "motivo_sin_cruce": "fuera_de_tolerancia",
+        "prohibidos": [
+          "SINT2CCC-6652-4297-908D-4233FAA92172"
+        ]
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0046",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0031",
+      "casos": [
+        "libro_no_registrado",
+        "suma_2",
+        "suma_con_distractor"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT0281-6F62-4E01-9B98-3CE9B326A0D0",
+          "SINTBF5B-3D74-4A34-B341-47FB34D88E0B"
+        ],
+        "evidencia": "suma",
+        "motivo_sin_cruce": null,
+        "prohibidos": [
+          "SINT0505-8081-4CB5-B253-24F96D9E8B58"
+        ]
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": null,
+        "motivo_sin_cruce": "sin_candidato",
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0032",
+      "casos": [
+        "libro_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT4792-851D-4409-8B01-5E57B10D8A23"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0058",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": {
+          "asiento_id": "AS-0058",
+          "veredicto": "registrado"
+        }
+      }
+    },
+    {
+      "cargo_id": "BETA-0033",
+      "casos": [
+        "libro_registrado",
+        "rfc_generico_receptor_unico"
+      ],
+      "cfdi": {
+        "esperados": [],
+        "evidencia": null,
+        "motivo_sin_cruce": "solo_rfc_generico",
+        "prohibidos": [
+          "SINT71F6-2724-4BE3-A93C-3CE95D5BA988"
+        ]
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0052",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0034",
+      "casos": [
+        "libro_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINTE427-82F0-4536-9CF7-2BF94ECEA6EA"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0055",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0035",
+      "casos": [
+        "fuera_ventana_superior",
+        "libro_no_registrado"
+      ],
+      "cfdi": {
+        "esperados": [],
+        "evidencia": null,
+        "motivo_sin_cruce": "fuera_de_ventana",
+        "prohibidos": [
+          "SINT453F-0250-4EF9-9682-675C18A9FAAC"
+        ]
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": null,
+        "motivo_sin_cruce": "sin_candidato",
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0036",
+      "casos": [
+        "libro_cubeta_fecha_lejana",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINTCB26-EB21-4284-B619-5BCF887CAFFC"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": "motor_sin_cruce",
+        "esperado": null,
+        "motivo_sin_cruce": "cubeta_evidencia_insuficiente",
+        "prohibidos": [
+          "AS-0001"
+        ],
+        "riesgo_cubeta": false,
+        "veredicto": {
+          "asiento_id": "AS-0001",
+          "veredicto": "registrado"
+        }
+      }
+    },
+    {
+      "cargo_id": "BETA-0037",
+      "casos": [
+        "libro_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT01C2-E1AD-48ED-BCC8-14A2C80D5790"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0061",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0038",
+      "casos": [
+        "libro_no_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT6C1D-0BF8-449A-9335-427FCD7D61D4"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": null,
+        "motivo_sin_cruce": "sin_candidato",
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0039",
+      "casos": [
+        "libro_no_registrado",
+        "sin_cfdi"
+      ],
+      "cfdi": {
+        "esperados": [],
+        "evidencia": null,
+        "motivo_sin_cruce": "sin_candidato",
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": null,
+        "motivo_sin_cruce": "sin_candidato",
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0040",
+      "casos": [
+        "libro_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINTD67C-C0BC-47F2-B9B8-367675EB16C7"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0062",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0041",
+      "casos": [
+        "libro_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT0620-F087-4E5F-8381-0C572F564652"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0074",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0042",
+      "casos": [
+        "libro_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT0432-8747-4F71-BA57-8129B3521414"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0067",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0043",
+      "casos": [
+        "libro_no_registrado",
+        "usd_sin_cfdi"
+      ],
+      "cfdi": {
+        "esperados": [],
+        "evidencia": null,
+        "motivo_sin_cruce": "sin_candidato",
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": null,
+        "motivo_sin_cruce": "sin_candidato",
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0044",
+      "casos": [
+        "libro_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINTC066-8D89-412C-A654-80AB51260CA6"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0072",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0045",
+      "casos": [
+        "libro_registrado",
+        "suma_3"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT00D7-D23D-4B05-BFC5-5F979159D802",
+          "SINT0DB6-5F95-4471-B6B8-48C8F8F353B9",
+          "SINT86BC-96C4-4689-81B9-36155FAF9E62"
+        ],
+        "evidencia": "suma",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0077",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0046",
+      "casos": [
+        "libro_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINTD078-019F-43E3-98BA-3A1A4761F31A"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0078",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0047",
+      "casos": [
+        "libro_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT5D6E-1742-4F88-93EA-00EA38B376E4"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0068",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0048",
+      "casos": [
+        "empate_grupo",
+        "libro_registrado"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT9754-9DEF-455A-840C-023453CB992C"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": "EMP-03",
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0069",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0049",
+      "casos": [
+        "empate_grupo",
+        "libro_registrado"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT79A0-4A1A-44ED-9559-3C44672434A3"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": "EMP-03",
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0070",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0050",
+      "casos": [
+        "libro_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINTF3E7-C474-440A-A936-4688BFAAAD58"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0075",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": {
+          "asiento_id": "AS-0075",
+          "veredicto": "registrado"
+        }
+      }
+    },
+    {
+      "cargo_id": "BETA-0051",
+      "casos": [
+        "libro_registrado",
+        "sin_cfdi"
+      ],
+      "cfdi": {
+        "esperados": [],
+        "evidencia": null,
+        "motivo_sin_cruce": "sin_candidato",
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0079",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0052",
+      "casos": [
+        "libro_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINTAD06-E8BD-4601-B6B7-2B94849B3DA0"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0097",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": {
+          "asiento_id": "AS-0097",
+          "veredicto": "registrado"
+        }
+      }
+    },
+    {
+      "cargo_id": "BETA-0053",
+      "casos": [
+        "libro_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT45D0-D322-4D7F-81FF-4C52E72FCFFA"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0090",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0054",
+      "casos": [
+        "compra_con_reembolso",
+        "libro_registrado"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT2CDB-32DA-4F4A-9CDB-4D457DFBBC01"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0095",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0055",
+      "casos": [
+        "libro_cubeta",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT16CB-E85E-4B3B-A5E5-131E2D1794D4"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0073",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": true,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0056",
+      "casos": [
+        "libro_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT6F5D-9815-4814-AF29-32DDD1CCF529"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0100",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0057",
+      "casos": [
+        "libro_registrado",
+        "rfc_generico_receptor_duplicado"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINTFE2C-FA80-44A3-9F0E-3298CCE7B4E5"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": [
+          "SINT71D6-92A3-4F67-9A45-512D0B664C12"
+        ]
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0098",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0058",
+      "casos": [
+        "libro_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINTDD89-5C96-4745-A042-5EB3AF6A2FF5"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0093",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0059",
+      "casos": [
+        "libro_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINTFD4E-7493-4ECC-A13A-8DD0198C04D5"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0103",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0060",
+      "casos": [
+        "libro_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINTDA48-A80B-44A4-A6E7-1FB5541658A0"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0104",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0061",
+      "casos": [
+        "libro_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT7431-65DC-4621-84AF-385BC1400138"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": "asiento_distinto",
+        "esperado": "AS-0096",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": {
+          "asiento_id": "AS-0129",
+          "veredicto": "registrado"
+        }
+      }
+    },
+    {
+      "cargo_id": "BETA-0062",
+      "casos": [
+        "libro_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT0019-FA43-4EE3-8FDC-2D1CF264D025"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0102",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0063",
+      "casos": [
+        "libro_registrado",
+        "nota_credito_reembolso"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT3DC8-EB33-4EE9-935B-06BD2059F550"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0106",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0064",
+      "casos": [
+        "libro_cubeta_fecha_lejana",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINTC957-0A1C-4171-8D28-399ABFE4ABB0"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": null,
+        "motivo_sin_cruce": "cubeta_evidencia_insuficiente",
+        "prohibidos": [
+          "AS-0002"
+        ],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0065",
+      "casos": [
+        "libro_registrado",
+        "suma_3",
+        "suma_con_distractor"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT4E34-5B2B-4A77-80BF-5F7087361754",
+          "SINTEF8C-5503-4931-A65A-958800ADD285",
+          "SINTFDF6-FB35-4C15-B133-14621ECE6476"
+        ],
+        "evidencia": "suma",
+        "motivo_sin_cruce": null,
+        "prohibidos": [
+          "SINT9C24-0CCC-4394-B11E-5C2927DE9EBE"
+        ]
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0089",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0066",
+      "casos": [
+        "libro_registrado",
+        "sin_cfdi"
+      ],
+      "cfdi": {
+        "esperados": [],
+        "evidencia": null,
+        "motivo_sin_cruce": "sin_candidato",
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0094",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0067",
+      "casos": [
+        "libro_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT6207-C9B8-4CA9-998B-0C887D299CEA"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0116",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0068",
+      "casos": [
+        "libro_no_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT22E2-6EDF-4353-9607-9C7C98A84DE2"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": null,
+        "motivo_sin_cruce": "sin_candidato",
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0069",
+      "casos": [
+        "libro_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINTE5E4-FEB9-4056-A5A7-3248C86B570A"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0122",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0070",
+      "casos": [
+        "libro_no_registrado",
+        "monto_tolerancia"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINTE05F-740D-4991-88C0-78A941A6BF3E"
+        ],
+        "evidencia": "monto_tolerancia",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": null,
+        "motivo_sin_cruce": "sin_candidato",
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0071",
+      "casos": [
+        "libro_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT6544-75BC-49C9-A9A3-649EFA5616A4"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0127",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0072",
+      "casos": [
+        "libro_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT38FC-EE42-4CB4-BFD0-5508CD084E33"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0114",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0073",
+      "casos": [
+        "libro_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINTD25B-74C6-4018-AF35-83B978676C36"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0136",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0074",
+      "casos": [
+        "libro_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINTE7B6-E3A7-46D5-960F-287CD0302955"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0133",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0075",
+      "casos": [
+        "libro_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT40A3-3C60-42EC-840D-16CC347A6EA7"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0126",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0076",
+      "casos": [
+        "libro_no_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT7483-24CD-428D-8573-5FC78FDD7D2C"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": null,
+        "motivo_sin_cruce": "sin_candidato",
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0077",
+      "casos": [
+        "libro_no_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINTAD3E-37A4-4D69-B0BE-0AB55E5FB604"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": null,
+        "motivo_sin_cruce": "sin_candidato",
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0078",
+      "casos": [
+        "libro_no_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINTD730-DF94-44E3-B104-44F5A03BFD03"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": null,
+        "motivo_sin_cruce": "sin_candidato",
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0079",
+      "casos": [
+        "libro_registrado",
+        "usd_moneda_original"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT6465-C596-4D9C-8642-1F0A779EBD9A"
+        ],
+        "evidencia": "moneda_original",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0140",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0080",
+      "casos": [
+        "libro_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT7FE2-2AEB-49D5-934B-43CAB73B1828"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0130",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0081",
+      "casos": [
+        "libro_no_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT7B46-B25D-4819-935B-3DFE87158B2D"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": null,
+        "motivo_sin_cruce": "sin_candidato",
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0082",
+      "casos": [
+        "libro_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINTD4ED-2D92-4207-A1F8-7981BC951B69"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0128",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0083",
+      "casos": [
+        "libro_no_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT225F-30DF-4884-8DCE-0D8654BCF579"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": null,
+        "motivo_sin_cruce": "sin_candidato",
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0084",
+      "casos": [
+        "libro_no_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINTED6C-0D0A-4CB8-AA12-2257D8C0DA58"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": null,
+        "motivo_sin_cruce": "sin_candidato",
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0085",
+      "casos": [
+        "libro_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINTD97F-F351-4A68-9C92-95F5E20EED01"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0138",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0086",
+      "casos": [
+        "libro_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT1AFB-5484-4E62-84AE-258E79F50B2A"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0139",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0087",
+      "casos": [
+        "libro_registrado",
+        "nota_credito_reembolso"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT5C91-D3A8-4654-9A16-7A32FA170E1E"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0132",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0088",
+      "casos": [
+        "libro_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINTE764-2375-4750-906A-28AA0240D3E6"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0144",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0089",
+      "casos": [
+        "libro_registrado",
+        "nota_credito_neta"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINTAF92-D3F2-47EE-BE80-6AF3F66507C1",
+          "SINTEEBA-498C-4418-BFBF-5D228CCBF34C"
+        ],
+        "evidencia": "suma",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0153",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0090",
+      "casos": [
+        "libro_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT9E5F-7F1A-447A-A6A9-1DD4E760DD8D"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0137",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0091",
+      "casos": [
+        "libro_descartado_por_nombre",
+        "sin_cfdi"
+      ],
+      "cfdi": {
+        "esperados": [],
+        "evidencia": null,
+        "motivo_sin_cruce": "sin_candidato",
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": null,
+        "motivo_sin_cruce": "descartado_por_nombre",
+        "prohibidos": [
+          "AS-0146"
+        ],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0092",
+      "casos": [
+        "libro_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT7F74-8BF7-4619-A746-4ECDC9CBD203"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": "asiento_distinto",
+        "esperado": "AS-0157",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": {
+          "asiento_id": "AS-0101",
+          "veredicto": "registrado"
+        }
+      }
+    },
+    {
+      "cargo_id": "BETA-0093",
+      "casos": [
+        "libro_no_registrado",
+        "rfc_generico_emisor_suma"
+      ],
+      "cfdi": {
+        "esperados": [],
+        "evidencia": null,
+        "motivo_sin_cruce": "solo_rfc_generico",
+        "prohibidos": [
+          "SINT5F5B-BE9D-4533-A4D8-99AF9E9FDD04",
+          "SINTFF72-DFF9-4B61-B22A-03E188F7ED1A"
+        ]
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": null,
+        "motivo_sin_cruce": "sin_candidato",
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0094",
+      "casos": [
+        "libro_registrado",
+        "usd_moneda_original"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT6A10-129F-4A56-85E6-2350BCDDB604"
+        ],
+        "evidencia": "moneda_original",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0143",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0095",
+      "casos": [
+        "libro_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT5416-9D11-4FC9-9232-51EE39B628BE"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0149",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0096",
+      "casos": [
+        "libro_registrado",
+        "sin_cfdi"
+      ],
+      "cfdi": {
+        "esperados": [],
+        "evidencia": null,
+        "motivo_sin_cruce": "sin_candidato",
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0146",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0097",
+      "casos": [
+        "libro_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT4498-D7D6-4C21-8C12-6FC399F06659"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0148",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0098",
+      "casos": [
+        "libro_cubeta",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT9D8C-F6D2-4CB3-B931-7BAAD2916A5A"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0158",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": true,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0099",
+      "casos": [
+        "libro_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT1BD2-8F46-48B3-A643-7629D60E19DC"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0166",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0100",
+      "casos": [
+        "libro_registrado",
+        "sin_cfdi"
+      ],
+      "cfdi": {
+        "esperados": [],
+        "evidencia": null,
+        "motivo_sin_cruce": "sin_candidato",
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0154",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0101",
+      "casos": [
+        "libro_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT3A94-1F7A-48D7-B5A5-929DF1A52983"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0169",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0102",
+      "casos": [
+        "libro_cubeta",
+        "monto_tolerancia"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINTB0C9-0032-4F37-A3C2-8FE1E1007078"
+        ],
+        "evidencia": "monto_tolerancia",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0163",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": true,
+        "veredicto": {
+          "asiento_id": "AS-0163",
+          "veredicto": "registrado"
+        }
+      }
+    },
+    {
+      "cargo_id": "BETA-0103",
+      "casos": [
+        "libro_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT2277-31A0-446F-8963-0E7829AAF4E5"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0160",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0104",
+      "casos": [
+        "libro_registrado",
+        "normal"
+      ],
+      "cfdi": {
+        "esperados": [
+          "SINT9AD4-B319-4A5A-8790-197E06426E88"
+        ],
+        "evidencia": "monto_exacto",
+        "motivo_sin_cruce": null,
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": "AS-0155",
+        "motivo_sin_cruce": null,
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": null
+      }
+    },
+    {
+      "cargo_id": "BETA-0105",
+      "casos": [
+        "libro_no_registrado",
+        "sin_cfdi"
+      ],
+      "cfdi": {
+        "esperados": [],
+        "evidencia": null,
+        "motivo_sin_cruce": "sin_candidato",
+        "prohibidos": []
+      },
+      "grupo_empate": null,
+      "libro_mayor": {
+        "conflicto": null,
+        "esperado": null,
+        "motivo_sin_cruce": "sin_candidato",
+        "prohibidos": [],
+        "riesgo_cubeta": false,
+        "veredicto": {
+          "asiento_id": null,
+          "veredicto": "no_registrado"
+        }
+      }
+    }
+  ],
+  "esquema": "oraculo_conciliacion/v1",
+  "grupos_empate": [
+    {
+      "asientos": [
+        "AS-0064",
+        "AS-0065"
+      ],
+      "cargos": [
+        "ALFA-0033",
+        "ALFA-0034"
+      ],
+      "cfdis": [
+        "SINT194E-054B-47F5-9395-21090F93A2A8",
+        "SINT7C13-A4C1-4DD9-9CA0-488B5462E2CB"
+      ],
+      "grupo": "EMP-01"
+    },
+    {
+      "asientos": [
+        "AS-0108",
+        "AS-0109"
+      ],
+      "cargos": [
+        "ALFA-0053",
+        "ALFA-0054"
+      ],
+      "cfdis": [
+        "SINT705F-6FB2-4EE6-9493-0C66D9FAF859",
+        "SINT9013-C8FF-44B7-9E90-38761EFD8671"
+      ],
+      "grupo": "EMP-02"
+    },
+    {
+      "asientos": [
+        "AS-0069",
+        "AS-0070"
+      ],
+      "cargos": [
+        "BETA-0048",
+        "BETA-0049"
+      ],
+      "cfdis": [
+        "SINT79A0-4A1A-44ED-9559-3C44672434A3",
+        "SINT9754-9DEF-455A-840C-023453CB992C"
+      ],
+      "grupo": "EMP-03"
+    },
+    {
+      "asientos": [
+        "AS-0022",
+        "AS-0023",
+        "AS-0024"
+      ],
+      "cargos": [
+        "ALFA-0006",
+        "ALFA-0007",
+        "ALFA-0008"
+      ],
+      "cfdis": [
+        "SINT1BB3-1457-4CD5-8398-44883507356A",
+        "SINT9942-E557-4C3A-B224-85B45BFB6F92",
+        "SINTECD5-6CDA-412E-9217-6A8EF5E32C23"
+      ],
+      "grupo": "EMP-04"
+    }
+  ],
+  "parametros": {
+    "banda_fuera_de_tolerancia": {
+      "max": "4.50",
+      "min": "2.50"
+    },
+    "cubeta_lejana_dias": {
+      "max": 30,
+      "min": 20
+    },
+    "cuentas_tarjeta": {
+      "ALFA": "2105-001",
+      "BETA": "2105-002"
+    },
+    "empresa": {
+      "nombre": "EMPRESA DEMO SA DE CV",
+      "rfc": "RFC_EMPRESA_DEMO"
+    },
+    "intento": 0,
+    "libro_desfase_dias": {
+      "max": 3,
+      "min": 0
+    },
+    "periodo": "2026-07",
+    "proveedor_cubeta": {
+      "id": "PRV-0999",
+      "nombre": "GASTOS VARIOS TARJETA"
+    },
+    "rfcs_genericos": [
+      "XAXX010101000",
+      "XEXX010101000"
+    ],
+    "semilla": 4242,
+    "tolerancia_monto": "1.00",
+    "ventana_dias": {
+      "max": 10,
+      "min": -3
+    }
+  },
+  "resumen": {
+    "asientos": 191,
+    "cargos": 199,
+    "casos": {
+      "compra_con_reembolso": 3,
+      "empate_grupo": 9,
+      "empate_monto_fecha_comercios_distintos": 2,
+      "empate_monto_fechas_distintas": 4,
+      "fila_ininterpretable": 2,
+      "fuera_de_tolerancia": 3,
+      "fuera_ventana_inferior": 2,
+      "fuera_ventana_superior": 2,
+      "libro_cubeta": 8,
+      "libro_cubeta_fecha_lejana": 3,
+      "libro_descartado_por_nombre": 3,
+      "libro_no_registrado": 40,
+      "libro_nomina_distractor": 3,
+      "libro_registrado": 138,
+      "monto_tolerancia": 8,
+      "nomina_distractor": 3,
+      "normal": 110,
+      "nota_credito_neta": 3,
+      "nota_credito_reembolso": 3,
+      "pago_tarjeta": 2,
+      "reembolso_total": 1,
+      "rfc_generico_emisor_suma": 2,
+      "rfc_generico_receptor_duplicado": 2,
+      "rfc_generico_receptor_unico": 2,
+      "sin_cfdi": 14,
+      "suma_2": 6,
+      "suma_3": 4,
+      "suma_con_distractor": 4,
+      "usd_moneda_original": 3,
+      "usd_sin_cfdi": 6,
+      "ventana_borde_inferior": 2,
+      "ventana_borde_superior": 2
+    },
+    "cfdis": 250,
+    "lineas_libro": 550
+  },
+  "revision_texto_libre": {
+    "cargos_en_revision": [
+      "ALFA-0083",
+      "BETA-0004"
+    ],
+    "marcados": [
+      {
+        "campo": "concepto",
+        "cargo_id": "ALFA-0083",
+        "familia": "marcado_html",
+        "origen": "cfdi",
+        "plantilla": "comentario_html",
+        "registro_id": "SINT6CFA-C5B1-41A9-B11D-6A9F9C68953F"
+      },
+      {
+        "campo": "concepto",
+        "cargo_id": null,
+        "familia": "anulacion_instrucciones",
+        "origen": "cfdi",
+        "plantilla": "base64_en_referencia",
+        "registro_id": "SINT8DD9-333A-4936-ADFB-0D22FD446182"
+      },
+      {
+        "campo": "concepto",
+        "cargo_id": "BETA-0004",
+        "familia": "anulacion_instrucciones",
+        "origen": "cfdi",
+        "plantilla": "anulacion_en_concepto",
+        "registro_id": "SINTF6A5-F7C1-4BA6-BD6D-085466546794"
+      }
+    ]
+  },
+  "veredictos_libro": {
+    "archivo": "veredictos_libro.csv",
+    "conflictos": {
+      "asiento_distinto": 2,
+      "motor_con_cruce": 2,
+      "motor_sin_cruce": 1
+    },
+    "filas": 12,
+    "sin_conflicto": 7
+  }
+}

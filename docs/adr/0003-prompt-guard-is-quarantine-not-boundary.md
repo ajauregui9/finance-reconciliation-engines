@@ -1,0 +1,3 @@
+# prompt_guard es un filtro de cuarentena con revisión humana, no una frontera de seguridad
+
+La detección de inyección por patrones se evade con paráfrasis, homoglifos o codificación, así que no puede ser una "frontera dura". `prompt_guard` queda cableado en la ruta de ingesta de texto libre (descripciones de cargos y conceptos de CFDI) antes de que algo llegue a un LLM. Su única acción es marcar el registro y mandarlo a revisión humana; nunca lo aprueba. La seguridad real descansa en controles que no dependen del texto: allowlist de dominios, parseo XML fail-closed con `defusedxml` y que ninguna escritura al ERP salga sin aprobación humana.

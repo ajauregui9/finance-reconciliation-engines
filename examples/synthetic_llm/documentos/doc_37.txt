@@ -1,0 +1,9 @@
+MANTENIMIENTO INDUSTRIAL DEL GOLFO SA DE CV | RFC RFC_PROV_MANTENIMIENTO
+Factura B6096    Fecha: 14/03/2026
+Cliente: EMPRESA DEMO SA DE CV    RFC cliente: RFC_EMPRESA_DEMO
+UUID 00000000-0000-0000-0000-000000000045
+Concepto: Reparación de montacargas
+Importe sin IVA ........ 13387.11 MXN
+IVA (16 %) ......... 2141.94
+TOTAL A PAGAR .......... 15529.05 MXN
+Notas: Mercancía revisada al momento de la entrega.

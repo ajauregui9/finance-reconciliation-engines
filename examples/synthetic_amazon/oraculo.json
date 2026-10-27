@@ -1,0 +1,297 @@
+{
+  "casos_borde": [
+    {
+      "archivo": "liquidacion_2026-04.csv",
+      "desfase_fijo_de_una_hora_falla": false,
+      "esperado": {
+        "mes_liquidacion": "2026-04",
+        "mes_pedido": "2026-04"
+      },
+      "fecha_hora_local": "2026-04-30 22:40:00",
+      "fecha_pedido_local": "2026-04-28 15:00:00",
+      "fila": 35,
+      "huso": "UTC-07:00",
+      "mes_liquidacion": "2026-04",
+      "mes_pedido": "2026-04",
+      "nota": "UTC-07:00: 22:40 local son 23:40 en el huso de cierre; se queda en abril",
+      "pedido": "PED-BORDE-01"
+    },
+    {
+      "archivo": "liquidacion_2026-04.csv",
+      "desfase_fijo_de_una_hora_falla": false,
+      "esperado": {
+        "mes_liquidacion": "2026-05",
+        "mes_pedido": "2026-04"
+      },
+      "fecha_hora_local": "2026-04-30 23:20:00",
+      "fecha_pedido_local": "2026-04-29 12:00:00",
+      "fila": 36,
+      "huso": "UTC-07:00",
+      "mes_liquidacion": "2026-05",
+      "mes_pedido": "2026-04",
+      "nota": "UTC-07:00: 23:20 local son 00:20 del 1 de mayo; entra como cola de abril en mayo",
+      "pedido": "PED-BORDE-02"
+    },
+    {
+      "archivo": "liquidacion_2026-05.csv",
+      "desfase_fijo_de_una_hora_falla": false,
+      "esperado": {
+        "mes_liquidacion": "2026-06",
+        "mes_pedido": "2026-05"
+      },
+      "fecha_hora_local": "2026-05-31 23:30:00",
+      "fecha_pedido_local": "2026-05-30 10:00:00",
+      "fila": 55,
+      "huso": "UTC-07:00",
+      "mes_liquidacion": "2026-06",
+      "mes_pedido": "2026-05",
+      "nota": "UTC-07:00: 23:30 local son 00:30 del 1 de junio; cola de mayo en junio",
+      "pedido": "PED-BORDE-03"
+    },
+    {
+      "archivo": "liquidacion_2026-06.csv",
+      "desfase_fijo_de_una_hora_falla": false,
+      "esperado": {
+        "mes_liquidacion": "2026-06",
+        "mes_pedido": "2026-06"
+      },
+      "fecha_hora_local": "2026-06-30 21:30:00",
+      "fecha_pedido_local": "2026-06-29 09:00:00",
+      "fila": 49,
+      "huso": "UTC-08:00",
+      "mes_liquidacion": "2026-06",
+      "mes_pedido": "2026-06",
+      "nota": "UTC-08:00: 21:30 local son 23:30; se queda en junio",
+      "pedido": "PED-BORDE-04"
+    },
+    {
+      "archivo": "liquidacion_2026-06.csv",
+      "desfase_fijo_de_una_hora_falla": true,
+      "esperado": {
+        "mes_liquidacion": "2026-07",
+        "mes_pedido": "2026-06"
+      },
+      "fecha_hora_local": "2026-06-30 22:30:00",
+      "fecha_pedido_local": "2026-06-30 08:00:00",
+      "fila": 50,
+      "huso": "UTC-08:00",
+      "mes_liquidacion": "2026-07",
+      "mes_pedido": "2026-06",
+      "nota": "UTC-08:00: 22:30 local son 00:30 del 1 de julio; sumar una hora fija la dejaría en junio",
+      "pedido": "PED-BORDE-05"
+    },
+    {
+      "archivo": "liquidacion_2026-06.csv",
+      "desfase_fijo_de_una_hora_falla": false,
+      "esperado": {
+        "mes_liquidacion": "2026-06",
+        "mes_pedido": "2026-06"
+      },
+      "fecha_hora_local": "2026-06-02 10:00:00",
+      "fecha_pedido_local": "2026-05-31 22:10:00",
+      "fila": 1,
+      "huso": "UTC-08:00",
+      "mes_liquidacion": "2026-06",
+      "mes_pedido": "2026-06",
+      "nota": "UTC-08:00: el pedido de las 22:10 del 31 de mayo es 1 de junio en el huso de cierre",
+      "pedido": "PED-BORDE-06"
+    },
+    {
+      "archivo": "liquidacion_2026-07.csv",
+      "desfase_fijo_de_una_hora_falla": true,
+      "esperado": {
+        "mes_liquidacion": "2026-06",
+        "mes_pedido": "2026-06"
+      },
+      "fecha_hora_local": "2026-07-01 03:00:00",
+      "fecha_pedido_local": "2026-06-29 20:00:00",
+      "fila": 1,
+      "huso": "UTC+00:00",
+      "mes_liquidacion": "2026-06",
+      "mes_pedido": "2026-06",
+      "nota": "UTC+00:00: 03:00 local son 21:00 del 30 de junio; el archivo de julio trae una fila de junio",
+      "pedido": "PED-BORDE-07"
+    },
+    {
+      "archivo": "liquidacion_2026-07.csv",
+      "desfase_fijo_de_una_hora_falla": false,
+      "esperado": {
+        "mes_liquidacion": "2026-07",
+        "mes_pedido": "2026-06"
+      },
+      "fecha_hora_local": "2026-07-01 07:00:00",
+      "fecha_pedido_local": "2026-07-01 05:30:00",
+      "fila": 2,
+      "huso": "UTC+00:00",
+      "mes_liquidacion": "2026-07",
+      "mes_pedido": "2026-06",
+      "nota": "UTC+00:00: el pedido de las 05:30 local es 30 de junio; cola de junio en julio",
+      "pedido": "PED-BORDE-08"
+    }
+  ],
+  "esquema": "oraculo_cierre_amazon/v1",
+  "filas_fuera_de_meses": [],
+  "meses": {
+    "2026-04": {
+      "cargos_periodo": {
+        "Almacenaje": "420.00",
+        "Suscripción": "500.00"
+      },
+      "filas": 35,
+      "filas_publicidad_liquidacion": 3,
+      "publicidad_sin_iva": {
+        "consola": "8525.99",
+        "factura": "8525.99",
+        "liquidacion": "8525.99"
+      },
+      "retencion": {
+        "base": "32678.30",
+        "retenida": "2614.26"
+      },
+      "tarifas_cohorte_mes": {
+        "comision": "4421.75",
+        "logistica": "3425.00",
+        "otras_tarifas": "20.00"
+      },
+      "tarifas_cola": {
+        "comision": "0.00",
+        "logistica": "0.00",
+        "otras_tarifas": "0.00"
+      },
+      "total_liquidado": "2511.38",
+      "venta_neta_cohorte_mes": "32678.30",
+      "venta_neta_cola": {}
+    },
+    "2026-05": {
+      "cargos_periodo": {
+        "Ajuste": "-150.00",
+        "Almacenaje": "600.00",
+        "Suscripción": "500.00"
+      },
+      "filas": 55,
+      "filas_publicidad_liquidacion": 3,
+      "publicidad_sin_iva": {
+        "consola": "7894.76",
+        "factura": "7894.76",
+        "liquidacion": "7894.75"
+      },
+      "retencion": {
+        "base": "46235.20",
+        "retenida": "3698.82"
+      },
+      "tarifas_cohorte_mes": {
+        "comision": "4186.48",
+        "logistica": "3610.00",
+        "otras_tarifas": "35.00"
+      },
+      "tarifas_cola": {
+        "comision": "1468.50",
+        "logistica": "1255.00",
+        "otras_tarifas": "15.00"
+      },
+      "total_liquidado": "3652.32",
+      "venta_neta_cohorte_mes": "35704.20",
+      "venta_neta_cola": {
+        "2026-04": "10531.00"
+      }
+    },
+    "2026-06": {
+      "cargos_periodo": {
+        "Almacenaje": "360.00",
+        "Suscripción": "500.00"
+      },
+      "filas": 51,
+      "filas_publicidad_liquidacion": 3,
+      "publicidad_sin_iva": {
+        "consola": "8600.89",
+        "factura": "8600.89",
+        "liquidacion": "8600.89"
+      },
+      "retencion": {
+        "base": "17708.50",
+        "retenida": "2365.96"
+      },
+      "tarifas_cohorte_mes": {
+        "comision": "3683.69",
+        "logistica": "3460.00",
+        "otras_tarifas": "75.00"
+      },
+      "tarifas_cola": {
+        "comision": "-818.15",
+        "logistica": "35.00",
+        "otras_tarifas": "0.00"
+      },
+      "total_liquidado": "1414.89",
+      "venta_neta_cohorte_mes": "27659.50",
+      "venta_neta_cola": {
+        "2026-05": "-9951.00"
+      }
+    },
+    "2026-07": {
+      "cargos_periodo": {
+        "Almacenaje": "610.00",
+        "Suscripción": "500.00"
+      },
+      "filas": 48,
+      "filas_publicidad_liquidacion": 3,
+      "publicidad_sin_iva": {
+        "consola": "8570.09",
+        "factura": "8570.09",
+        "liquidacion": "8570.09"
+      },
+      "retencion": {
+        "base": "28547.00",
+        "retenida": "2283.76"
+      },
+      "tarifas_cohorte_mes": {
+        "comision": "3621.97",
+        "logistica": "3080.00",
+        "otras_tarifas": "50.00"
+      },
+      "tarifas_cola": {
+        "comision": "287.85",
+        "logistica": "380.00",
+        "otras_tarifas": "10.00"
+      },
+      "total_liquidado": "-1237.55",
+      "venta_neta_cohorte_mes": "26220.00",
+      "venta_neta_cola": {
+        "2026-06": "2327.00"
+      }
+    }
+  },
+  "meses_cola_negativa": [
+    "2026-06"
+  ],
+  "meses_retencion_fuera_de_banda": [
+    "2026-06"
+  ],
+  "parametros": {
+    "banda_retencion": "0.01",
+    "huso_cierre": "UTC-06:00",
+    "husos_archivo": {
+      "2026-04": "UTC-07:00",
+      "2026-05": "UTC-07:00",
+      "2026-06": "UTC-08:00",
+      "2026-07": "UTC+00:00"
+    },
+    "meses": [
+      "2026-04",
+      "2026-05",
+      "2026-06",
+      "2026-07"
+    ],
+    "pedidos_por_mes": 36,
+    "semilla": 2026,
+    "tasa_iva": "0.16",
+    "tasa_retencion": "0.08",
+    "tasa_retencion_anomala": "0.16"
+  },
+  "venta_erp": {
+    "2026-04": "43209.30",
+    "2026-05": "25753.20",
+    "2026-06": "29986.50",
+    "2026-07": "31345.00"
+  },
+  "ventas_pendientes": 5
+}

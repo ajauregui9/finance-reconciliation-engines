@@ -1,0 +1,49 @@
+{
+  "esquema": "parametros_generador_flujo/v1",
+  "semilla": 1313,
+  "corte": "2026-11-02",
+  "moneda": "MXN",
+  "dias_programacion": 105,
+  "saldos_bancarios": {
+    "cuentas": [
+      {"cuenta": "BANCO-UNO-0001", "banco": "BANCO UNO DEMO"},
+      {"cuenta": "BANCO-UNO-0002", "banco": "BANCO UNO DEMO"},
+      {"cuenta": "BANCO-DOS-0001", "banco": "BANCO DOS DEMO"}
+    ],
+    "monto_min": "500000.00",
+    "monto_max": "3000000.00"
+  },
+  "cxc_antiguedad": {
+    "clientes": 20,
+    "facturas": 80,
+    "plazos_dias": [15, 30, 45, 60, 90, 120],
+    "emision_dias_atras_max": 120,
+    "monto_min": "5000.00",
+    "monto_max": "300000.00",
+    "antiguedades_borde": [-100, -91, -90, -85, -7, 0, 1, 30, 31, 60, 61, 90, 91, 180],
+    "saldos_acreedores": {"registros": 2, "monto_min": "1000.00", "monto_max": "50000.00"},
+    "saldos_cero": 1
+  },
+  "cxp_programadas": {
+    "proveedores": 12,
+    "facturas": 60,
+    "monto_min": "10000.00",
+    "monto_max": "250000.00",
+    "dias_borde": [0, 6, 7, 90, 91],
+    "dias_vencidos": [-20, -1]
+  },
+  "nomina": {
+    "dia_quincena": 15,
+    "descripcion": "NOMINA QUINCENAL",
+    "monto_min": "400000.00",
+    "monto_max": "450000.00"
+  },
+  "impuestos": {
+    "dia_limite": 17,
+    "conceptos": [
+      {"impuesto": "ISR", "monto_min": "100000.00", "monto_max": "150000.00"},
+      {"impuesto": "IVA", "monto_min": "150000.00", "monto_max": "250000.00"},
+      {"impuesto": "IMSS", "monto_min": "50000.00", "monto_max": "80000.00"}
+    ]
+  }
+}

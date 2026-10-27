@@ -1,0 +1,94 @@
+[build-system]
+requires = ["setuptools>=65.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "finance-automation-blueprint"
+version = "0.1.0"
+description = "Deterministic Financial Reconciliation, Marketplace Auditing, Cashflow Forecasting & AI Guardrails"
+readme = "README.md"
+requires-python = ">=3.9"
+authors = [
+  { name = "Arturo Jáuregui" }
+]
+dependencies = [
+  "openpyxl>=3.1.0",
+  "defusedxml>=0.7.1",
+]
+
+[project.optional-dependencies]
+# Mantener sincronizado con requirements-dev.txt (lo que instala el CI).
+dev = [
+  "pytest>=7.4.0",
+  "pytest-cov>=4.1.0",
+  "coverage[toml]>=7.3.0",
+  "ruff>=0.6.0",
+  "mypy>=1.10.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = [
+  ".",
+  "examples",
+  "skills/credit-card-reconciliation",
+  "skills/marketplace-expenses/amazon",
+  "skills/pl-review-methodology/scripts",
+  "skills/cashflow-forecasting",
+  "skills/netsuite-gl-reconciliation",
+  "skills/security-guardian/scripts",
+  "skills/llm-extraction-qc",
+  "tools",
+]
+
+# ---------------------------------------------------------------- ruff
+[tool.ruff]
+target-version = "py39"
+line-length = 120
+# Datos sintéticos y muestras: no son código.
+extend-exclude = ["examples/synthetic", "examples/sample_data"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "B"]
+
+# ---------------------------------------------------------------- mypy
+[tool.mypy]
+python_version = "3.9"
+strict = true
+warn_unused_configs = true
+# Lista explícita de rutas que se revisan en modo estricto; todo motor nuevo
+# de skills/ se agrega aquí y debe pasar `mypy` sin errores.
+files = [
+  "tools",
+  "skills/security-guardian/guardia",
+  "skills/security-guardian/scripts",
+  "examples/generador_sintetico",
+  "examples/generate.py",
+  "skills/credit-card-reconciliation/conciliacion",
+  "skills/cashflow-forecasting/flujo",
+  "examples/generador_flujo",
+  "skills/netsuite-gl-reconciliation/netsuite_gl",
+  "skills/pl-review-methodology/scripts",
+  "skills/marketplace-expenses/amazon/cierre_amazon",
+  "examples/generador_amazon",
+  "skills/llm-extraction-qc/extraccion_llm",
+  "skills/llm-extraction-qc/run_llm_extraction.py",
+  "examples/generador_llm",
+]
+
+# ---------------------------------------------------------------- coverage
+[tool.coverage.run]
+# Se mide sobre TODO el código fuente: un archivo que ninguna prueba importa
+# aparece con 0%. Sin `omit`: no se esconde ningún módulo.
+source = ["skills", "tools", "examples"]
+branch = true
+
+[tool.coverage.report]
+# Los scripts de skills/ viven en carpetas sin __init__.py; sin esto coverage
+# no reporta los archivos que nadie importa.
+include_namespace_packages = true
+# Ratchet: arranca en la cobertura real medida al configurar el CI (redondeada
+# hacia abajo) y solo sube. El mínimo exigido es 80. Nunca bajarlo.
+fail_under = 90  # ratchet: medido 96.7% al integrar los motores clean-room; el mínimo exigido es 80%
+show_missing = true
+skip_covered = false

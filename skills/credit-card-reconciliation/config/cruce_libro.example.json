@@ -1,0 +1,22 @@
+{
+  "cuentas_tarjeta": {
+    "ALFA": "2105-001",
+    "BETA": "2105-002"
+  },
+  "esquema": "cruce_libro_config/v1",
+  "max_candidatos_reporte": 5,
+  "moneda_libro": "MXN",
+  "nombres": {
+    "largo_max_abreviatura": 3,
+    "largo_min_pieza": 3,
+    "largo_min_prefijo": 3,
+    "largo_min_raiz": 4,
+    "min_nombres_stopword": 4,
+    "stopwords_fijas": ["CV", "DE", "INC", "LLC", "LTD", "RL", "SA", "SAPI", "SC"]
+  },
+  "proveedores_cubeta": ["PRV-0999"],
+  "tolerancia_monto": "1.00",
+  "umbral_similitud": "0.50",
+  "ventana_busqueda_dias": {"max": 30, "min": -30},
+  "ventana_cubeta_dias": {"max": 5, "min": 0}
+}

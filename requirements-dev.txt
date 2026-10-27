@@ -1,0 +1,8 @@
+# Herramientas de desarrollo y CI. Mantener sincronizado con [project.optional-dependencies].dev
+-r requirements.txt
+pytest>=7.4.0
+pytest-cov>=4.1.0
+coverage[toml]>=7.3.0
+ruff>=0.6.0
+mypy>=1.10.0
+types-openpyxl>=3.1

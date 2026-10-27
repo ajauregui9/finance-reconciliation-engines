@@ -1,0 +1,30 @@
+{
+  "esquema": "auditoria_pl_config/v1",
+  "rubros": {
+    "ingreso": ["4"],
+    "costo": ["5"],
+    "gasto_venta": ["61"],
+    "gasto_admin": ["62"],
+    "bajo_ebitda": ["7"]
+  },
+  "cuentas_sin_polizas_manuales": ["4010"],
+  "madurez": {
+    "dias_minimos_tras_cierre": 3,
+    "cuentas_nomina": ["6130", "6210"],
+    "provisiones_obligatorias": ["2150", "2160"]
+  },
+  "bandas": {
+    "margen_bruto": {"minimo_pct": "40", "maximo_pct": "60", "favorable": "alto"},
+    "gasto_venta": {"minimo_pct": "15", "maximo_pct": "20", "favorable": "bajo"},
+    "gasto_admin": {"minimo_pct": "10", "maximo_pct": "20", "favorable": "bajo"},
+    "ebitda": {"minimo_pct": "10", "maximo_pct": "30", "favorable": "alto"}
+  },
+  "publicidad": {"cuenta": "6120", "objetivo_pct": "8", "alerta_pct": "12"},
+  "materialidad": {
+    "piso_monto": "20000",
+    "piso_pct_ingreso": "1",
+    "piso_mencion": "2000",
+    "variacion_pct_minima": "20",
+    "tope_materiales": 10
+  }
+}

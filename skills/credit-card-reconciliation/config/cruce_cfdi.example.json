@@ -1,0 +1,27 @@
+{
+  "afinidad_minima": "0.50",
+  "diagnostico": {
+    "banda_fuera_de_tolerancia": "5.00",
+    "margen_fuera_de_ventana_dias": 10
+  },
+  "esquema": "cruce_cfdi_config/v1",
+  "rfc_empresa": "RFC_EMPRESA_DEMO",
+  "rfcs_genericos": [
+    "XAXX010101000",
+    "XEXX010101000"
+  ],
+  "suma": {
+    "max_candidatos_por_emisor": 10,
+    "max_cfdis": 3,
+    "min_cfdis": 2
+  },
+  "tolerancias": {
+    "moneda_original": "1.00",
+    "suma": "1.00",
+    "uno_a_uno": "1.00"
+  },
+  "ventana_dias": {
+    "max": 10,
+    "min": -3
+  }
+}

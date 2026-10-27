@@ -1,0 +1,46 @@
+{
+  "casos": {
+    "cxc_saldo_acreedor": {
+      "registros": 2,
+      "suma": "-34547.11"
+    },
+    "cxc_saldo_cero": {
+      "registros": 1
+    },
+    "egresos_vencidos": {
+      "registros": 2,
+      "suma": "267810.60"
+    }
+  },
+  "corte": "2026-11-02",
+  "esquema": "totales_control_flujo/v2",
+  "fuentes": {
+    "cxc_antiguedad": {
+      "archivo": "cxc_antiguedad.csv",
+      "registros": 83,
+      "suma": "12778901.01"
+    },
+    "cxp_programadas": {
+      "archivo": "cxp_programadas.csv",
+      "registros": 62,
+      "suma": "7253242.48"
+    },
+    "impuestos": {
+      "archivo": "impuestos.csv",
+      "registros": 9,
+      "suma": "1092113.79"
+    },
+    "nomina": {
+      "archivo": "nomina.csv",
+      "registros": 7,
+      "suma": "3008031.42"
+    },
+    "saldos_bancarios": {
+      "archivo": "saldos_bancarios.csv",
+      "registros": 3,
+      "suma": "7881780.35"
+    }
+  },
+  "moneda": "MXN",
+  "semilla": 1313
+}

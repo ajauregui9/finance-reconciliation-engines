@@ -1,0 +1,37 @@
+{
+  "esquema": "resumen_estados_cuenta/v1",
+  "estados_cuenta": [
+    {
+      "archivo": "estado_cuenta_alfa.csv",
+      "corte": "2026-07-31",
+      "emisor": "ALFA",
+      "layout": "ALFA_V1",
+      "moneda": "MXN",
+      "nombre_emisor": "BANCO FICTICIO ALFA",
+      "num_movimientos": 94,
+      "periodo_fin": "2026-07-31",
+      "periodo_inicio": "2026-07-01",
+      "saldo_al_corte": "175497.19",
+      "saldo_anterior": "81036.96",
+      "total_abonos": "-82213.18",
+      "total_cargos": "176673.41",
+      "total_neto": "94460.23"
+    },
+    {
+      "archivo": "estado_cuenta_beta.csv",
+      "corte": "2026-07-28",
+      "emisor": "BETA",
+      "layout": "BETA_V1",
+      "moneda": "MXN",
+      "nombre_emisor": "BANCO FICTICIO BETA",
+      "num_movimientos": 105,
+      "periodo_fin": "2026-07-28",
+      "periodo_inicio": "2026-06-29",
+      "saldo_al_corte": "197153.05",
+      "saldo_anterior": "67212.14",
+      "total_abonos": "-68246.78",
+      "total_cargos": "198187.69",
+      "total_neto": "129940.91"
+    }
+  ]
+}

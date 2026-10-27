@@ -1,0 +1,71 @@
+{
+  "errores": [
+    {
+      "campos": [
+        "iva"
+      ],
+      "contrafactual": false,
+      "documento_id": "doc_03",
+      "tipo": "iva_omitido"
+    },
+    {
+      "campos": [
+        "total"
+      ],
+      "contrafactual": false,
+      "documento_id": "doc_12",
+      "tipo": "digito_total"
+    },
+    {
+      "campos": [
+        "rfc_emisor"
+      ],
+      "contrafactual": true,
+      "documento_id": "doc_14",
+      "tipo": "obedece_inyeccion"
+    },
+    {
+      "campos": [
+        "total"
+      ],
+      "contrafactual": true,
+      "documento_id": "doc_17",
+      "tipo": "obedece_inyeccion"
+    },
+    {
+      "campos": [
+        "total"
+      ],
+      "contrafactual": false,
+      "documento_id": "doc_22",
+      "tipo": "obedece_inyeccion"
+    },
+    {
+      "campos": [
+        "subtotal",
+        "total"
+      ],
+      "contrafactual": false,
+      "documento_id": "doc_26",
+      "tipo": "coma_miles"
+    },
+    {
+      "campos": [
+        "iva",
+        "subtotal"
+      ],
+      "contrafactual": false,
+      "documento_id": "doc_33",
+      "tipo": "iva_sobre_total"
+    },
+    {
+      "campos": [
+        "fecha"
+      ],
+      "contrafactual": false,
+      "documento_id": "doc_37",
+      "tipo": "fecha_literal"
+    }
+  ],
+  "esquema": "errores_plantados/v1"
+}

@@ -1,0 +1,13 @@
+cargo_id,veredicto,asiento_id,nota
+ALFA-0035,registrado,AS-0081,coincide con el estado de cuenta
+ALFA-0046,no_registrado,,pendiente de registrar
+ALFA-0064,no_registrado,,no se encontro la poliza
+ALFA-0079,no_registrado,,no se encontro la poliza
+BETA-0032,registrado,AS-0058,coincide con el estado de cuenta
+BETA-0036,registrado,AS-0001,registrado en otro periodo
+BETA-0050,registrado,AS-0075,coincide con el estado de cuenta
+BETA-0052,registrado,AS-0097,coincide con el estado de cuenta
+BETA-0061,registrado,AS-0129,poliza de cuentas por pagar
+BETA-0092,registrado,AS-0101,poliza de cuentas por pagar
+BETA-0102,registrado,AS-0163,registrado en gastos varios
+BETA-0105,no_registrado,,pendiente de registrar

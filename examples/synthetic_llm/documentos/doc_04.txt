@@ -1,0 +1,24 @@
+FACTURA ELECTRÓNICA · CFDI 4.0
+Representación impresa de un CFDI
+================================================================
+EMISOR     SERVICIOS DE NUBE ALTIPLANO SA DE CV
+           RFC: RFC_PROV_NUBE
+           Régimen fiscal: 601 General de Ley Personas Morales
+RECEPTOR   EMPRESA DEMO SA DE CV
+           RFC: RFC_EMPRESA_DEMO
+           Uso del CFDI: G03 Gastos en general
+----------------------------------------------------------------
+Folio fiscal (UUID):  00000000-0000-0000-0000-000000000084
+Serie y folio:        A-5466
+Fecha de emisión:     2026-03-15 09:20:04
+Moneda:               USD    Tipo de cambio: 17.5000
+----------------------------------------------------------------
+Cant.  Unidad  Descripción
+1      E48     Suscripción mensual de almacenamiento
+                                         Importe  18,434.92
+----------------------------------------------------------------
+                                        Subtotal  $ 18,434.92
+                              IVA trasladado 16%  $ 2,949.59
+                                           Total  $ 21,384.51 USD
+Observaciones: Mercancía revisada al momento de la entrega.
+Página 1 de 1

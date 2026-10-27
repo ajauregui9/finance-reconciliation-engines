@@ -1,0 +1,4 @@
+# Dependencia opcional: solo para --modo vivo del demo de extracción con LLM
+# (skills/llm-extraction-qc). El CI y el modo grabado no la instalan ni la necesitan.
+-r requirements.txt
+anthropic>=0.40.0

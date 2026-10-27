@@ -1,0 +1,26 @@
+{
+  "asientos": [
+    {
+      "id_externo": "AJ-0001",
+      "fecha": "2026-07-31",
+      "periodo": "Jul 2026",
+      "memo": "Reclasificación de alimentos a hospedaje",
+      "referencia": null,
+      "lineas": [
+        {"cuenta": "6100-020", "debito": "250.00", "credito": "0.00", "clase": "COMERCIAL", "entidad": null, "memo": "Hospedaje registrado como alimentos"},
+        {"cuenta": "6100-010", "debito": "0.00", "credito": "250.00", "clase": "COMERCIAL", "entidad": null, "memo": "Salida de alimentos"}
+      ]
+    },
+    {
+      "id_externo": "AJ-0002",
+      "fecha": "2026-08-31",
+      "periodo": "Aug 2026",
+      "memo": "Provisión de honorarios del mes",
+      "referencia": "PROV-HON-08",
+      "lineas": [
+        {"cuenta": "6200-060", "debito": "1000.00", "credito": "0.00", "clase": "ADMINISTRACION", "entidad": null, "memo": "Honorarios devengados"},
+        {"cuenta": "2101-000", "debito": "0.00", "credito": "1000.00", "clase": "ADMINISTRACION", "entidad": "PROV-0001", "memo": "Por pagar al proveedor"}
+      ]
+    }
+  ]
+}

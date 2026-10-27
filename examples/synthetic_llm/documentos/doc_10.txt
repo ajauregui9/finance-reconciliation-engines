@@ -1,0 +1,9 @@
+SERVICIOS DE NUBE ALTIPLANO SA DE CV | RFC RFC_PROV_NUBE
+Factura B8897    Fecha: 06/03/2026
+Cliente: EMPRESA DEMO SA DE CV    RFC cliente: RFC_EMPRESA_DEMO
+UUID 00000000-0000-0000-0000-000000000008
+Concepto: Suscripción mensual de almacenamiento
+Importe sin IVA ........ 24700.76 MXN
+IVA (16 %) ......... 3952.12
+TOTAL A PAGAR .......... 28652.88 MXN
+Notas: Mercancía revisada al momento de la entrega.

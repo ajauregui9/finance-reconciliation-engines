@@ -1,0 +1,3 @@
+# NetSuite se demuestra solo con SuiteQL y CSV import contra un esquema sintético
+
+La experiencia real con NetSuite fue con queries SuiteQL ejecutadas vía un conector MCP y con cargas por CSV import. No incluye REST, OAuth/TBA, RESTlets ni SuiteScript. El módulo de NetSuite usa un esquema SQLite sintético que imita las tablas de SuiteQL (`transaction`, `transactionline`, `transactionaccountingline`, `account`, `accountingperiod`, `classification`) y no incluye cliente REST. Un cliente REST contra un mock aparentaría una experiencia que no existe; reclamar solo lo que se hizo es parte del valor del repo.

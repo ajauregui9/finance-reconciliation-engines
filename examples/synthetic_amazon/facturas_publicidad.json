@@ -1,0 +1,33 @@
+{
+  "esquema": "facturas_publicidad/v1",
+  "facturas": [
+    {
+      "folio": "PUB-SINT-202604",
+      "iva": "1364.16",
+      "mes": "2026-04",
+      "subtotal": "8525.99",
+      "total": "9890.15"
+    },
+    {
+      "folio": "PUB-SINT-202605",
+      "iva": "1263.16",
+      "mes": "2026-05",
+      "subtotal": "7894.76",
+      "total": "9157.92"
+    },
+    {
+      "folio": "PUB-SINT-202606",
+      "iva": "1376.14",
+      "mes": "2026-06",
+      "subtotal": "8600.89",
+      "total": "9977.03"
+    },
+    {
+      "folio": "PUB-SINT-202607",
+      "iva": "1371.21",
+      "mes": "2026-07",
+      "subtotal": "8570.09",
+      "total": "9941.30"
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "esquema": "exportacion_pl/v1",
+  "periodo": "2026-09",
+  "fecha_extraccion": "2026-10-06",
+  "cuentas": [
+    {"cuenta": "4010", "nombre": "Venta de producto", "anterior": "2250000.00", "actual": "2370000.00", "polizas_manuales_actual": "-30000.00"},
+    {"cuenta": "4020", "nombre": "Otros ingresos", "anterior": "110000.00", "actual": "100000.00"},
+    {"cuenta": "5010", "nombre": "Costo de venta", "anterior": "1150000.00", "actual": "1200000.00"},
+    {"cuenta": "5020", "nombre": "Costo de envío", "anterior": "40000.00", "actual": "50000.00"},
+    {"cuenta": "6110", "nombre": "Comisiones de venta", "anterior": "180000.00", "actual": "190000.00"},
+    {"cuenta": "6120", "nombre": "Publicidad digital", "anterior": "200000.00", "actual": "260000.00"},
+    {"cuenta": "6130", "nombre": "Sueldos de venta", "anterior": "120000.00", "actual": "120000.00"},
+    {"cuenta": "6210", "nombre": "Sueldos administrativos", "anterior": "180000.00", "actual": "180000.00"},
+    {"cuenta": "6220", "nombre": "Renta de oficinas", "anterior": "70000.00", "actual": "70000.00"},
+    {"cuenta": "6230", "nombre": "Software y suscripciones", "anterior": "40000.00", "actual": "41500.00"},
+    {"cuenta": "6240", "nombre": "Honorarios profesionales", "anterior": "30000.00", "actual": "38000.00"},
+    {"cuenta": "6250", "nombre": "Mantenimiento de equipo", "anterior": "0.00", "actual": "30000.00"},
+    {"cuenta": "7010", "nombre": "Depreciación", "anterior": "25000.00", "actual": "25000.00"},
+    {"cuenta": "7020", "nombre": "Intereses bancarios", "anterior": "80000.00", "actual": "88000.00"}
+  ],
+  "marcas": [
+    {"marca": "Marca Norte", "venta": "1200000.00", "publicidad": "180000.00"},
+    {"marca": "Marca Sur", "venta": "800000.00", "publicidad": "56000.00"},
+    {"marca": "Marca Centro", "venta": "400000.00", "publicidad": "24000.00"}
+  ],
+  "provisiones": [
+    {"cuenta": "2150", "creado": "35000.00"},
+    {"cuenta": "2160", "creado": "12000.00"}
+  ]
+}

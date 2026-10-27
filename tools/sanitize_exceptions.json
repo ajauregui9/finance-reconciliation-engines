@@ -1,0 +1,17 @@
+{
+  "_comentario": "Lista versionada de excepciones del sanitizer (tools/sanitize_audit.py). Cada entrada exime las 'reglas' indicadas en los archivos cuya ruta, relativa a la raiz auditada, coincide con el glob 'ruta' y, si se indica, solo en las lineas donde aparece la regex 'coincide'. La 'justificacion' es obligatoria. Este archivo solo se revisa con las reglas estructuradas, porque necesita citar el vocabulario que exime. Agregar entradas solo con revision humana.",
+  "excepciones": [
+    {
+      "reglas": ["fecha_bitacora", "referencia_auditoria", "referencia_ticket", "aprobacion_cargo", "flujo_interno", "seudonimo_empresa"],
+      "ruta": "tests/test_sanitize_audit.py",
+      "coincide": "# fixture-sanitizer$",
+      "justificacion": "Fixtures de la prueba del sanitizer: cada linea marcada planta a proposito una huella narrativa, o un caso frontera parecido, para comprobar que se detecta o que no se marca."
+    },
+    {
+      "reglas": ["rfc", "uuid", "clabe", "correo", "ruta_macos", "ruta_linux", "llave_secreta"],
+      "ruta": "tests/test_sanitize_audit.py",
+      "coincide": "# fixture-sanitizer$",
+      "justificacion": "Fixtures de la prueba del sanitizer: identificadores falsos con formato valido (RFC, UUID, CLABE, correo, rutas, llave) para comprobar que las reglas estructuradas siguen detectandolos."
+    }
+  ]
+}

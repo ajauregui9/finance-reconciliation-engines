@@ -1,0 +1,19 @@
+{
+  "_comentario": "Valores de ejemplo. Los precios por millón de tokens son ilustrativos: ajústalos a la lista de precios vigente del modelo antes de usar la estimación en USD.",
+  "esquema": "config_extraccion_llm/v1",
+  "modelo": "claude-opus-5-5",
+  "max_tokens_salida": 1024,
+  "temperatura": 0,
+  "herramienta_estricta": true,
+  "rfc_empresa": "RFC_EMPRESA_DEMO",
+  "aceptar_rfc_marcador": true,
+  "monedas_permitidas": ["MXN", "USD"],
+  "limites": {
+    "max_documentos": 50,
+    "max_tokens": 100000
+  },
+  "precios_usd_por_millon": {
+    "entrada": "5.00",
+    "salida": "25.00"
+  }
+}

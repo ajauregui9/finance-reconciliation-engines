@@ -1,0 +1,29 @@
+{
+  "esquema": "config_cierre_amazon/v1",
+  "nota": "Valores de ejemplo redondos para los datos sinteticos de examples/synthetic_amazon. No son una calibracion real.",
+  "moneda": "MXN",
+  "huso_cierre": "UTC-06:00",
+  "tasa_iva": "0.16",
+  "tipos": {
+    "Pedido": "venta",
+    "Reembolso": "reembolso",
+    "Almacenaje": "cargo_periodo",
+    "Suscripción": "cargo_periodo",
+    "Ajuste": "cargo_periodo",
+    "Publicidad": "publicidad",
+    "Transferencia": "transferencia"
+  },
+  "publicidad": {
+    "fuente_autoritativa": "consola",
+    "tolerancia": "1.00"
+  },
+  "retencion": {
+    "tasa": "0.08",
+    "banda": "0.01"
+  },
+  "referencias_tarifas": {
+    "comision": {"min": "0.10", "max": "0.20"},
+    "logistica": {"min": "0.05", "max": "0.20"},
+    "otras_tarifas": {"min": "0.00", "max": "0.05"}
+  }
+}

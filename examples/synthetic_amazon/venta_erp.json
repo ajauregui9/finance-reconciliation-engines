@@ -1,0 +1,10 @@
+{
+  "esquema": "venta_erp/v1",
+  "nota": "Venta neta sin IVA por mes de pedido (huso de cierre), incluye lo que aún no se liquida.",
+  "venta_neta_por_mes_de_pedido": {
+    "2026-04": "43209.30",
+    "2026-05": "25753.20",
+    "2026-06": "29986.50",
+    "2026-07": "31345.00"
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "esquema": "flujo_config/v1",
+  "moneda": "MXN",
+  "insumos": {
+    "saldos_bancarios": "../../../examples/synthetic_flujo/saldos_bancarios.csv",
+    "cxc_antiguedad": "../../../examples/synthetic_flujo/cxc_antiguedad.csv",
+    "cxp_programadas": "../../../examples/synthetic_flujo/cxp_programadas.csv",
+    "nomina": "../../../examples/synthetic_flujo/nomina.csv",
+    "impuestos": "../../../examples/synthetic_flujo/impuestos.csv"
+  },
+  "curva_cobranza": [
+    {"tramo": "por_vencer", "dias_desde": null, "dias_hasta": 0, "pesos": ["0.60", "0.25", "0.10"]},
+    {"tramo": "vencido_1_30", "dias_desde": 1, "dias_hasta": 30, "pesos": ["0.50", "0.30", "0.10"]},
+    {"tramo": "vencido_31_60", "dias_desde": 31, "dias_hasta": 60, "pesos": ["0.30", "0.30", "0.20"]},
+    {"tramo": "vencido_61_90", "dias_desde": 61, "dias_hasta": 90, "pesos": ["0.20", "0.20", "0.20"]},
+    {"tramo": "vencido_mas_90", "dias_desde": 91, "dias_hasta": null, "pesos": ["0.10", "0.10"]}
+  ]
+}

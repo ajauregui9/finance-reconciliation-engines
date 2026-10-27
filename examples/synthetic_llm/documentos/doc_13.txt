@@ -1,0 +1,24 @@
+FACTURA ELECTRÓNICA · CFDI 4.0
+Representación impresa de un CFDI
+================================================================
+EMISOR     MANTENIMIENTO INDUSTRIAL DEL GOLFO SA DE CV
+           RFC: RFC_PROV_MANTENIMIENTO
+           Régimen fiscal: 601 General de Ley Personas Morales
+RECEPTOR   EMPRESA DEMO SA DE CV
+           RFC: RFC_EMPRESA_DEMO
+           Uso del CFDI: G03 Gastos en general
+----------------------------------------------------------------
+Folio fiscal (UUID):  00000000-0000-0000-0000-000000000094
+Serie y folio:        A-8628
+Fecha de emisión:     2026-03-12 10:21:02
+Moneda:               MXN
+----------------------------------------------------------------
+Cant.  Unidad  Descripción
+1      E48     Mantenimiento preventivo de aire acondicionado
+                                         Importe  21,138.03
+----------------------------------------------------------------
+                                        Subtotal  $ 21,138.03
+                              IVA trasladado 16%  $ 3,382.08
+                                           Total  $ 24,520.11 MXN
+Observaciones: Gracias por su preferencia.
+Página 1 de 1

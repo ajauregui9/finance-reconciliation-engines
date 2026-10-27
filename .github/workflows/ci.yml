@@ -1,0 +1,86 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    name: Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # Debe cubrir desde `requires-python` (pyproject.toml) hasta la última soportada.
+        python-version: ["3.9", "3.10", "3.11", "3.12"]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            requirements-dev.txt
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-dev.txt
+
+      - name: Lint (ruff)
+        run: ruff check .
+
+      - name: Type check (mypy --strict)
+        # Las rutas estrictas se listan en [tool.mypy].files de pyproject.toml.
+        run: mypy
+
+      - name: Tests with coverage
+        # Cobertura sobre todo el código fuente ([tool.coverage.run].source);
+        # fail_under en pyproject.toml es un ratchet que solo sube.
+        run: python -m pytest -q --cov --cov-report=term-missing
+
+      - name: Sanitizer gate (blocking)
+        # Todo lo que se publica (de docs/ solo se publican los ADRs).
+        # Los archivos sueltos se auditan desde la raíz para que las excepciones
+        # de tools/sanitize_exceptions.json (rutas relativas a la raíz) apliquen.
+        run: |
+          set -euo pipefail
+          rutas=(skills examples tools .github docs/adr pyproject.toml requirements.txt requirements-dev.txt requirements-llm.txt README.md GLOSSARY.md)
+          for ruta in "${rutas[@]}"; do
+            python tools/sanitize_audit.py audit "$ruta"
+          done
+          for prueba in tests/*.py; do
+            python tools/sanitize_audit.py audit "$prueba"
+          done
+
+      - name: Documentation references (blocking)
+        # Todo enlace relativo y toda ruta del repo citada en el Markdown publicable debe
+        # existir y publicarse. Las rutas publicables por omisión están en el propio script.
+        run: python tools/check_links.py
+
+      - name: Prompt guard self-test
+        run: python skills/security-guardian/scripts/prompt_guard.py --self-test
+
+      - name: LLM extraction demo (recorded responses, no API key)
+        # Respuestas grabadas sintéticas: valida el pipeline de evaluación, no la exactitud
+        # del modelo. Sin red ni llave; dos corridas deben dar los mismos bytes.
+        env:
+          ANTHROPIC_API_KEY: ""
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/llm_a" "$RUNNER_TEMP/llm_b"
+          python skills/llm-extraction-qc/run_llm_extraction.py --modo grabado --salida "$RUNNER_TEMP/llm_a"
+          python skills/llm-extraction-qc/run_llm_extraction.py --modo grabado --salida "$RUNNER_TEMP/llm_b"
+          cmp "$RUNNER_TEMP/llm_a/evaluacion.json" "$RUNNER_TEMP/llm_b/evaluacion.json"
+          cmp "$RUNNER_TEMP/llm_a/evaluacion.md" "$RUNNER_TEMP/llm_b/evaluacion.md"
+
+      # La compuerta de similitud (tools/similarity_gate.py) NO corre aquí: necesita
+      # el material de referencia privado, que nunca entra al repo. Se corre a mano antes de publicar.

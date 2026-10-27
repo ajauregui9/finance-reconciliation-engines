@@ -1,0 +1,30 @@
+{
+  "documento_id": "doc_24",
+  "esquema": "respuesta_grabada/v1",
+  "origen": "sintetico",
+  "respuesta": {
+    "content": [
+      {
+        "input": {
+          "fecha": "2026-03-23",
+          "iva": "1818.42",
+          "moneda": "MXN",
+          "rfc_emisor": "RFC_PROV_NUBE",
+          "rfc_receptor": "RFC_EMPRESA_DEMO",
+          "subtotal": "11365.13",
+          "total": "13183.55",
+          "uuid": "00000000-0000-0000-0000-000000000016"
+        },
+        "name": "registrar_cfdi",
+        "type": "tool_use"
+      }
+    ],
+    "model": "fixture-sintetico",
+    "stop_reason": "tool_use",
+    "usage": {
+      "input_tokens": 885,
+      "output_tokens": 79
+    }
+  },
+  "sha256_documento": "6b253f9853944311e1dc97981bad9172bf957c444266b5d5c33aa98abe1fd772"
+}
