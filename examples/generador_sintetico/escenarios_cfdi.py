@@ -100,7 +100,7 @@ def ventanas(ctx: Contexto) -> List[Escenario]:
             for caso, delta, dentro in casos for _ in range(CUOTAS["ventana"])]
 
 
-def _partes(ctx: Contexto, total: Decimal, n: int) -> Tuple[Decimal, ...]:
+def partir_monto(ctx: Contexto, total: Decimal, n: int) -> Tuple[Decimal, ...]:
     """Parte `total` en `n` montos libres, cada uno >= 15% del total."""
     for _ in range(MAX_REINTENTOS):
         cortes = sorted(ctx.entero(15, 85) for _ in range(n - 1))
@@ -132,7 +132,7 @@ def sumas(ctx: Contexto) -> List[Escenario]:
         comercio = ctx.elegir(_grandes(2500))
         cargo = nuevo_cargo(ctx, comercio, ctx.monto(max(comercio.rango[0], 600), comercio.rango[1]))
         cfdis = tuple(cfdi_comercio(ctx, comercio, p, cargo.fecha + dias(ctx.delta_en_ventana(0, 5)))
-                      for p in _partes(ctx, cargo.monto, n))
+                      for p in partir_monto(ctx, cargo.monto, n))
         extra: Tuple[Cfdi, ...] = ()
         if con_distractor:
             monto = _distractor(ctx, comercio, cargo.monto, tuple(c.total for c in cfdis))
@@ -211,7 +211,7 @@ def _emisor_generico_suma(ctx: Contexto) -> Escenario:
     """Dos comprobantes con RFC genérico de extranjero que suman el cargo pero son de emisores distintos."""
     comercio, otro = ctx.barajar(COMERCIOS_EXTRANJEROS)[:2]
     cargo = cargo_usd(ctx, comercio)
-    parte, resto = _partes(ctx, cargo.monto, 2)
+    parte, resto = partir_monto(ctx, cargo.monto, 2)
     cfdis = tuple(
         nuevo_cfdi(ctx, rfc_emisor=RFC_EXTRANJERO, nombre_emisor=nombre, serie="EXT", total=monto,
                    fecha=cargo.fecha + dias(ctx.delta_en_ventana(0, 5)), concepto="SERVICIOS DIGITALES",

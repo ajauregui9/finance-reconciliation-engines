@@ -1,9 +1,18 @@
-"""Motor del cruce cargo ↔ CFDI: asignación greedy en dos fases y diagnóstico de los cargos sin cruce.
+"""Motor del cruce cargo ↔ CFDI: asignación greedy en cuatro fases y diagnóstico de los cargos sin cruce.
 
-Fase 1 (uno a uno) termina por completo antes de la fase 2 (sumas): así un cruce
-uno a uno siempre gana sobre una suma. Cada fase ordena sus propuestas con un
-orden total y acepta una propuesta si su cargo sigue libre y todos sus CFDIs
-también. Ver specs/cruce_cfdi.md.
+La evidencia con afinidad de nombre siempre gana sobre la que solo coincide por
+monto y, dentro de cada nivel, un cruce uno a uno gana sobre una suma. Por eso las
+fases corren en este orden y cada una termina por completo antes de la siguiente:
+
+1. uno a uno con afinidad (`monto_exacto`, `moneda_original`, `monto_tolerancia`);
+2. sumas con afinidad (`suma`);
+3. uno a uno sin afinidad (`monto_sin_afinidad`);
+4. sumas sin afinidad (`monto_sin_afinidad`).
+
+Cada fase ordena sus propuestas con un orden total y acepta una propuesta si su
+cargo sigue libre y todos sus CFDIs también. Un cruce `monto_sin_afinidad` ocupa sus
+CFDIs como cualquier otro, pero no respalda al cargo: queda para revisión humana.
+Ver specs/cruce_cfdi.md.
 """
 from __future__ import annotations
 
@@ -11,9 +20,17 @@ from dataclasses import dataclass
 from decimal import Decimal
 from fractions import Fraction
 from itertools import combinations
-from typing import AbstractSet, Any, Dict, Iterable, List, Mapping, Sequence, Set, Tuple
+from typing import AbstractSet, Any, Dict, FrozenSet, Iterable, List, Mapping, Sequence, Set, Tuple
 
-from .cruce_cfdi_candidatos import Pool, armar_pool, calificar, delta_dias, en_ventana
+from .cruce_cfdi_candidatos import (
+    Pool,
+    afinidad_de,
+    alcanza_afinidad,
+    armar_pool,
+    calificar,
+    delta_dias,
+    en_ventana,
+)
 from .cruce_cfdi_config import ConfigCruce
 from .cruce_cfdi_modelo import (
     ESTADO_OK,
@@ -21,6 +38,7 @@ from .cruce_cfdi_modelo import (
     FUERA_DE_TOLERANCIA,
     FUERA_DE_VENTANA,
     MONEDA_LOCAL,
+    MONTO_SIN_AFINIDAD,
     MOTIVOS,
     NO_APLICA,
     SIN_CANDIDATO,
@@ -32,7 +50,10 @@ from .cruce_cfdi_modelo import (
     ResultadoCargo,
     ResultadoCruce,
 )
-from .cruce_cfdi_nombres import afinidad
+
+Avisos = Mapping[str, Tuple[str, ...]]
+# (¿es fase de sumas?, ¿exige afinidad?) en el orden en que corren las fases.
+FASES: Tuple[Tuple[bool, bool], ...] = ((False, True), (True, True), (False, False), (True, False))
 
 
 @dataclass(frozen=True)
@@ -46,15 +67,20 @@ class _Propuesta:
     afinidad: Fraction
 
 
-def _propuestas_individuales(cargos: Sequence[Cargo], pool: Pool, config: ConfigCruce) -> List[_Propuesta]:
+def _propuestas_individuales(cargos: Sequence[Cargo], pool: Pool, tomados: AbstractSet[str],
+                             config: ConfigCruce, con_afinidad: bool) -> List[_Propuesta]:
+    """Pares uno a uno con CFDI libre cuya afinidad alcanza (o no alcanza) el mínimo, según la fase."""
     propuestas = []
     for cargo in cargos:
         for cfdi, calificacion in pool.individuales(cargo, config):
+            parecido = afinidad_de(cargo, cfdi)
+            if cfdi.uuid in tomados or alcanza_afinidad(parecido, config) != con_afinidad:
+                continue
             delta = delta_dias(cargo, cfdi)
-            parecido = afinidad(cargo.descripcion, cfdi.nombre_emisor)
             clave = (calificacion.rango, -parecido, calificacion.diferencia, abs(delta), delta < 0,
                      cargo.cargo_id, cfdi.uuid)
-            propuestas.append(_Propuesta(clave, cargo, (cfdi,), calificacion.evidencia,
+            evidencia = calificacion.evidencia if con_afinidad else MONTO_SIN_AFINIDAD
+            propuestas.append(_Propuesta(clave, cargo, (cfdi,), evidencia,
                                          calificacion.diferencia, calificacion.moneda, parecido))
     return propuestas
 
@@ -88,27 +114,46 @@ def _sumas(cargo: Cargo, cfdis: Iterable[Cfdi], config: ConfigCruce) -> Tuple[Li
 
 
 def _con_afinidad(cargo: Cargo, cfdis: Iterable[Cfdi], config: ConfigCruce) -> List[Cfdi]:
-    minima = Fraction(config.afinidad_minima)
-    return [c for c in cfdis if afinidad(cargo.descripcion, c.nombre_emisor) >= minima]
+    return [c for c in cfdis if alcanza_afinidad(afinidad_de(cargo, c), config)]
 
 
 def _propuestas_de_suma(
-    cargos: Sequence[Cargo], pool: Pool, tomados: AbstractSet[str], config: ConfigCruce
-) -> Tuple[List[_Propuesta], Dict[str, Tuple[str, ...]]]:
+    cargos: Sequence[Cargo], pool: Pool, tomados: AbstractSet[str], config: ConfigCruce, con_afinidad: bool
+) -> Tuple[List[_Propuesta], Avisos]:
+    """Sumas de CFDIs libres de un emisor. Con afinidad, solo entran CFDIs que la alcanzan cada uno;
+    sin afinidad entran todos, y el tier lo decide la menor afinidad del grupo."""
     propuestas: List[_Propuesta] = []
     avisos: Dict[str, Tuple[str, ...]] = {}
     for cargo in cargos:
         libres = [c for c in pool.validos_en_ventana(cargo, config) if c.uuid not in tomados]
-        combos, avisos_cargo = _sumas(cargo, _con_afinidad(cargo, libres, config), config)
+        combos, avisos_cargo = _sumas(cargo, _con_afinidad(cargo, libres, config) if con_afinidad else libres, config)
         if avisos_cargo:
             avisos[cargo.cargo_id] = tuple(avisos_cargo)
         for combo in combos:
             diferencia = abs(sum((c.valor_mxn for c in combo), Decimal(0)) - cargo.monto)
-            parecido = min(afinidad(cargo.descripcion, c.nombre_emisor) for c in combo)
+            parecido = min(afinidad_de(cargo, c) for c in combo)
             lejania = max(abs(delta_dias(cargo, c)) for c in combo)
             clave = (len(combo), diferencia, -parecido, lejania, cargo.cargo_id, tuple(c.uuid for c in combo))
-            propuestas.append(_Propuesta(clave, cargo, combo, SUMA, diferencia, MONEDA_LOCAL, parecido))
+            evidencia = SUMA if alcanza_afinidad(parecido, config) else MONTO_SIN_AFINIDAD
+            propuestas.append(_Propuesta(clave, cargo, combo, evidencia, diferencia, MONEDA_LOCAL, parecido))
     return propuestas, avisos
+
+
+def _propuestas(fase: Tuple[bool, bool], cargos: Sequence[Cargo], pool: Pool, tomados: AbstractSet[str],
+                config: ConfigCruce) -> Tuple[List[_Propuesta], Avisos]:
+    es_suma, con_afinidad = fase
+    if es_suma:
+        return _propuestas_de_suma(cargos, pool, tomados, config, con_afinidad)
+    return _propuestas_individuales(cargos, pool, tomados, config, con_afinidad), {}
+
+
+def _unir_avisos(previos: Avisos, nuevos: Avisos) -> Dict[str, Tuple[str, ...]]:
+    """Avisos por cargo de todas las fases, sin repetir un mismo texto y en el orden en que aparecieron."""
+    salida = {cid: tuple(avisos) for cid, avisos in previos.items()}
+    for cid, avisos in nuevos.items():
+        actuales = salida.get(cid, ())
+        salida[cid] = actuales + tuple(a for a in dict.fromkeys(avisos) if a not in actuales)
+    return salida
 
 
 def _aceptar(propuestas: Iterable[_Propuesta], tomados: AbstractSet[str]) -> Tuple[_Propuesta, ...]:
@@ -194,14 +239,19 @@ def cruzar(cargos: Iterable[Cargo], cfdis: Iterable[Cfdi], config: ConfigCruce) 
     """Asigna CFDIs a cargos. Puro y determinista: no depende del orden de los insumos."""
     universo = sorted(cargos, key=lambda c: c.cargo_id)
     pool = armar_pool(cfdis, config)
-    cruzables = [c for c in universo if c.cruzable]
-    uno_a_uno = _aceptar(_propuestas_individuales(cruzables, pool, config), frozenset())
-    tomados = frozenset(c.uuid for p in uno_a_uno for c in p.cfdis)
-    resueltos = {p.cargo.cargo_id for p in uno_a_uno}
-    pendientes = [c for c in cruzables if c.cargo_id not in resueltos]
-    de_suma, avisos = _propuestas_de_suma(pendientes, pool, tomados, config)
-    sumas = _aceptar(de_suma, tomados)
-    asignadas: Mapping[str, _Propuesta] = {p.cargo.cargo_id: p for p in (*uno_a_uno, *sumas)}
+    pendientes = [c for c in universo if c.cruzable]
+    tomados: FrozenSet[str] = frozenset()
+    aceptadas: List[_Propuesta] = []
+    avisos: Avisos = {}
+    for fase in FASES:
+        propuestas, avisos_fase = _propuestas(fase, pendientes, pool, tomados, config)
+        nuevas = _aceptar(propuestas, tomados)
+        aceptadas.extend(nuevas)
+        tomados = tomados | {c.uuid for p in nuevas for c in p.cfdis}
+        resueltos = {p.cargo.cargo_id for p in nuevas}
+        pendientes = [c for c in pendientes if c.cargo_id not in resueltos]
+        avisos = _unir_avisos(avisos, avisos_fase)
+    asignadas: Mapping[str, _Propuesta] = {p.cargo.cargo_id: p for p in aceptadas}
     libres = frozenset(pool.todos) - {c.uuid for p in asignadas.values() for c in p.cfdis}
     resultados = tuple(
         _con_cruce(asignadas[c.cargo_id], avisos.get(c.cargo_id, ())) if c.cargo_id in asignadas

@@ -28,7 +28,7 @@ from conciliacion.pipeline import OpcionesPipeline, correr_pipeline
 RAIZ = Path(__file__).resolve().parents[1]
 SKILL = RAIZ / "skills" / "credit-card-reconciliation"
 SINTETICO = RAIZ / "examples" / "synthetic"
-TIERS = ("monto_exacto", "moneda_original", "monto_tolerancia", "suma")
+TIERS = ("monto_exacto", "moneda_original", "monto_tolerancia", "suma", "monto_sin_afinidad")
 
 Tasa = Dict[str, Tuple[int, int]]
 
@@ -141,7 +141,7 @@ class TestCadenaDeEtapas:
         assert insumos["estados_cuenta"] == {
             emisor: {"archivo": archivo, "sha256": sha256(SINTETICO / archivo)}
             for emisor, archivo in (("ALFA", "estado_cuenta_alfa.csv"), ("BETA", "estado_cuenta_beta.csv"))}
-        assert (insumos["cfdis"]["registros"], insumos["libro_mayor"]["lineas"]) == (250, 550)
+        assert (insumos["cfdis"]["registros"], insumos["libro_mayor"]["lineas"]) == (254, 550)
         assert insumos["veredictos"] == {"archivo": "veredictos_libro.csv", "filas": 12, "aplicados": 12,
                                          "en_espera": 0, "sha256": sha256(SINTETICO / "veredictos_libro.csv")}
 
@@ -252,6 +252,8 @@ class TestOraculo:
                 esperada = "fila_ininterpretable"
             elif fila["tipo_movimiento"] == "pago":
                 esperada = "no_aplica"
+            elif fila["cfdi"]["tier"] == "monto_sin_afinidad":
+                esperada = "cfdi_por_revisar"
             else:
                 esperada = {(True, True): "conciliado", (False, True): "falta_cfdi",
                             (True, False): "falta_registro", (False, False): "falta_cfdi_y_registro"}[
@@ -268,6 +270,19 @@ class TestOraculo:
         for marcado in esperado["marcados"]:
             assert marcado["familia"] in {o["familia"] for o in cola if o["registro_id"] == marcado["registro_id"]}
         assert sorted(k for k, f in filas.items() if f["situacion"] == "en_revision") == esperado["cargos_en_revision"]
+
+    def test_los_cfdis_sin_afinidad_quedan_por_revisar_y_en_el_reporte(
+            self, dos_corridas: Tuple[Path, Path], filas: Dict[str, Dict[str, Any]], oraculo: Dict[str, Any]) -> None:
+        esperados = sorted(c["cargo_id"] for c in oraculo["cargos"] if c["cfdi"]["evidencia"] == "monto_sin_afinidad")
+        reporte = json.loads((dos_corridas[0] / "reporte.json").read_text(encoding="utf-8"))
+        publicados = reporte["cfdi_por_revisar"]
+        assert [p["cargo_id"] for p in publicados] == esperados and len(esperados) == 3
+        assert {(p["situacion"], p["tier"], p["afinidad_nombre"]) for p in publicados} == {
+            ("cfdi_por_revisar", "monto_sin_afinidad", "0.00")}
+        assert [p["uuids"] for p in publicados] == [filas[c]["cfdi"]["uuids"] for c in esperados]
+        assert reporte["resumen"]["por_situacion"]["cfdi_por_revisar"]["cargos"] == 3
+        assert reporte["etapas"]["cruce_cfdi"]["resumen"]["por_revisar"] == 3
+        assert not any(filas[c]["situacion"] in {"conciliado", "falta_registro"} for c in esperados)
 
     def test_el_resumen_publicado_cuadra_con_las_filas(self, dos_corridas: Tuple[Path, Path],
                                                        filas: Dict[str, Dict[str, Any]]) -> None:

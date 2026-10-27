@@ -1,7 +1,8 @@
 """Reglas de candidatura del cruce cargo ↔ CFDI e índices del pool por fecha y por monto.
 
-Las definiciones (qué CFDI es candidato, qué tier califica) viven aquí y las
-comparten el motor y los invariantes. Los índices evitan recorrer el pool
+Las definiciones (qué CFDI es candidato, qué tier califica por monto y cuándo la
+afinidad de nombre alcanza el mínimo) viven aquí y las comparten el motor y los
+invariantes. Los índices evitan recorrer el pool
 completo por cada cargo: se localiza por fecha o por monto con búsqueda binaria.
 """
 from __future__ import annotations
@@ -10,6 +11,7 @@ from bisect import bisect_left, bisect_right
 from dataclasses import dataclass
 from datetime import date, timedelta
 from decimal import Decimal
+from fractions import Fraction
 from types import MappingProxyType
 from typing import Dict, Iterable, List, Mapping, Optional, Tuple
 
@@ -24,6 +26,7 @@ from .cruce_cfdi_modelo import (
     Cargo,
     Cfdi,
 )
+from .cruce_cfdi_nombres import afinidad
 
 RANGO_TIER = {MONTO_EXACTO: 0, MONEDA_ORIGINAL: 1, MONTO_TOLERANCIA: 2}
 
@@ -64,6 +67,16 @@ def falla_solo_por_generico(cfdi: Cfdi, config: ConfigCruce) -> bool:
     hay_generico = cfdi.rfc_receptor in genericos or cfdi.rfc_emisor in genericos
     return (cfdi.direccion == RECIBIDO and cfdi.tipo_comprobante in TIPOS_CON_EVIDENCIA
             and receptor_aceptable and hay_generico)
+
+
+def afinidad_de(cargo: Cargo, cfdi: Cfdi) -> Fraction:
+    """Afinidad entre la descripción del cargo y la razón social del emisor del CFDI."""
+    return afinidad(cargo.descripcion, cfdi.nombre_emisor)
+
+
+def alcanza_afinidad(parecido: Fraction, config: ConfigCruce) -> bool:
+    """True si la afinidad llega a `afinidad_minima` (el umbral es inclusivo)."""
+    return parecido >= Fraction(config.afinidad_minima)
 
 
 def calificar(cargo: Cargo, cfdi: Cfdi, config: ConfigCruce) -> Optional[Calificacion]:

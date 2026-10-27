@@ -92,6 +92,20 @@ def revision_humana(revision: Revision, filas: Sequence[FilaCargo]) -> Dict[str,
     }
 
 
+_CAMPOS_POR_REVISAR = ("uuids", "tier", "afinidad_nombre", "diferencia", "moneda_diferencia")
+
+
+def cfdi_por_revisar(filas: Sequence[FilaCargo]) -> List[Dict[str, Any]]:
+    """Cargos cuyo CFDI solo coincide por monto, con su afinidad de nombre, ordenados por `cargo_id`."""
+    salida = []
+    for fila in sorted(filas, key=lambda f: f.cargo_id):
+        if fila.cfdi.por_revisar:
+            cfdi = fila_a_dict(fila)["cfdi"]
+            salida.append({"cargo_id": fila.cargo_id, "situacion": fila.situacion,
+                           **{campo: cfdi[campo] for campo in _CAMPOS_POR_REVISAR}})
+    return salida
+
+
 def armar_reporte(*, insumos: Insumos, motivos: Sequence[MotivoProvisional], revision: Revision,
                   cfdi: EtapaCfdi, libro: EtapaLibro, candados: Sequence[Candado], resumen: Mapping[str, Any],
                   filas: Sequence[FilaCargo], artefactos: Mapping[str, str]) -> Dict[str, Any]:
@@ -105,6 +119,7 @@ def armar_reporte(*, insumos: Insumos, motivos: Sequence[MotivoProvisional], rev
         "candados": [candado_a_dict(c) for c in candados],
         "resumen": dict(resumen),
         "revision_humana": revision_humana(revision, filas),
+        "cfdi_por_revisar": cfdi_por_revisar(filas),
         "veredictos_en_espera": _en_espera(insumos),
         "artefactos": dict(sorted(artefactos.items())),
     }

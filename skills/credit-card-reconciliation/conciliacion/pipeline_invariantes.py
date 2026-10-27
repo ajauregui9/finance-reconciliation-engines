@@ -26,8 +26,8 @@ from .cruce_libro_modelo import (
     ORIGEN_VEREDICTO,
 )
 from .montos import texto_monto
-from .pipeline_filas import FilaCargo
-from .pipeline_modelo import ETAPA_CFDI, ETAPA_LIBRO, ETAPA_PIPELINE, SITUACION_EN_REVISION, SITUACIONES, Candado
+from .pipeline_filas import SITUACION_CFDI_POR_REVISAR, SITUACIONES_FILA, FilaCargo
+from .pipeline_modelo import ETAPA_CFDI, ETAPA_LIBRO, ETAPA_PIPELINE, SITUACION_EN_REVISION, Candado
 from .pipeline_revision import ORIGEN_CARGO, ORIGEN_CFDI, Observacion
 
 CERO = Decimal("0.00")
@@ -72,7 +72,7 @@ def resumir(filas: Sequence[FilaCargo], control: Mapping[str, Decimal]) -> Dict[
     return {
         "total": _bolsa(filas),
         "por_emisor": _por_emisor(filas, control),
-        "por_situacion": _agrupar(filas, lambda f: f.situacion, SITUACIONES),
+        "por_situacion": _agrupar(filas, lambda f: f.situacion, SITUACIONES_FILA),
         "cfdi": {
             "por_tier": _agrupar(filas, lambda f: f.cfdi.tier, EVIDENCIAS),
             "por_motivo": _agrupar(filas, lambda f: f.cfdi.motivo, MOTIVOS),
@@ -179,6 +179,18 @@ def _cuarentena(filas: Sequence[FilaCargo]) -> List[str]:
             if bool(f.revision) != (f.situacion == SITUACION_EN_REVISION)]
 
 
+def _candidato_por_revisar(filas: Sequence[FilaCargo]) -> List[str]:
+    """Un CFDI que solo coincide por monto nunca cuenta como respaldo y publica su afinidad."""
+    problemas = []
+    for f in filas:
+        esperado = f.cfdi.por_revisar and not f.revision
+        if esperado != (f.situacion == SITUACION_CFDI_POR_REVISAR):
+            problemas.append(f"{f.cargo_id}: tier {f.cfdi.tier} con situación {f.situacion}")
+        if f.cfdi.por_revisar and f.cfdi.afinidad is None:
+            problemas.append(f"{f.cargo_id}: tier {f.cfdi.tier} sin afinidad publicada")
+    return problemas
+
+
 def _cola_completa(filas: Sequence[FilaCargo], cola: Sequence[Observacion]) -> List[str]:
     """Cada observación llega a la fila de su cargo o de su CFDI asignado; la de un CFDI libre solo va a la cola."""
     por_cargo = {f.cargo_id: f for f in filas}
@@ -215,4 +227,5 @@ def invariantes_de_filas(filas: Sequence[FilaCargo], resumen: Mapping[str, Any],
         _candado("totales_resumen", _totales_resumen(filas, resumen)),
         _candado("cuarentena", _cuarentena(filas)),
         _candado("cola_completa", _cola_completa(filas, cola)),
+        _candado("candidato_por_revisar", _candidato_por_revisar(filas)),
     )

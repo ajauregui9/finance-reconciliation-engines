@@ -94,8 +94,9 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         print(f"cruce_cfdi: no se puede escribir {args.salida}: {exc}", file=sys.stderr)
         return SALIDA_INSUMO_INVALIDO
     resumen = documento["resumen"]
-    print(f"cruce_cfdi: {resumen['cargos']} cargos, {resumen['con_cruce']} con cruce, "
-          f"{resumen['sin_cruce']} sin cruce; invariantes cumplidos; salida en {args.salida}")
+    print(f"cruce_cfdi: {resumen['cargos']} cargos, {resumen['respaldados']} respaldados, "
+          f"{resumen['por_revisar']} con candidato por revisar, {resumen['sin_cruce']} sin cruce; "
+          f"invariantes cumplidos; salida en {args.salida}")
     return SALIDA_OK
 
 

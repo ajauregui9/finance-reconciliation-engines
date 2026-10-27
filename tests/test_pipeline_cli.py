@@ -106,7 +106,8 @@ class TestCorridaCompleta:
                                  "tipo_movimiento", "estado", "motivo_fila", "situacion", "provisional",
                                  "cfdi", "libro_mayor", "revision"}
             assert set(fila["cfdi"]) == {"uuids", "tier", "motivo_sin_cruce", "diferencia",
-                                         "moneda_diferencia", "delta_dias"}
+                                         "moneda_diferencia", "delta_dias", "afinidad_nombre"}
+            assert (fila["cfdi"]["afinidad_nombre"] is None) == (fila["cfdi"]["tier"] is None)
             assert set(fila["libro_mayor"]) == {"asiento_id", "origen", "riesgo_cubeta", "motivo_sin_cruce",
                                                 "propuesta_asiento_id", "conflicto", "veredicto"}
             assert fila["provisional"] is False and isinstance(fila["revision"], list)

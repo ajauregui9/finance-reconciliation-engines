@@ -5,8 +5,14 @@ Reglas de candidatura que el oráculo supone (y documenta el README):
   delta dentro de la ventana. Uno a uno: |valor firmado - monto| <= tolerancia,
   en pesos o, si ambos están en USD, en dólares.
 - Suma: 2 o 3 CFDIs candidatos del emisor del comercio (RFC no genérico). Los
-  tiers uno a uno tienen precedencia: un cargo resuelto uno a uno no llega al
-  tier de suma, y un CFDI reclamado uno a uno por otro cargo no entra en sumas.
+  tiers uno a uno con afinidad tienen precedencia: un cargo resuelto así no llega
+  al tier de suma, y un CFDI reclamado así por otro cargo no entra en sumas.
+- Afinidad: un cruce solo por monto también es un cruce (`monto_sin_afinidad`, por
+  revisar) y se decide después de todos los cruces con afinidad. Por eso, para un
+  cargo sin cruce esperado o con un cruce por revisar, también cuenta la suma de
+  cualquier otro emisor no genérico hecha con CFDIs que ningún cruce anterior
+  reclama; y un CFDI que se supone sin afinidad no comparte ninguna inicial de
+  palabra con la descripción del cargo.
 - Asiento candidato: línea en una cuenta de tarjeta (2105-*) del lado correcto,
   con |importe - |monto|| <= tolerancia y a no más de 30 días del cargo.
 Cualquier candidato fuera de lo esperado, lo prohibido o el grupo de empate es
@@ -19,10 +25,12 @@ from __future__ import annotations
 from collections import Counter
 from itertools import combinations
 from decimal import Decimal
-from typing import Dict, FrozenSet, Iterable, List, Set, Tuple
+from typing import Dict, FrozenSet, Iterable, List, Mapping, Set, Tuple
 
+from .afinidad import CASO_EMPATE, EVIDENCIA_SIN_AFINIDAD, nombres_ajenos
 from .catalogo import EMISORES
 from .config import LIBRO_DESFASE_MAX, LIBRO_DESFASE_MIN, RFC_EMPRESA, RFCS_GENERICOS, ConfigGenerador
+from .estado_cuenta import descripcion_cruda
 from .modelo import Asiento, Cargo, Cfdi, Datos, Expectativa, LineaMayor
 from .inyecciones import verificar_inyecciones
 from .veredictos import verificar_veredictos
@@ -50,12 +58,16 @@ def _uno_a_uno(cargo: Cargo, candidatos: List[Cfdi], tol: Decimal) -> Set[str]:
     return salida
 
 
-def _sumas(cargo: Cargo, candidatos: List[Cfdi], tol: Decimal) -> Set[FrozenSet[str]]:
+def _sumas(cargo: Cargo, candidatos: List[Cfdi], tol: Decimal, *, ajenas: bool = False) -> Set[FrozenSet[str]]:
+    """Grupos de 2 o 3 CFDIs de un mismo RFC no genérico que suman el monto: del emisor del comercio o,
+    con `ajenas`, de cualquier otro emisor (una suma sin afinidad también es un cruce)."""
     rfc = cargo.comercio.rfc if cargo.comercio else None
-    if rfc is None or rfc in RFCS_GENERICOS:
-        return set()
-    propios = [u for u in candidatos if u.rfc_emisor == rfc]
-    return {frozenset(u.uuid for u in combo) for k in (2, 3) for combo in combinations(propios, k)
+    grupos: Dict[str, List[Cfdi]] = {}
+    for u in candidatos:
+        if u.rfc_emisor not in RFCS_GENERICOS and (u.rfc_emisor != rfc) == ajenas:
+            grupos.setdefault(u.rfc_emisor, []).append(u)
+    return {frozenset(u.uuid for u in combo) for propios in grupos.values() for k in (2, 3)
+            for combo in combinations(propios, k)
             if abs(sum(u.valor_firmado_mxn for u in combo) - cargo.monto) <= tol}
 
 
@@ -83,27 +95,57 @@ def _exclusividad(expectativas: Tuple[Expectativa, ...]) -> List[str]:
 
 
 def _reclamados_uno_a_uno(expectativas: Iterable[Expectativa]) -> Dict[str, str]:
-    """UUID -> cargo que lo reclama en un tier uno a uno."""
+    """UUID -> cargo que lo reclama en un tier uno a uno con afinidad (la primera fase del motor)."""
     return {u: e.clave_cargo for e in expectativas if e.cfdi.evidencia in EVIDENCIAS_UNO_A_UNO
             for u in e.cfdi.esperados}
 
 
+def _reclamados_antes_de_sumas_ajenas(expectativas: Iterable[Expectativa]) -> Dict[str, str]:
+    """UUID -> cargo que lo reclama en una fase anterior a las sumas sin afinidad (todas salvo esas sumas)."""
+    return {u: e.clave_cargo for e in expectativas if e.cfdi.evidencia is not None
+            and not (e.cfdi.evidencia == EVIDENCIA_SIN_AFINIDAD and len(e.cfdi.esperados) > 1)
+            for u in e.cfdi.esperados}
+
+
+def _sumas_posibles(cargo: Cargo, exp: Expectativa, candidatos: List[Cfdi], reclamados: Tuple[Dict[str, str], ...],
+                    tol: Decimal) -> Set[FrozenSet[str]]:
+    """Sumas que el motor podría formar para el cargo, según la fase en que competirían."""
+    if exp.cfdi.evidencia in EVIDENCIAS_UNO_A_UNO:
+        return set()
+    cid, (afines, previos) = cargo.cargo_id, reclamados
+    sumas = _sumas(cargo, [u for u in candidatos if afines.get(u.uuid, cid) == cid], tol)
+    if exp.cfdi.evidencia in (None, EVIDENCIA_SIN_AFINIDAD):
+        sumas |= _sumas(cargo, [u for u in candidatos if previos.get(u.uuid, cid) == cid], tol, ajenas=True)
+    return sumas
+
+
 def _verificar_cfdi(cargo: Cargo, exp: Expectativa, cfdis: Tuple[Cfdi, ...], grupo: Set[str],
-                    reclamados: Dict[str, str], config: ConfigGenerador) -> List[str]:
+                    reclamados: Tuple[Dict[str, str], ...], config: ConfigGenerador) -> List[str]:
     cid, tol = cargo.cargo_id, config.tolerancia_monto
     candidatos = candidatos_cfdi(cargo, cfdis, config.ventana_min, config.ventana_max)
     permitidos = set(exp.cfdi.esperados) | set(exp.cfdi.prohibidos) | grupo
     violaciones = [f"{cid}: candidato 1 a 1 no previsto {u}"
                    for u in sorted(_uno_a_uno(cargo, candidatos, tol) - permitidos)]
-    libres = [u for u in candidatos if reclamados.get(u.uuid, cid) == cid]
-    sumas = set() if exp.cfdi.evidencia in EVIDENCIAS_UNO_A_UNO else _sumas(cargo, libres, tol)
-    esperada = {frozenset(exp.cfdi.esperados)} if exp.cfdi.evidencia == "suma" else set()
+    sumas = _sumas_posibles(cargo, exp, candidatos, reclamados, tol)
+    es_suma = exp.cfdi.evidencia == "suma" or (exp.cfdi.evidencia == EVIDENCIA_SIN_AFINIDAD
+                                               and len(exp.cfdi.esperados) > 1)
+    esperada = {frozenset(exp.cfdi.esperados)} if es_suma else set()
     violaciones += [f"{cid}: suma no prevista {sorted(s)}" for s in sorted(sumas - esperada, key=sorted)]
     if esperada and not esperada <= sumas:
         violaciones.append(f"{cid}: la suma esperada no es candidata")
     fuera = set(exp.cfdi.esperados) - {u.uuid for u in candidatos}
     violaciones += [f"{cid}: CFDI esperado fuera de candidatura {u}" for u in sorted(fuera)]
     return violaciones
+
+
+def _verificar_afinidad(cargo: Cargo, exp: Expectativa, por_uuid: Mapping[str, Cfdi]) -> List[str]:
+    """Lo que se supone sin afinidad (lo esperado por revisar y el señuelo de un empate) lo es de verdad."""
+    supuestos = list(exp.cfdi.esperados) if exp.cfdi.evidencia == EVIDENCIA_SIN_AFINIDAD else []
+    if CASO_EMPATE in exp.casos:
+        supuestos += list(exp.cfdi.prohibidos)
+    descripcion = descripcion_cruda(cargo)
+    return [f"{cargo.cargo_id}: el CFDI {u} se supone sin afinidad y su emisor comparte inicial con el cargo"
+            for u in supuestos if u in por_uuid and not nombres_ajenos(descripcion, por_uuid[u].nombre_emisor)]
 
 
 def _verificar_libro(cargo: Cargo, exp: Expectativa, asientos: Tuple[Asiento, ...],
@@ -128,7 +170,8 @@ def verificar(datos: Datos) -> Tuple[str, ...]:
     grupo_cfdi = {c: set(g.cfdis) for g in datos.grupos for c in g.cargos}
     grupo_libro = {c: set(g.asientos) for g in datos.grupos for c in g.cargos}
     por_id = {a.asiento_id: a for a in datos.asientos}
-    reclamados = _reclamados_uno_a_uno(datos.expectativas)
+    por_uuid = {c.uuid: c for c in datos.cfdis}
+    reclamados = (_reclamados_uno_a_uno(datos.expectativas), _reclamados_antes_de_sumas_ajenas(datos.expectativas))
     violaciones = _exclusividad(datos.expectativas)
     faltantes = {c.cargo_id for c in datos.cargos} ^ set(expectativas)
     violaciones += [f"{c}: cargo sin expectativa o expectativa sin cargo" for c in sorted(faltantes)]
@@ -138,6 +181,7 @@ def verificar(datos: Datos) -> Tuple[str, ...]:
             continue
         violaciones += _verificar_cfdi(cargo, exp, datos.cfdis, grupo_cfdi.get(cargo.cargo_id, set()),
                                        reclamados, datos.config)
+        violaciones += _verificar_afinidad(cargo, exp, por_uuid)
         violaciones += _verificar_libro(cargo, exp, datos.asientos, por_id,
                                         grupo_libro.get(cargo.cargo_id, set()), datos.config.tolerancia_monto)
     violaciones += verificar_veredictos(datos)

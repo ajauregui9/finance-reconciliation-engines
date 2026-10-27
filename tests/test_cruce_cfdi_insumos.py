@@ -142,7 +142,7 @@ class TestArchivos:
     def test_lee_los_insumos_sinteticos(self) -> None:
         cargos = leer_cargos(SINTETICOS / "universo_cargos_esperado.jsonl")
         cfdis = leer_cfdis(SINTETICOS / "cfdis.jsonl")
-        assert (len(cargos), len(cfdis)) == (199, 250)
+        assert (len(cargos), len(cfdis)) == (199, 254)
         assert sum(1 for c in cargos if c.fecha is None) == 2
         assert all(isinstance(c.monto, Decimal) for c in cargos)
 

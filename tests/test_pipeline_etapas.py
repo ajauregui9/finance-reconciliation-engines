@@ -67,7 +67,7 @@ class TestLecturaDeInsumos:
         insumos = leer_insumos(OpcionesPipeline(datos=SINTETICO))
         assert len(insumos.veredictos) == 12 and insumos.en_espera == ()
         assert motivos_provisional(OpcionesPipeline(datos=SINTETICO), insumos) == ()
-        assert insumos.huellas["cfdis"]["registros"] == len(insumos.cfdis) == 250
+        assert insumos.huellas["cfdis"]["registros"] == len(insumos.cfdis) == 254
 
     def test_universo_parcial_separa_los_veredictos_en_espera(self) -> None:
         opciones = OpcionesPipeline(datos=SINTETICO, estados_omitidos=("BETA",))

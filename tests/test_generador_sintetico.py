@@ -27,6 +27,8 @@ for rel in ("examples", "tools"):
         sys.path.insert(0, p)
 
 import generador_sintetico as gs  # noqa: E402
+from generador_sintetico import afinidad  # noqa: E402
+from generador_sintetico.contexto import Contexto  # noqa: E402
 import sanitize_audit  # noqa: E402
 
 CENTAVO = Decimal("0.01")
@@ -61,6 +63,9 @@ CASOS_MINIMOS = {
     "libro_no_registrado": 20, "libro_descartado_por_nombre": 2, "libro_nomina_distractor": 2,
 }
 MONTO_TXT = re.compile(r"^-?\d+\.\d{2}$")
+CASOS_AFINIDAD = ("afinidad_emisor_ajeno", "afinidad_suma_emisor_ajeno", "empate_monto_afinidad",
+                  "afinidad_descriptor_agregador")
+PALABRA = re.compile(r"[A-Z0-9]+")
 
 
 # ---------------------------------------------------------------- utilidades
@@ -141,6 +146,11 @@ def _delta(cfdi: dict, cargo: dict) -> int:
 def _valor_firmado(cfdi: dict) -> Decimal:
     total = Decimal(cfdi["total_mxn"])
     return -total if cfdi["tipo_comprobante"] == "E" else total
+
+
+def _iniciales(texto: str) -> set:
+    """Iniciales de las palabras de 3+ caracteres que no son solo dígitos (la afinidad exige inicial común)."""
+    return {p[0] for p in PALABRA.findall(texto.upper()) if len(p) >= 3 and not p.isdigit()}
 
 
 def _recorrer(valor):
@@ -361,6 +371,10 @@ class TestVolumenYCasosBorde(_ConSalida):
                     self.assertEqual(cfdis[0]["moneda"], "USD")
                     self.assertEqual(Decimal(cfdis[0]["total"]), Decimal(cargo["monto_original"]))
                     self.assertGreater(diferencia, tol)
+                elif evidencia == "monto_sin_afinidad":
+                    self.assertIn(len(cfdis), (1, 2, 3))
+                    self.assertEqual(len({c["rfc_emisor"] for c in cfdis}), 1)
+                    self.assertLessEqual(diferencia, tol)
                 else:
                     self.fail(f"evidencia desconocida: {evidencia}")
 
@@ -677,6 +691,101 @@ class TestDineroYDatosFicticios(_ConSalida):
                 rutas = gs.escribir_salida(gs.generar(gs.ConfigGenerador(semilla=semilla)), Path(tmp))
                 alertas = [(r.name, a) for r in rutas for a in sanitize_audit.audit_file(str(r), reglas)]
             self.assertEqual(alertas, [], semilla)
+
+
+# ------------------------------------------------ afinidad de nombre
+class TestAfinidadSembrada(_ConSalida):
+    """Casos donde solo coincide el monto: el cruce queda por revisar y el emisor ajeno nunca respalda."""
+
+    def _ajeno(self, cargo_id: str, uuid: str) -> bool:
+        return not _iniciales(self.universo[cargo_id]["descripcion"]) & _iniciales(self.cfdis[uuid]["nombre_emisor"])
+
+    def test_siembra_un_caso_de_cada_tipo(self):
+        for caso in CASOS_AFINIDAD:
+            with self.subTest(caso=caso):
+                self.assertEqual(len(self._con_caso(caso)), 1)
+
+    def test_monto_exacto_de_un_emisor_ajeno(self):
+        (o,) = self._con_caso("afinidad_emisor_ajeno")
+        cargo, (uuid,) = self.universo[o["cargo_id"]], o["cfdi"]["esperados"]
+        self.assertEqual((o["cfdi"]["evidencia"], o["cfdi"]["prohibidos"]), ("monto_sin_afinidad", []))
+        self.assertEqual(Decimal(self.cfdis[uuid]["total_mxn"]), Decimal(cargo["monto"]))
+        self.assertTrue(self._ajeno(o["cargo_id"], uuid))
+        self.assertNotIn("sin_cfdi", o["casos"])
+
+    def test_suma_de_un_emisor_ajeno(self):
+        (o,) = self._con_caso("afinidad_suma_emisor_ajeno")
+        cfdis = [self.cfdis[u] for u in o["cfdi"]["esperados"]]
+        self.assertEqual((o["cfdi"]["evidencia"], len(cfdis)), ("monto_sin_afinidad", 2))
+        self.assertEqual(len({c["rfc_emisor"] for c in cfdis}), 1)
+        self.assertEqual(sum(_valor_firmado(c) for c in cfdis), Decimal(self.universo[o["cargo_id"]]["monto"]))
+        self.assertTrue(all(self._ajeno(o["cargo_id"], c["uuid"]) for c in cfdis))
+
+    def test_empate_de_monto_gana_el_cfdi_del_comercio(self):
+        (o,) = self._con_caso("empate_monto_afinidad")
+        cargo = self.universo[o["cargo_id"]]
+        (propio,), (ajeno,) = o["cfdi"]["esperados"], o["cfdi"]["prohibidos"]
+        self.assertEqual(o["cfdi"]["evidencia"], "monto_exacto")
+        self.assertEqual(self.cfdis[propio]["total_mxn"], self.cfdis[ajeno]["total_mxn"])
+        self.assertEqual(_delta(self.cfdis[ajeno], cargo), 0)
+        self.assertGreater(abs(_delta(self.cfdis[propio], cargo)), 0)
+        self.assertTrue(self._ajeno(o["cargo_id"], ajeno))
+        self.assertFalse(self._ajeno(o["cargo_id"], propio))
+
+    def test_descriptor_de_pasarela_que_no_nombra_al_comercio(self):
+        (o,) = self._con_caso("afinidad_descriptor_agregador")
+        (uuid,) = o["cfdi"]["esperados"]
+        self.assertTrue(self.universo[o["cargo_id"]]["descripcion"].startswith("PGDEMO *PEDIDO "))
+        self.assertEqual(o["cfdi"]["evidencia"], "monto_sin_afinidad")
+        self.assertTrue(self._ajeno(o["cargo_id"], uuid))
+        self.assertIsNone(o["libro_mayor"]["esperado"])
+
+    def test_no_toca_veredictos_inyecciones_ni_empates(self):
+        sembrados = {o["cargo_id"] for caso in CASOS_AFINIDAD for o in self._con_caso(caso)}
+        self.assertEqual(len(sembrados), len(CASOS_AFINIDAD))
+        self.assertFalse(sembrados & {v.cargo_id for v in self.datos.veredictos})
+        self.assertFalse(sembrados & {s.cargo_id for s in self.datos.inyecciones})
+        self.assertTrue(all(self.por_cargo[c]["grupo_empate"] is None for c in sembrados))
+
+    def test_los_cfdis_nuevos_continuan_el_folio_de_su_serie(self):
+        series = Counter((c["rfc_emisor"], c["nombre_emisor"], c["serie"], c["folio"]) for c in self.cfdis.values())
+        self.assertEqual([k for k, n in series.items() if n > 1], [])
+
+    def test_autoverificacion_detecta_un_emisor_que_si_se_parece(self):
+        (o,) = self._con_caso("afinidad_emisor_ajeno")
+        (uuid,) = o["cfdi"]["esperados"]
+        inicial = self.universo[o["cargo_id"]]["descripcion"][0]
+        cfdis = tuple(dataclasses.replace(c, nombre_emisor=f"{inicial}XYZ DEMO SA DE CV") if c.uuid == uuid else c
+                      for c in self.datos.cfdis)
+        violaciones = gs.verificar(dataclasses.replace(self.datos, cfdis=cfdis))
+        self.assertTrue(any(o["cargo_id"] in v and "afinidad" in v for v in violaciones), violaciones)
+
+    def test_autoverificacion_detecta_una_suma_ajena_accidental(self):
+        (o,) = self._con_caso("afinidad_emisor_ajeno")
+        (uuid,) = o["cfdi"]["esperados"]
+        original = next(c for c in self.datos.cfdis if c.uuid == uuid)
+        mitad = (original.total_mxn / 2).quantize(CENTAVO)
+        partes = tuple(dataclasses.replace(original, uuid=f"SINTEEEE-EEEE-4EEE-8EEE-{n}EEEEEEEEEEE", total=m,
+                                           total_mxn=m) for n, m in ((1, mitad), (2, original.total_mxn - mitad)))
+        violaciones = gs.verificar(dataclasses.replace(self.datos, cfdis=self.datos.cfdis + partes))
+        self.assertTrue(any(o["cargo_id"] in v and "suma no prevista" in v for v in violaciones), violaciones)
+
+
+class TestAfinidadBordes(unittest.TestCase):
+    def test_iniciales_ignoran_palabras_cortas_y_numeros(self):
+        self.assertEqual(afinidad.iniciales("PGDEMO *PEDIDO 4471 WEB"), {"P", "W"})
+        self.assertTrue(afinidad.nombres_ajenos("TIENDITA LA ESQUINA GDL", "FLORERIA JARDIN DEMO SA DE CV"))
+        self.assertFalse(afinidad.nombres_ajenos("CAFE LUNA AZUL CDMX", "CAFETERIA LUNA AZUL SA DE CV"))
+
+    def test_sin_cargos_elegibles_no_siembra_y_lo_dice(self):
+        datos = gs.generar(gs.ConfigGenerador())
+        with self.assertRaisesRegex(RuntimeError, "sin cargos elegibles"):
+            afinidad.sembrar_afinidad(datos.config, 0, datos.cargos, datos.cfdis, (), (), ())
+
+    def test_una_descripcion_con_todas_las_iniciales_no_tiene_comercio_ajeno(self):
+        todas = " ".join(letra * 3 for letra in "ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+        with self.assertRaisesRegex(RuntimeError, "ningún comercio"):
+            afinidad._comercio_ajeno(Contexto(gs.ConfigGenerador(), 0), todas)
 
 
 # ---------------------------------------------------------------------- CLI

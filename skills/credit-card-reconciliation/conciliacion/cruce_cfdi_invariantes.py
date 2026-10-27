@@ -10,10 +10,21 @@ from dataclasses import dataclass
 from decimal import Decimal
 from typing import Callable, Dict, Iterable, List, Mapping, Sequence, Tuple
 
-from .cruce_cfdi_candidatos import Pool, armar_pool, calificar, delta_dias, en_ventana, es_valido
+from .cruce_cfdi_candidatos import (
+    Pool,
+    afinidad_de,
+    alcanza_afinidad,
+    armar_pool,
+    calificar,
+    delta_dias,
+    en_ventana,
+    es_valido,
+)
 from .cruce_cfdi_config import ConfigCruce
 from .cruce_cfdi_modelo import (
     EVIDENCIAS_INDIVIDUALES,
+    EVIDENCIAS_POR_REVISAR,
+    MONTO_SIN_AFINIDAD,
     MOTIVOS,
     SUMA,
     Cargo,
@@ -78,27 +89,48 @@ def _evidencia_o_motivo(ctx: _Contexto) -> List[str]:
     return problemas
 
 
+def _problema_de_suma(cargo: Cargo, cfdis: Sequence[Cfdi], config: ConfigCruce) -> str:
+    total = sum((c.valor_mxn for c in cfdis), Decimal(0))
+    if not config.suma_min_cfdis <= len(cfdis) <= config.suma_max_cfdis:
+        return f"suma de {len(cfdis)} CFDIs fuera de límites"
+    if len({c.rfc_emisor for c in cfdis}) != 1:
+        return "suma con emisores distintos"
+    if abs(total - cargo.monto) > config.tolerancia_suma:
+        return f"suma {total} no cuadra con {cargo.monto}"
+    return ""
+
+
+def _problema_de_monto(cargo: Cargo, r: ResultadoCargo, cfdis: Sequence[Cfdi], config: ConfigCruce) -> str:
+    """Condiciones de monto del tier; `monto_sin_afinidad` exige las de algún tier uno a uno o las de suma."""
+    individual = r.evidencia in EVIDENCIAS_INDIVIDUALES or (r.evidencia == MONTO_SIN_AFINIDAD and len(cfdis) == 1)
+    if individual:
+        calificacion = calificar(cargo, cfdis[0], config) if len(cfdis) == 1 else None
+        if calificacion is None or (r.evidencia != MONTO_SIN_AFINIDAD and calificacion.evidencia != r.evidencia):
+            return f"no califica como {r.evidencia}"
+        return ""
+    if r.evidencia in (SUMA, MONTO_SIN_AFINIDAD):
+        return _problema_de_suma(cargo, cfdis, config)
+    return f"tier desconocido {r.evidencia}"
+
+
+def _problema_de_afinidad(cargo: Cargo, r: ResultadoCargo, cfdis: Sequence[Cfdi], config: ConfigCruce) -> str:
+    """La afinidad publicada es la menor del grupo, y alcanza el mínimo si y solo si el tier respalda."""
+    parecido = min(afinidad_de(cargo, c) for c in cfdis)
+    if r.afinidad != parecido:
+        return f"afinidad publicada {r.afinidad} distinta de la recalculada {parecido}"
+    if alcanza_afinidad(parecido, config) == (r.evidencia in EVIDENCIAS_POR_REVISAR):
+        estado = "alcanza" if alcanza_afinidad(parecido, config) else "no alcanza"
+        return f"la afinidad {parecido} {estado} el mínimo {config.afinidad_minima} y el tier es {r.evidencia}"
+    return ""
+
+
 def _problema_de_tier(cargo: Cargo, r: ResultadoCargo, cfdis: Sequence[Cfdi], config: ConfigCruce) -> str:
     """Texto del problema, o cadena vacía si el cruce cumple las condiciones de su tier."""
     if not cargo.cruzable:
         return "el cargo no es cruzable"
     if not all(es_valido(c, config) and en_ventana(delta_dias(cargo, c), config) for c in cfdis):
         return "incluye un CFDI no candidato o fuera de ventana"
-    if r.evidencia in EVIDENCIAS_INDIVIDUALES:
-        calificacion = calificar(cargo, cfdis[0], config) if len(cfdis) == 1 else None
-        if calificacion is None or calificacion.evidencia != r.evidencia:
-            return f"no califica como {r.evidencia}"
-        return ""
-    if r.evidencia == SUMA:
-        total = sum((c.valor_mxn for c in cfdis), Decimal(0))
-        if not config.suma_min_cfdis <= len(cfdis) <= config.suma_max_cfdis:
-            return f"suma de {len(cfdis)} CFDIs fuera de límites"
-        if len({c.rfc_emisor for c in cfdis}) != 1:
-            return "suma con emisores distintos"
-        if abs(total - cargo.monto) > config.tolerancia_suma:
-            return f"suma {total} no cuadra con {cargo.monto}"
-        return ""
-    return f"tier desconocido {r.evidencia}"
+    return _problema_de_monto(cargo, r, cfdis, config) or _problema_de_afinidad(cargo, r, cfdis, config)
 
 
 def _coherencia_tier(ctx: _Contexto) -> List[str]:
@@ -116,16 +148,23 @@ def _coherencia_tier(ctx: _Contexto) -> List[str]:
 
 
 def _maximalidad(ctx: _Contexto) -> List[str]:
-    individuales = [r for r in ctx.resultado.cargos if r.evidencia in EVIDENCIAS_INDIVIDUALES]
-    resueltos = {r.cargo_id for r in individuales}
-    tomados = {u for r in individuales for u in r.cfdis}
+    """Ningún par uno a uno con afinidad quedó fuera de la fase con afinidad, ni ningún par uno a uno
+    (con o sin afinidad) entre un cargo sin cruce y un CFDI sin asignar."""
+    afines = [r for r in ctx.resultado.cargos if r.evidencia in EVIDENCIAS_INDIVIDUALES]
+    resueltos_afines = {r.cargo_id for r in afines}
+    tomados_afines = {u for r in afines for u in r.cfdis}
+    con_cruce = {r.cargo_id for r in ctx.resultado.cargos if r.evidencia is not None}
+    asignados = ctx.resultado.cfdis_asignados()
     problemas: List[str] = []
     for cid in sorted(ctx.cargos):
         cargo = ctx.cargos[cid]
-        if cid in resueltos or not cargo.cruzable:
+        if cid in resueltos_afines or not cargo.cruzable:
             continue
-        problemas.extend(f"{cid}: {c.uuid} quedó libre y califica uno a uno"
-                         for c, _ in ctx.pool.individuales(cargo, ctx.config) if c.uuid not in tomados)
+        for cfdi, _ in ctx.pool.individuales(cargo, ctx.config):
+            if alcanza_afinidad(afinidad_de(cargo, cfdi), ctx.config) and cfdi.uuid not in tomados_afines:
+                problemas.append(f"{cid}: {cfdi.uuid} quedó fuera y califica uno a uno con afinidad")
+            elif cid not in con_cruce and cfdi.uuid not in asignados:
+                problemas.append(f"{cid}: {cfdi.uuid} quedó libre y califica uno a uno")
     return problemas
 
 

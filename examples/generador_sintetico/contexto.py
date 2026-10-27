@@ -2,7 +2,9 @@
 
 Encapsula la instancia `random.Random` (nunca el `random` global), el registro
 de montos ya usados y el consecutivo de claves internas. Vive solo durante un
-intento de generación; todo lo que produce son objetos inmutables.
+intento de generación; todo lo que produce son objetos inmutables. Una etapa que
+siembra sobre el conjunto ya ensamblado abre su propio contexto con otra `sal` y
+registra con `ocupar` los montos y UUIDs que ya existen.
 """
 from __future__ import annotations
 
@@ -11,7 +13,7 @@ import calendar
 import random
 from datetime import date, timedelta
 from decimal import Decimal
-from typing import Dict, List, Sequence, Set, Tuple, TypeVar
+from typing import Dict, Iterable, List, Sequence, Set, Tuple, TypeVar
 
 from .config import ConfigGenerador
 from .dinero import desde_centavos, q4
@@ -33,13 +35,19 @@ def periodo_emisor(config: ConfigGenerador, emisor: str) -> Tuple[date, date]:
 
 
 class Contexto:
-    def __init__(self, config: ConfigGenerador, intento: int) -> None:
+    def __init__(self, config: ConfigGenerador, intento: int, sal: int = 0) -> None:
         self.config = config
         self.intento = intento
-        self._rng = random.Random(config.semilla + intento * SALTO_SEMILLA)
+        self._rng = random.Random(config.semilla + intento * SALTO_SEMILLA + sal)
         self._montos: Dict[str, List[Decimal]] = {"MXN": [], "USD": []}
         self._uuids: Set[str] = set()
         self._consecutivo = 0
+
+    def ocupar(self, montos: Iterable[Tuple[Decimal, str]], uuids: Iterable[str]) -> None:
+        """Registra montos (con su moneda) y UUIDs que ya existen, para no repetirlos ni acercarse a ellos."""
+        for monto, moneda in montos:
+            self.reservar(monto, moneda)
+        self._uuids.update(uuids)
 
     # ------------------------------------------------------------ azar básico
     def entero(self, minimo: int, maximo: int) -> int:

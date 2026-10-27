@@ -9,13 +9,17 @@ from typing import FrozenSet, Optional, Tuple
 
 MONEDA_LOCAL = "MXN"
 
-# Tiers en el orden en que se publican en el resumen.
+# Tiers en el orden en que se publican en el resumen. Los cuatro primeros respaldan
+# al cargo; `monto_sin_afinidad` es un cruce que solo coincide por monto: ocupa sus
+# CFDIs (exclusividad) pero queda pendiente de revisión humana, nunca respaldado.
 MONTO_EXACTO = "monto_exacto"
 MONEDA_ORIGINAL = "moneda_original"
 MONTO_TOLERANCIA = "monto_tolerancia"
 SUMA = "suma"
-EVIDENCIAS: Tuple[str, ...] = (MONTO_EXACTO, MONEDA_ORIGINAL, MONTO_TOLERANCIA, SUMA)
+MONTO_SIN_AFINIDAD = "monto_sin_afinidad"
+EVIDENCIAS: Tuple[str, ...] = (MONTO_EXACTO, MONEDA_ORIGINAL, MONTO_TOLERANCIA, SUMA, MONTO_SIN_AFINIDAD)
 EVIDENCIAS_INDIVIDUALES: FrozenSet[str] = frozenset({MONTO_EXACTO, MONEDA_ORIGINAL, MONTO_TOLERANCIA})
+EVIDENCIAS_POR_REVISAR: FrozenSet[str] = frozenset({MONTO_SIN_AFINIDAD})
 
 # Motivos de no-cruce, en el orden en que se evalúan.
 FILA_ININTERPRETABLE = "fila_ininterpretable"

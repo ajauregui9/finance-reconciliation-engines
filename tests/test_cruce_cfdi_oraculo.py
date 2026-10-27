@@ -109,9 +109,23 @@ def test_cubre_todos_los_tiers_y_motivos(corrida: Dict[str, Any]) -> None:
     resultado: ResultadoCruce = corrida["resultado"]
     evidencias = {r.evidencia for r in resultado.cargos} - {None}
     motivos = {r.motivo for r in resultado.cargos} - {None}
-    assert evidencias == {"monto_exacto", "monto_tolerancia", "moneda_original", "suma"}
+    assert evidencias == {"monto_exacto", "monto_tolerancia", "moneda_original", "suma", "monto_sin_afinidad"}
     assert motivos == {"sin_candidato", "fuera_de_ventana", "fuera_de_tolerancia", "solo_rfc_generico",
                        "fila_ininterpretable", "no_aplica"}
+
+
+def test_los_cruces_por_revisar_son_los_casos_de_afinidad(corrida: Dict[str, Any]) -> None:
+    resultado: ResultadoCruce = corrida["resultado"]
+    por_revisar = {r.cargo_id: r.afinidad for r in resultado.cargos if r.evidencia == "monto_sin_afinidad"}
+    sembrados = {c["cargo_id"] for c in corrida["oraculo"]["cargos"]
+                 if {"afinidad_emisor_ajeno", "afinidad_suma_emisor_ajeno", "afinidad_descriptor_agregador"}
+                 & set(c["casos"])}
+    assert set(por_revisar) == sembrados and len(sembrados) == 3
+    assert set(por_revisar.values()) == {0}
+    empate = next(c for c in corrida["oraculo"]["cargos"] if "empate_monto_afinidad" in c["casos"])
+    ganador = resultado.buscar(empate["cargo_id"])
+    assert (ganador.evidencia, ganador.cfdis) == ("monto_exacto", tuple(empate["cfdi"]["esperados"]))
+    assert not set(empate["cfdi"]["prohibidos"]) & resultado.cfdis_asignados()
 
 
 def test_invariantes_se_cumplen(corrida: Dict[str, Any]) -> None:

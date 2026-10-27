@@ -54,8 +54,9 @@ class TestSalida:
         assert set(doc) == {"esquema", "parametros", "insumos", "resumen", "invariantes", "cargos"}
         resumen = doc["resumen"]
         assert (resumen["cargos"], resumen["con_cruce"], resumen["sin_cruce"]) == (2, 1, 1)
+        assert (resumen["respaldados"], resumen["por_revisar"]) == (1, 0)
         assert resumen["por_evidencia"] == {"monto_exacto": 0, "moneda_original": 0, "monto_tolerancia": 1,
-                                            "suma": 0}
+                                            "suma": 0, "monto_sin_afinidad": 0}
         assert resumen["por_motivo"]["fila_ininterpretable"] == 1
         assert (resumen["cfdis_en_pool"], resumen["cfdis_asignados"], resumen["advertencias"]) == (1, 1, 0)
 
@@ -71,6 +72,21 @@ class TestSalida:
         parametros = self._documento()["parametros"]
         assert parametros["ventana_dias"] == {"min": -3, "max": 10}
         assert parametros["tolerancias"]["uno_a_uno"] == "1.00"
+
+    def test_un_cruce_por_revisar_se_cuenta_aparte_y_publica_su_afinidad(self) -> None:
+        dia = date(2026, 7, 10)
+        cargos = (Cargo("ALFA-0001", dia, "GASOLINERA SAN JUAN", Decimal("500.00"), "MXN", Decimal("500.00"),
+                        "cargo", "ok"),)
+        cfdis = (Cfdi("U-1", dia, "I", "recibido", "RFC_COM_77", "FLORERIA LAS ROSAS SA DE CV",
+                      "RFC_EMPRESA_DEMO", "MXN", Decimal("500.00"), Decimal("500.00")),)
+        config = ConfigCruce()
+        resultado = cruzar(cargos, cfdis, config)
+        doc = armar_salida(config, resultado, verificar_invariantes(cargos, cfdis, config, resultado),
+                           {"universo": {}, "cfdis": {}}, cfdis_en_pool=1)
+        resumen = doc["resumen"]
+        assert (resumen["con_cruce"], resumen["respaldados"], resumen["por_revisar"]) == (1, 0, 1)
+        assert resumen["por_evidencia"]["monto_sin_afinidad"] == 1
+        assert (doc["cargos"][0]["evidencia"], doc["cargos"][0]["afinidad_nombre"]) == ("monto_sin_afinidad", "0.00")
 
     def test_serializacion_determinista(self) -> None:
         crudo = serializar(self._documento())
@@ -90,7 +106,12 @@ class TestCli:
         assert doc["resumen"]["cargos"] == 199
         assert doc["insumos"]["universo"]["sha256"] == hashlib.sha256(UNIVERSO.read_bytes()).hexdigest()
         assert all(i["cumple"] for i in doc["invariantes"])
-        assert "199 cargos" in capsys.readouterr().out
+        resumen = doc["resumen"]
+        assert resumen["con_cruce"] == resumen["respaldados"] + resumen["por_revisar"]
+        assert resumen["por_revisar"] == resumen["por_evidencia"]["monto_sin_afinidad"] > 0
+        salida = capsys.readouterr().out
+        assert "199 cargos" in salida
+        assert f"{resumen['por_revisar']} con candidato por revisar" in salida
 
     def test_config_explicita(self, tmp_path: Path) -> None:
         config = tmp_path / "c.json"

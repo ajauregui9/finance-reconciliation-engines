@@ -5,6 +5,7 @@ import dataclasses
 import sys
 from datetime import date, timedelta
 from decimal import Decimal
+from fractions import Fraction
 from pathlib import Path
 from typing import Optional
 
@@ -236,10 +237,12 @@ class TestSumas:
         pool = [cfdi("U-1", "60.00"), cfdi("U-2", "40.00", rfc="RFC_COM_02")]
         assert uno(cruzar([cargo()], pool, CONFIG)).motivo == "sin_candidato"
 
-    def test_suma_exige_afinidad_de_nombre(self) -> None:
-        ajeno = "TALLER MECANICO EL PISTON SA DE CV"
-        pool = [cfdi("U-1", "60.00", nombre=ajeno), cfdi("U-2", "40.00", nombre=ajeno)]
-        assert uno(cruzar([cargo()], pool, CONFIG)).motivo == "sin_candidato"
+    def test_suma_sin_afinidad_de_nombre_queda_por_revisar(self) -> None:
+        taller = "TALLER MECANICO EL PISTON SA DE CV"
+        pool = [cfdi("U-1", "60.00", nombre=taller), cfdi("U-2", "40.00", nombre=taller)]
+        r = uno(cruzar([cargo()], pool, CONFIG))
+        assert (r.cfdis, r.evidencia, r.motivo) == (("U-1", "U-2"), "monto_sin_afinidad", None)
+        assert r.afinidad == 0
 
     def test_prefiere_menos_cfdis(self) -> None:
         pool = [cfdi("U-1", "70.00"), cfdi("U-2", "30.00"), cfdi("U-3", "20.00"), cfdi("U-4", "10.00")]
@@ -325,6 +328,103 @@ class TestEmpates:
         assert uno(res, "ALFA-0003").motivo == "sin_candidato"
 
 
+GASOLINERA = "GASOLINERA SAN JUAN PUE"
+FLORERIA = "FLORERIA LAS ROSAS SA DE CV"
+
+
+def ajeno(uuid: str, total: str = "100.00", dia: int = 0, moneda: str = "MXN",
+          total_mxn: Optional[str] = None) -> Cfdi:
+    """Un CFDI de un emisor cuyo nombre no se parece al de ningún cargo de prueba."""
+    return cfdi(uuid, total, dia, rfc="RFC_COM_77", nombre=FLORERIA, moneda=moneda, total_mxn=total_mxn)
+
+
+class TestAfinidadMinima:
+    """Un cruce que solo coincide por monto ocupa su CFDI pero queda por revisar, nunca respaldado."""
+
+    def test_monto_exacto_de_emisor_ajeno_queda_por_revisar(self) -> None:
+        r = uno(cruzar([cargo(monto="500.00", desc=GASOLINERA)], [ajeno("U-1", "500.00", dia=1)], CONFIG))
+        assert (r.cfdis, r.evidencia, r.motivo) == (("U-1",), "monto_sin_afinidad", None)
+        assert (r.diferencia, r.moneda_diferencia, r.deltas, r.afinidad) == (Decimal("0.00"), "MXN", (1,), 0)
+
+    def test_monto_con_tolerancia_de_emisor_ajeno_queda_por_revisar(self) -> None:
+        r = uno(cruzar([cargo()], [ajeno("U-1", "100.40")], CONFIG))
+        assert (r.evidencia, r.diferencia) == ("monto_sin_afinidad", Decimal("0.40"))
+
+    def test_moneda_original_de_emisor_ajeno_queda_por_revisar(self) -> None:
+        c = cargo(monto="1900.00", moneda_original="USD", monto_original="100.00")
+        r = uno(cruzar([c], [ajeno("U-1", "100.00", moneda="USD", total_mxn="1870.00")], CONFIG))
+        assert (r.evidencia, r.diferencia, r.moneda_diferencia) == ("monto_sin_afinidad", Decimal("0.00"), "USD")
+
+    def test_suma_con_un_cfdi_sin_afinidad_queda_por_revisar(self) -> None:
+        pool = [cfdi("U-1", "60.00"), cfdi("U-2", "40.00", nombre="SERVICIOS INTEGRALES DEMO SA DE CV")]
+        r = uno(cruzar([cargo()], pool, CONFIG))
+        assert (r.cfdis, r.evidencia, r.afinidad) == (("U-1", "U-2"), "monto_sin_afinidad", 0)
+
+    def test_el_cfdi_por_revisar_queda_ocupado(self) -> None:
+        cargos = [cargo("ALFA-0001", "500.00", desc=GASOLINERA), cargo("ALFA-0002", "500.00", desc=GASOLINERA)]
+        res = cruzar(cargos, [ajeno("U-1", "500.00")], CONFIG)
+        assert (uno(res, "ALFA-0001").cfdis, uno(res, "ALFA-0001").evidencia) == (("U-1",), "monto_sin_afinidad")
+        assert (uno(res, "ALFA-0002").cfdis, uno(res, "ALFA-0002").motivo) == ((), "sin_candidato")
+
+    def test_empate_de_monto_gana_el_de_afinidad_aunque_el_ajeno_este_mas_cerca(self) -> None:
+        res = cruzar([cargo()], [ajeno("U-1", dia=0), cfdi("U-2", dia=3)], CONFIG)
+        assert (uno(res).cfdis, uno(res).evidencia) == (("U-2",), "monto_exacto")
+        assert res.cfdis_asignados() == frozenset({"U-2"})
+
+    def test_con_afinidad_en_tolerancia_gana_al_exacto_sin_afinidad(self) -> None:
+        r = uno(cruzar([cargo()], [ajeno("U-1"), cfdi("U-2", "100.40")], CONFIG))
+        assert (r.cfdis, r.evidencia) == (("U-2",), "monto_tolerancia")
+
+    def test_suma_con_afinidad_gana_al_uno_a_uno_sin_afinidad(self) -> None:
+        res = cruzar([cargo()], [ajeno("U-1"), cfdi("U-2", "60.00"), cfdi("U-3", "40.00")], CONFIG)
+        assert (uno(res).cfdis, uno(res).evidencia) == (("U-2", "U-3"), "suma")
+        assert "U-1" not in res.cfdis_asignados()
+
+    def test_uno_a_uno_sin_afinidad_gana_a_suma_sin_afinidad(self) -> None:
+        pool = [ajeno("U-1"), ajeno("U-2", "60.00"), ajeno("U-3", "40.00")]
+        assert uno(cruzar([cargo(desc=GASOLINERA)], pool, CONFIG)).cfdis == ("U-1",)
+
+    def test_el_cargo_afin_toma_el_cfdi_antes_que_uno_ajeno_con_mejor_fecha(self) -> None:
+        cargos = [cargo("ALFA-0001", desc=GASOLINERA, dia=1), cargo("ALFA-0002", dia=-2)]
+        res = cruzar(cargos, [cfdi("U-1", dia=1)], CONFIG)
+        assert (uno(res, "ALFA-0002").cfdis, uno(res, "ALFA-0002").evidencia) == (("U-1",), "monto_exacto")
+        assert uno(res, "ALFA-0001").motivo == "sin_candidato"
+
+    @pytest.mark.parametrize("minima,evidencia", [("0.50", "monto_exacto"), ("0.51", "monto_sin_afinidad"),
+                                                  ("0.00", "monto_exacto")])
+    def test_el_umbral_es_inclusivo_y_configurable(self, minima: str, evidencia: str) -> None:
+        # CAFE LUNA AZUL CDMX contra LUNA ROJA: la mitad de la razón social tiene pareja.
+        config = dataclasses.replace(CONFIG, afinidad_minima=Decimal(minima))
+        r = uno(cruzar([cargo()], [cfdi("U-1", nombre="LUNA ROJA SA DE CV")], config))
+        assert (r.evidencia, r.afinidad) == (evidencia, Fraction(1, 2))
+
+    def test_umbral_cero_acepta_un_emisor_ajeno(self) -> None:
+        sin_umbral = dataclasses.replace(CONFIG, afinidad_minima=Decimal("0.00"))
+        assert uno(cruzar([cargo(desc=GASOLINERA)], [ajeno("U-1")], sin_umbral)).evidencia == "monto_exacto"
+
+    def test_descriptor_de_pasarela_con_el_comercio_conserva_la_afinidad(self) -> None:
+        r = uno(cruzar([cargo(desc="PGDEMO *FLORERIA JARDIN GDL")],
+                       [cfdi("U-1", nombre="FLORERIA JARDIN DEMO SA DE CV")], CONFIG))
+        assert (r.evidencia, r.afinidad) == ("monto_exacto", Fraction(2, 3))
+
+    def test_descriptor_de_pasarela_sin_el_comercio_queda_por_revisar(self) -> None:
+        r = uno(cruzar([cargo(desc="PGDEMO *PEDIDO 4471")],
+                       [cfdi("U-1", nombre="FLORERIA JARDIN DEMO SA DE CV")], CONFIG))
+        assert (r.evidencia, r.afinidad) == ("monto_sin_afinidad", 0)
+
+    def test_avisos_de_tope_de_ambas_fases_de_suma_no_se_repiten(self) -> None:
+        pool = [cfdi(f"U-{i}", f"{11 + i}.00", dia=i % 3) for i in range(4)]
+        tope = dataclasses.replace(CONFIG, suma_max_candidatos=3)
+        r = uno(cruzar([cargo()], pool, tope))
+        assert r.advertencias == ("tope_suma_truncado: emisor RFC_COM_01, 4 candidatos, se usan 3",)
+
+    def test_avisos_de_la_fase_sin_afinidad(self) -> None:
+        pool = [ajeno(f"U-{i}", f"{11 + i}.00", dia=i % 3) for i in range(4)]
+        tope = dataclasses.replace(CONFIG, suma_max_candidatos=3)
+        r = uno(cruzar([cargo(desc=GASOLINERA)], pool, tope))
+        assert r.advertencias == ("tope_suma_truncado: emisor RFC_COM_77, 4 candidatos, se usan 3",)
+
+
 class TestFilasEspeciales:
     def test_pago_no_aplica_aunque_haya_monto_igual(self) -> None:
         pago = cargo(monto="-100.00", tipo="pago", desc="PAGO RECIBIDO GRACIAS")
@@ -358,4 +458,14 @@ class TestEscala:
         pool = [cfdi(f"U-{i:05d}", f"{100 + 3 * i}.00", dia=i % 300 + 1) for i in range(n)]
         res = cruzar(cargos, pool, CONFIG)
         assert all(r.evidencia == "monto_exacto" for r in res.cargos)
+        assert len(res.cfdis_asignados()) == n
+
+    def test_diez_mil_cargos_por_revisar_y_mitad_respaldados(self) -> None:
+        n = 10_000
+        cargos = [cargo(f"ALFA-{i:05d}", f"{100 + 3 * i}.00", dia=i % 300, desc=GASOLINERA if i % 2 else CAFE)
+                  for i in range(n)]
+        pool = [cfdi(f"U-{i:05d}", f"{100 + 3 * i}.00", dia=i % 300 + 1) for i in range(n)]
+        res = cruzar(cargos, pool, CONFIG)
+        conteo = {e: sum(1 for r in res.cargos if r.evidencia == e) for e in ("monto_exacto", "monto_sin_afinidad")}
+        assert conteo == {"monto_exacto": n // 2, "monto_sin_afinidad": n // 2}
         assert len(res.cfdis_asignados()) == n

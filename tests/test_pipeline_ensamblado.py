@@ -6,22 +6,24 @@ import dataclasses
 import json
 from datetime import date
 from decimal import Decimal
+from fractions import Fraction
 from typing import Any, Dict, Optional, Tuple
 
 import pytest
 
-from conciliacion.pipeline_filas import FilaCargo, LadoCfdi, LadoLibro, fila_a_dict, situacion_de
+from conciliacion import pipeline_filas
+from conciliacion.pipeline_filas import SITUACIONES_FILA, FilaCargo, LadoCfdi, LadoLibro, fila_a_dict, situacion_de
 from conciliacion.pipeline_invariantes import invariantes_de_filas, resumir, verificar_cobertura
 from conciliacion.pipeline_modelo import SITUACIONES
-from conciliacion.pipeline_reporte import a_json, a_jsonl
+from conciliacion.pipeline_reporte import a_json, a_jsonl, cfdi_por_revisar
 from conciliacion.pipeline_revision import Observacion
 
 SIN_CFDI = LadoCfdi((), None, "sin_candidato", None, None, ())
 SIN_ASIENTO = LadoLibro(None, "motor", False, "sin_candidato", None, None, None)
 
 
-def lado_cfdi(*uuids: str, tier: str = "monto_exacto") -> LadoCfdi:
-    return LadoCfdi(tuple(uuids), tier, None, Decimal("0.00"), "MXN", tuple(0 for _ in uuids))
+def lado_cfdi(*uuids: str, tier: str = "monto_exacto", afinidad: Optional[Fraction] = Fraction(1)) -> LadoCfdi:
+    return LadoCfdi(tuple(uuids), tier, None, Decimal("0.00"), "MXN", tuple(0 for _ in uuids), afinidad)
 
 
 def lado_libro(asiento: str, cubeta: bool = False) -> LadoLibro:
@@ -70,6 +72,21 @@ def test_situacion(estado: str, tipo: str, tiene_cfdi: bool, tiene_asiento: bool
     assert esperada in SITUACIONES
 
 
+@pytest.mark.parametrize("tiene_asiento", [True, False])
+def test_un_cfdi_sin_afinidad_queda_por_revisar_con_o_sin_asiento(tiene_asiento: bool) -> None:
+    assert situacion_de("ok", "cargo", True, tiene_asiento, cfdi_por_revisar=True) == "cfdi_por_revisar"
+    assert situacion_de("ok", "cargo", True, tiene_asiento, en_revision=True, cfdi_por_revisar=True) == "en_revision"
+    assert set(SITUACIONES_FILA) == set(SITUACIONES) | {"cfdi_por_revisar"}
+
+
+def test_la_fila_con_tier_sin_afinidad_nunca_queda_conciliada() -> None:
+    sin_afinidad = fila("ALFA-0001", "100.00", lado_cfdi("U-9", tier="monto_sin_afinidad", afinidad=Fraction(0)),
+                        lado_libro("AS-1"))
+    assert sin_afinidad.situacion == "cfdi_por_revisar"
+    objeto = fila_a_dict(sin_afinidad)
+    assert (objeto["cfdi"]["tier"], objeto["cfdi"]["afinidad_nombre"]) == ("monto_sin_afinidad", "0.00")
+
+
 @pytest.mark.parametrize("estado,tipo,tiene_cfdi,tiene_asiento", [
     ("ininterpretable", "cargo", True, True),
     ("ok", "pago", False, False),
@@ -94,7 +111,7 @@ def test_fila_como_objeto_json() -> None:
         "monto": "100.00", "moneda": "MXN", "tipo_movimiento": "cargo", "estado": "ok", "motivo_fila": None,
         "situacion": "en_revision", "provisional": True,
         "cfdi": {"uuids": ["U-1"], "tier": "monto_exacto", "motivo_sin_cruce": None, "diferencia": "0.00",
-                 "moneda_diferencia": "MXN", "delta_dias": [0]},
+                 "moneda_diferencia": "MXN", "delta_dias": [0], "afinidad_nombre": "1.00"},
         "libro_mayor": {"asiento_id": "AS-1", "origen": "motor", "riesgo_cubeta": False, "motivo_sin_cruce": None,
                         "propuesta_asiento_id": "AS-1", "conflicto": None, "veredicto": None},
         "revision": [{"origen": "cargo", "registro_id": "ALFA-0001", "campo": "descripcion",
@@ -110,9 +127,11 @@ class TestResumen:
         assert resumen["por_emisor"] == {
             "ALFA": {"cargos": 3, "monto": "-440.00", "total_neto_estado": "-440.00"},
             "BETA": {"cargos": 1, "monto": "25.50", "total_neto_estado": "25.50"}}
-        assert list(resumen["por_situacion"]) == sorted(SITUACIONES)
+        assert list(resumen["por_situacion"]) == sorted(SITUACIONES_FILA)
         assert resumen["por_situacion"]["falta_cfdi_y_registro"] == {"cargos": 0, "monto": "0.00"}
+        assert resumen["por_situacion"]["cfdi_por_revisar"] == {"cargos": 0, "monto": "0.00"}
         assert resumen["cfdi"]["por_tier"]["suma"] == {"cargos": 1, "monto": "-40.00"}
+        assert resumen["cfdi"]["por_tier"]["monto_sin_afinidad"] == {"cargos": 0, "monto": "0.00"}
         assert resumen["cfdi"]["por_motivo"]["no_aplica"] == {"cargos": 1, "monto": "-500.00"}
         assert resumen["cfdi"]["uuids_asignados"] == 3
         libro = resumen["libro_mayor"]
@@ -134,8 +153,25 @@ class TestInvariantes:
         nombres = [c.nombre for c in invariantes_de_filas(base(), resumir(base(), CONTROL), CONTROL)]
         assert nombres == ["exclusividad_uuid", "exclusividad_asiento", "tier_o_motivo_cfdi",
                            "asiento_o_motivo_libro", "totales_control", "totales_resumen", "cuarentena",
-                           "cola_completa"]
+                           "cola_completa", "candidato_por_revisar"]
         assert fallidos(base()) == {}
+
+    def test_un_candidato_por_revisar_en_verde(self) -> None:
+        filas = base()[:3] + (dataclasses.replace(
+            base()[3], cfdi=lado_cfdi("U-9", tier="monto_sin_afinidad", afinidad=Fraction(1, 4))),)
+        assert fallidos(filas, resumen=resumir(filas, CONTROL)) == {}
+
+    def test_un_candidato_por_revisar_sin_afinidad_publicada(self) -> None:
+        filas = base()[:3] + (dataclasses.replace(
+            base()[3], cfdi=lado_cfdi("U-9", tier="monto_sin_afinidad", afinidad=None)),)
+        detalle = fallidos(filas)
+        assert set(detalle) == {"candidato_por_revisar"} and "BETA-0001" in detalle["candidato_por_revisar"]
+
+    def test_un_candidato_por_revisar_que_cuenta_como_conciliado(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        filas = base()[:3] + (dataclasses.replace(
+            base()[3], cfdi=lado_cfdi("U-9", tier="monto_sin_afinidad", afinidad=Fraction(0))),)
+        monkeypatch.setattr(pipeline_filas, "situacion_de", lambda *args, **kwargs: "conciliado")
+        assert "candidato_por_revisar" in fallidos(filas)
 
     def test_uuid_en_dos_cargos(self) -> None:
         filas = base()[:1] + (dataclasses.replace(base()[1], cfdi=lado_cfdi("U-1", "U-3", tier="suma")),) + base()[2:]
@@ -206,6 +242,21 @@ class TestCobertura:
                                               pista: str) -> None:
         candado = verificar_cobertura(("A-1", "A-2"), cfdi, libro)
         assert not candado.cumple and pista in candado.detalle
+
+
+# ------------------------------------------------- candidatos por revisar
+def test_el_reporte_lista_los_cfdis_por_revisar_con_su_afinidad() -> None:
+    observacion = Observacion("cargo", "BETA-0001", "descripcion", "anulacion_instrucciones", "X")
+    sin_afinidad = lado_cfdi("U-9", tier="monto_sin_afinidad", afinidad=Fraction(1, 3))
+    filas = (base()[0], dataclasses.replace(base()[3], cfdi=sin_afinidad),
+             dataclasses.replace(fila("ALFA-0009", "7.00"), cfdi=sin_afinidad, revision=(observacion,)))
+    assert cfdi_por_revisar(filas) == [
+        {"cargo_id": "ALFA-0009", "uuids": ["U-9"], "tier": "monto_sin_afinidad", "afinidad_nombre": "0.33",
+         "diferencia": "0.00", "moneda_diferencia": "MXN", "situacion": "en_revision"},
+        {"cargo_id": "BETA-0001", "uuids": ["U-9"], "tier": "monto_sin_afinidad", "afinidad_nombre": "0.33",
+         "diferencia": "0.00", "moneda_diferencia": "MXN", "situacion": "cfdi_por_revisar"},
+    ]
+    assert cfdi_por_revisar(base()) == []
 
 
 # ------------------------------------------------------------ serialización

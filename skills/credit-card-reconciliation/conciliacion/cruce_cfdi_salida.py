@@ -9,7 +9,7 @@ from typing import Any, Dict, Mapping, Optional, Sequence
 
 from .cruce_cfdi_config import ConfigCruce, config_a_dict
 from .cruce_cfdi_invariantes import Invariante
-from .cruce_cfdi_modelo import EVIDENCIAS, MOTIVOS, ResultadoCargo, ResultadoCruce
+from .cruce_cfdi_modelo import EVIDENCIAS, EVIDENCIAS_POR_REVISAR, MOTIVOS, ResultadoCargo, ResultadoCruce
 
 ESQUEMA_SALIDA = "cruce_cfdi/v1"
 CENTESIMO = Decimal("0.01")
@@ -19,7 +19,8 @@ def _texto_decimal(valor: Optional[Decimal]) -> Optional[str]:
     return None if valor is None else str(valor.quantize(CENTESIMO, rounding=ROUND_HALF_UP))
 
 
-def _texto_fraccion(valor: Optional[Fraction]) -> Optional[str]:
+def texto_afinidad(valor: Optional[Fraction]) -> Optional[str]:
+    """Una afinidad (o None) como texto con dos decimales, `ROUND_HALF_UP`."""
     if valor is None:
         return None
     return _texto_decimal(Decimal(valor.numerator) / Decimal(valor.denominator))
@@ -34,7 +35,7 @@ def _cargo(r: ResultadoCargo) -> Dict[str, Any]:
         "diferencia": _texto_decimal(r.diferencia),
         "moneda_diferencia": r.moneda_diferencia,
         "delta_dias": list(r.deltas),
-        "afinidad_nombre": _texto_fraccion(r.afinidad),
+        "afinidad_nombre": texto_afinidad(r.afinidad),
         "cfdis_descartados": [{"uuid": d.uuid, "motivo": d.motivo} for d in r.descartados],
         "advertencias": list(r.advertencias),
     }
@@ -44,9 +45,12 @@ def _resumen(resultado: ResultadoCruce, cfdis_en_pool: int) -> Dict[str, Any]:
     evidencias = Counter(r.evidencia for r in resultado.cargos if r.evidencia is not None)
     motivos = Counter(r.motivo for r in resultado.cargos if r.motivo is not None)
     con_cruce = sum(evidencias.values())
+    por_revisar = sum(n for e, n in evidencias.items() if e in EVIDENCIAS_POR_REVISAR)
     return {
         "cargos": len(resultado.cargos),
         "con_cruce": con_cruce,
+        "respaldados": con_cruce - por_revisar,
+        "por_revisar": por_revisar,
         "sin_cruce": len(resultado.cargos) - con_cruce,
         "por_evidencia": {e: evidencias.get(e, 0) for e in EVIDENCIAS},
         "por_motivo": {m: motivos.get(m, 0) for m in MOTIVOS},

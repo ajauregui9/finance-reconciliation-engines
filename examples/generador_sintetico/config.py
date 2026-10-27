@@ -11,6 +11,8 @@ from typing import Tuple
 
 SEMILLA_POR_DEFECTO = 4242
 MAX_INTENTOS = 25
+# Primer folio de cada serie de CFDI (por emisor y serie).
+FOLIO_INICIAL = 1001
 
 RFC_PUBLICO_GENERAL = "XAXX010101000"
 RFC_EXTRANJERO = "XEXX010101000"

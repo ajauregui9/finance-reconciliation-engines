@@ -1,12 +1,14 @@
 # Spec: cruce cargo ↔ CFDI (`conciliacion.cruce_cfdi`)
 
-Versión de la spec: 1. Esquema de salida: `cruce_cfdi/v1`.
+Versión de la spec: 2. Esquema de salida: `cruce_cfdi/v1`.
 
 ## Propósito
 
 Para cada cargo del universo de cargos, el motor decide qué CFDIs recibidos lo
 respaldan, con qué tier de evidencia, y, si no encuentra respaldo, por qué. La
-asignación es exclusiva: un CFDI respalda como máximo a un cargo.
+asignación es exclusiva: un CFDI se asigna como máximo a un cargo. Un cruce que
+solo coincide por monto, sin afinidad de nombre suficiente, no respalda al cargo:
+se publica como `monto_sin_afinidad`, pendiente de revisión humana.
 
 ## Entradas
 
@@ -31,31 +33,42 @@ asignación es exclusiva: un CFDI respalda como máximo a un cargo.
      error); `uuid_relacionado` = el primer `CfdiRelacionado`. Un directorio sin
      archivos `.xml` o con un UUID repetido es un error.
    - Lectura con desglose (`cruce_cfdi_xml.cargar_cfdis_xml_con_montos`), para
-     consumidores que necesitan subtotal e IVA (la extracción con LLM). Mismo
-     parser, mismas validaciones y mismo orden por `uuid`; devuelve cada CFDI
-     junto con dos montos en la moneda del comprobante, sin convertir:
-     `subtotal` = `SubTotal` (obligatorio en esta función) e `iva_trasladado` =
-     el atributo `TotalImpuestosTrasladados` del nodo `Impuestos` hijo directo
-     del comprobante o, si ese atributo falta, la suma de `Importe` de los
-     `Traslado` de ese nodo con `Impuesto="002"` (un traslado `Exento` sin
-     `Importe` aporta cero; otro sin `Importe` es un error). Sin nodo
-     `Impuestos` o sin traslados, el IVA es 0.00. Los impuestos por concepto
-     nunca se suman. Ambos montos pasan por la misma conversión a `Decimal`
-     (0.01, `ROUND_HALF_UP`) y un valor negativo es un error. El motor de cruce
-     no usa estos montos: `cargar_cfdis_xml` no cambia y no exige `SubTotal`.
+     consumidores que necesitan el desglose fiscal (la extracción con LLM).
+     Mismo parser, mismas validaciones y mismo orden por `uuid`; devuelve cada
+     CFDI junto con estos montos en la moneda del comprobante, sin convertir
+     (0.00 si el concepto no aparece):
+
+     | Campo | Fuente |
+     |---|---|
+     | `subtotal` | `SubTotal` (obligatorio en esta función) |
+     | `descuento` | `Descuento` del comprobante |
+     | `iva_trasladado`, `ieps_trasladado` | suma de `Importe` de los `Traslado` con `Impuesto="002"` y `"003"` |
+     | `total_trasladados` | `TotalImpuestosTrasladados`; si falta, la suma de todos los `Traslado` |
+     | `isr_retenido`, `iva_retenido` | suma de `Importe` de las `Retencion` con `Impuesto="001"` y `"002"` |
+     | `total_retenidos` | `TotalImpuestosRetenidos`; si falta, la suma de todas las `Retencion` |
+
+     Traslados y retenciones son los del nodo `Impuestos` hijo directo del
+     comprobante; los impuestos por concepto nunca se suman. Sin ese nodo, todo
+     es 0.00. Un traslado `Exento` sin `Importe` aporta cero; cualquier otro
+     traslado o retención sin `Importe` es un error. Todos los montos pasan por
+     la misma conversión a `Decimal` (0.01, `ROUND_HALF_UP`) y un valor negativo
+     o ilegible es un error que nombra el archivo y el atributo. El motor de
+     cruce no usa estos montos: `cargar_cfdis_xml` no cambia y no exige
+     `SubTotal`.
 
      **Decisión: el lector solo lee el desglose; no valida que cuadre con
-     `Total`.** Razones: (1) el lector es compartido con el motor, y rechazar
-     ahí un comprobante detendría todo el cruce por un CFDI que ya fue timbrado
-     (la aritmética la revisa quien timbra); (2) la identidad completa es
+     `Total` ni que los totales declarados coincidan con la suma por impuesto.**
+     Razones: (1) el lector es compartido con el motor, y rechazar ahí un
+     comprobante detendría todo el cruce por un CFDI que ya fue timbrado (la
+     aritmética la revisa quien timbra); (2) la identidad completa es
      `SubTotal − Descuento + trasladados − retenidos (+ impuestos locales) =
-     Total`, y una versión parcial rechazaría CFDIs válidos con retenciones o
-     impuestos locales; (3) el consumidor compara los montos campo por campo:
-     en la extracción con LLM, un desglose que no cuadra o que difiere del
-     propuesto termina en revisión humana. Límite: con IEPS,
-     `TotalImpuestosTrasladados` lo incluye, así que `iva_trasladado` queda por
-     encima del IVA; un consumidor que lo compare contra un IVA falla cerrado
-     (discrepancia).
+     Total`, y los impuestos locales viven en un complemento que este lector no
+     lee, así que validarla rechazaría CFDIs válidos; (3) el consumidor compara
+     los montos campo por campo: en la extracción con LLM, un desglose que no
+     cuadra o que difiere del propuesto termina en revisión humana. Como el IVA
+     y el IEPS se leen por clave de impuesto, un CFDI con IEPS da su IVA real.
+     Límite: los impuestos locales (complemento `implocal`) no se leen; un
+     consumidor que cuadre con este desglose falla cerrado ante ellos.
 3. **Config** (JSON, opcional). Si falta, se usan los valores de ejemplo de
    `config/cruce_cfdi.example.json`, que coinciden con los parámetros del
    conjunto sintético.
@@ -96,23 +109,58 @@ asignación es exclusiva: un CFDI respalda como máximo a un cargo.
   prefijo de 4 letras o más. La cobertura de un nombre en otro es la fracción
   de sus palabras que tienen pareja compatible; la afinidad es la mayor de las
   dos coberturas (así es simétrica). Es una señal heurística: nunca basta por
-  sí sola para un cruce.
+  sí sola para un cruce. La afinidad de un cruce es la de su CFDI (uno a uno) o
+  la menor de su grupo (suma).
+- **Afinidad suficiente**: afinidad ≥ `afinidad_minima` (umbral inclusivo; con
+  `0` toda afinidad es suficiente y el tier `monto_sin_afinidad` no aparece).
+  `afinidad_minima` se usa en tres lugares: decide si un cruce por monto
+  respalda o queda por revisar; filtra los CFDIs de la fase de sumas con
+  afinidad; y sustituye al criterio relajado en los diagnósticos
+  `fuera_de_ventana` y `fuera_de_tolerancia`.
+
+### Límite: descriptores de pasarela o agregador
+
+Un descriptor que antepone una pasarela de pago al comercio
+(`PGDEMO *FLORERIA JARDIN`) no necesita trato especial: como la afinidad es la
+mayor de las dos coberturas, la palabra de la pasarela solo resta en la
+cobertura del lado del cargo, y la de la razón social no cambia
+(`FLORERIA JARDIN DEMO SA DE CV` queda en 2/3). Cuando el descriptor no nombra al
+comercio (`PGDEMO *PEDIDO 4471`) o usa un nombre comercial que no se parece a la
+razón social, la afinidad es 0 y el cruce queda `monto_sin_afinidad`: el error
+va hacia la revisión humana, nunca hacia un respaldo en silencio. El motor no
+quita prefijos de pasarela (achicaría el denominador y subiría la afinidad de
+cualquier par) ni compara contra el `concepto` del CFDI: es texto libre de
+terceros que ningún motor de cruce lee (lo revisa la cuarentena del pipeline).
 
 ## Tiers de evidencia
 
-Uno a uno (un cargo, un CFDI candidato), evaluados en este orden:
+Un cruce primero califica por monto y después por afinidad. Uno a uno (un cargo,
+un CFDI candidato), por monto, evaluados en este orden:
 
-| Tier | Condición | Rango |
+| Tier por monto | Condición | Rango |
 |---|---|---|
 | `monto_exacto` | diferencia en pesos = 0 | 0 |
 | `moneda_original` | cargo y CFDI en la misma moneda extranjera y diferencia en esa moneda ≤ `tolerancias.moneda_original` | 1 |
 | `monto_tolerancia` | 0 < diferencia en pesos ≤ `tolerancias.uno_a_uno` | 2 |
 
-Suma:
+Suma por monto: entre `suma.min_cfdis` y `suma.max_cfdis` CFDIs candidatos del
+mismo `rfc_emisor`, todos libres al empezar su fase, cuyo valor firmado sumado en
+pesos difiere del monto en ≤ `tolerancias.suma`.
 
-| Tier | Condición |
-|---|---|
-| `suma` | entre `suma.min_cfdis` y `suma.max_cfdis` CFDIs candidatos del mismo `rfc_emisor`, todos libres tras la fase uno a uno, cada uno con afinidad ≥ `afinidad_minima`, y cuyo valor firmado sumado en pesos difiere del monto en ≤ `tolerancias.suma` |
+Tier publicado:
+
+| Tier | Cuándo | ¿Respalda? |
+|---|---|---|
+| `monto_exacto`, `moneda_original`, `monto_tolerancia` | uno a uno por monto con afinidad suficiente | sí |
+| `suma` | suma por monto con afinidad suficiente en cada CFDI | sí |
+| `monto_sin_afinidad` | uno a uno o suma por monto cuya afinidad no es suficiente | no: pendiente de revisión humana |
+
+Un cruce `monto_sin_afinidad` no se rechaza ni se acepta en silencio: ocupa sus
+CFDIs (exclusividad: ningún otro cargo los recibe), no lleva motivo de no-cruce,
+publica su `afinidad_nombre` y cuenta en el resumen como `por_revisar`, nunca
+como `respaldados`. Para saber qué coincidió: `diferencia` 0.00 en `MXN` es monto
+exacto; una `moneda_diferencia` extranjera es moneda original; una diferencia
+mayor que cero con un CFDI es tolerancia; dos o más CFDIs son una suma.
 
 Las notas de crédito restan: una factura más su nota de crédito puede formar
 una suma, y una nota de crédito sola puede respaldar un abono (monto negativo).
@@ -120,18 +168,42 @@ El vínculo `uuid_relacionado` no interviene en la decisión.
 
 ## Asignación greedy y precedencia
 
-El motor hace una **asignación greedy** en dos fases; no es un emparejamiento
+El motor hace una **asignación greedy** en cuatro fases; no es un emparejamiento
 óptimo (no resuelve un problema bipartito de costo mínimo). Cada fase ordena sus
 propuestas con un orden total y recorre la lista una vez: una propuesta se
 acepta si su cargo sigue sin cruce y todos sus CFDIs siguen libres.
 
-**Precedencia: un cruce uno a uno gana sobre una suma de 2–3 CFDIs.** La fase
-uno a uno termina por completo antes de que empiece la de sumas. En
-consecuencia: un cargo resuelto uno a uno nunca llega al tier de suma, y un
-CFDI tomado uno a uno por cualquier cargo ya no está disponible para sumas de
-otro cargo. Es la misma precedencia que asume el oráculo sintético.
+| Fase | Propuestas | Tier que asigna |
+|---|---|---|
+| 1 | uno a uno con afinidad suficiente | `monto_exacto`, `moneda_original`, `monto_tolerancia` |
+| 2 | sumas de CFDIs con afinidad suficiente cada uno | `suma` |
+| 3 | uno a uno sin afinidad suficiente | `monto_sin_afinidad` |
+| 4 | sumas con CFDIs de cualquier afinidad | `monto_sin_afinidad` |
 
-Orden total de la fase uno a uno (de mejor a peor):
+**Precedencia: la evidencia con afinidad gana sobre la que solo coincide por
+monto y, dentro de cada nivel, un cruce uno a uno gana sobre una suma de 2–3
+CFDIs.** Cada fase termina por completo antes de que empiece la siguiente y
+solo ve cargos sin cruce y CFDIs libres. En consecuencia:
+
+- **Empate de monto.** Si dos CFDIs del mismo monto califican para un cargo y
+  solo uno tiene afinidad suficiente, gana ese (fase 1), aunque el otro esté más
+  cerca en fecha; el otro queda libre. Si ninguno la tiene, decide el orden de
+  la fase 3.
+- Un CFDI con afinidad dentro de tolerancia gana a uno exacto sin afinidad, y
+  una suma con afinidad gana a un uno a uno sin afinidad.
+- Un CFDI afín a un cargo se asigna a ese cargo antes de que un cargo ajeno lo
+  pueda tomar solo por monto.
+- Un cargo resuelto en una fase nunca llega a las siguientes, y un CFDI tomado
+  en una fase ya no está disponible para las siguientes. Es la misma
+  precedencia que asume el oráculo sintético.
+
+En la fase 4 el tier lo decide la menor afinidad del grupo. Un grupo con
+afinidad suficiente en todos sus CFDIs solo llega ahí si el tope por emisor lo
+dejó fuera de la fase 2 (con la advertencia `tope_suma_truncado`), y entonces se
+publica como `suma`. Si un cargo recibe la misma advertencia en las fases 2 y 4,
+se publica una vez.
+
+Orden total de las fases uno a uno (1 y 3), de mejor a peor:
 
 1. rango del tier (menor primero);
 2. afinidad de nombre (mayor primero);
@@ -140,7 +212,7 @@ Orden total de la fase uno a uno (de mejor a peor):
 5. delta no negativo antes que negativo (el CFDI suele emitirse después);
 6. `cargo_id` y luego `uuid`, en orden lexicográfico.
 
-Orden total de la fase de sumas:
+Orden total de las fases de sumas (2 y 4):
 
 1. número de CFDIs (menos primero);
 2. diferencia (menor primero);
@@ -164,7 +236,8 @@ el costo de armar candidatos crece con el tamaño de la ventana, no del pool.
 
 ## Motivo de no-cruce
 
-Un cargo sin cruce recibe exactamente un motivo. Se evalúan en este orden y
+Un cargo sin cruce recibe exactamente un motivo (un cargo con cruce
+`monto_sin_afinidad` tiene cruce y no lleva motivo). Se evalúan en este orden y
 gana el primero que aplica:
 
 | Motivo | Cuándo |
@@ -191,8 +264,9 @@ esquema      "cruce_cfdi/v1"
 parametros   la config efectiva
 insumos      {universo, cfdis}: registros y sha256 del archivo leído (para un
              directorio XML: sha256 de la lista ordenada nombre + sha256 de cada archivo)
-resumen      cargos, con_cruce, sin_cruce, por_evidencia{}, por_motivo{},
-             cfdis_en_pool, cfdis_asignados, advertencias
+resumen      cargos, con_cruce, respaldados, por_revisar, sin_cruce,
+             por_evidencia{}, por_motivo{}, cfdis_en_pool, cfdis_asignados,
+             advertencias
 invariantes  [{nombre, cumple, detalle}]
 cargos       uno por cargo, ordenados por cargo_id:
   cargo_id, cfdis[] (uuids ordenados), evidencia, motivo_sin_cruce,
@@ -203,6 +277,8 @@ cargos       uno por cargo, ordenados por cargo_id:
 Montos y afinidades se escriben como cadenas (`"0.00"`), nunca como números.
 En una suma, `diferencia` es la del total del grupo y `afinidad_nombre` la
 menor del grupo. En `moneda_original`, `diferencia` está en esa moneda.
+`con_cruce` = `respaldados` + `por_revisar`, donde `por_revisar` cuenta los
+cruces `monto_sin_afinidad`; `con_cruce` + `sin_cruce` = `cargos`.
 
 ## Invariantes (candados)
 
@@ -215,10 +291,15 @@ termina con código 3.
 3. `cfdis_conocidos`: todo CFDI asignado existe en el pool.
 4. `evidencia_o_motivo`: cada cargo tiene evidencia o motivo, nunca ambos ni
    ninguno; tiene CFDIs si y solo si tiene evidencia.
-5. `coherencia_tier`: al recalcular, cada cruce cumple las condiciones de su
-   tier (incluye: CFDIs candidatos, en ventana, del mismo emisor en sumas).
+5. `coherencia_tier`: al recalcular, cada cruce cumple las condiciones de monto
+   de su tier (incluye: CFDIs candidatos, en ventana, del mismo emisor en sumas;
+   para `monto_sin_afinidad`, las de algún tier uno a uno o las de suma), la
+   afinidad publicada es la recalculada, y es suficiente si y solo si el tier
+   respalda.
 6. `maximalidad_uno_a_uno`: no queda un par (cargo, CFDI) que califique uno a
-   uno con el cargo sin cruce uno a uno y el CFDI sin asignar uno a uno.
+   uno con afinidad suficiente con el cargo sin cruce uno a uno con afinidad y
+   el CFDI fuera de esos cruces; ni un par que califique uno a uno (con
+   cualquier afinidad) entre un cargo sin cruce y un CFDI sin asignar.
 
 ## CLI
 
@@ -242,6 +323,10 @@ python3 -m conciliacion.cruce_cfdi --universo <jsonl> --cfdis-xml <dir> --salida
 - No convierte divisas: usa `total_mxn` del insumo y, para el tier de moneda
   original, los montos en la moneda de cada lado.
 - No usa `forma_pago` (es ruidosa) ni `uuid_relacionado` para decidir.
+- No lee el `concepto` del CFDI ni quita prefijos de pasarela de la descripción
+  del cargo para calcular la afinidad.
+- No decide si un cruce `monto_sin_afinidad` es correcto: lo deja ocupado y
+  visible para que una persona lo confirme o lo descarte.
 - No valida sellos, timbres ni el estatus del CFDI ante el SAT.
 - No valida la aritmética del CFDI (`SubTotal`, impuestos, `Total`).
 - No toma ni sobrescribe veredictos humanos ni decide deducibilidad.

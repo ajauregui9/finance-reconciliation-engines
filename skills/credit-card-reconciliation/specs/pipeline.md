@@ -1,6 +1,6 @@
 # Spec: pipeline de tarjetas de punta a punta (`conciliacion.pipeline`)
 
-Versión de la spec: 2. Esquema del reporte: `pipeline_tarjetas/v1`.
+Versión de la spec: 3. Esquema del reporte: `pipeline_tarjetas/v1`.
 
 ## Propósito
 
@@ -172,7 +172,8 @@ cargo_id, emisor, fecha, descripcion, monto, moneda, tipo_movimiento,
 estado, motivo_fila       del universo (motivo_fila = motivo de la fila ininterpretable)
 situacion                 ver tabla
 provisional               true si el reporte es provisional
-cfdi:        uuids[], tier, motivo_sin_cruce, diferencia, moneda_diferencia, delta_dias[]
+cfdi:        uuids[], tier, motivo_sin_cruce, diferencia, moneda_diferencia, delta_dias[],
+             afinidad_nombre
 libro_mayor: asiento_id, origen, riesgo_cubeta, motivo_sin_cruce,
              propuesta_asiento_id, conflicto, veredicto
 revision     observaciones (origen, registro_id, campo, familia, fragmento) que ponen el
@@ -180,7 +181,9 @@ revision     observaciones (origen, registro_id, campo, familia, fragmento) que 
 ```
 
 `tier` es la evidencia del cruce con CFDI (`monto_exacto`, `moneda_original`,
-`monto_tolerancia`, `suma`). En `libro_mayor`, los campos sin prefijo son el
+`monto_tolerancia`, `suma` o `monto_sin_afinidad`) y `afinidad_nombre` su
+afinidad de nombre como texto con dos decimales (nula sin cruce); ambos son los
+del documento del motor. En `libro_mayor`, los campos sin prefijo son el
 resultado final (después de aplicar veredictos) y `propuesta_asiento_id` es lo
 que el motor propuso por sí solo. `veredicto` es `registrado`,
 `no_registrado` o nulo.
@@ -190,6 +193,7 @@ que el motor propuso por sí solo. `veredicto` es `registrado`,
 | `en_revision` | tiene observaciones de la revisión de texto libre (`revision` no vacío); su cruce no se acepta en automático |
 | `fila_ininterpretable` | `estado` distinto de `ok` |
 | `no_aplica` | `tipo_movimiento = pago` |
+| `cfdi_por_revisar` | su tier de CFDI es `monto_sin_afinidad`: el CFDI coincide solo por monto, tenga o no asiento. Ocupa su UUID, pero no cuenta como respaldo; una persona lo confirma o lo descarta |
 | `conciliado` | tiene CFDI y asiento |
 | `falta_cfdi` | tiene asiento, no CFDI |
 | `falta_registro` | tiene CFDI, no asiento |
@@ -213,6 +217,10 @@ resumen              total, por_emisor, por_situacion,
                      libro_mayor {con_asiento, sin_asiento, por_motivo, por_origen,
                      riesgo_cubeta, conflictos}
 revision_humana      {revisor, marcados, cargos_en_revision[], cola[]}
+cfdi_por_revisar     [{cargo_id, situacion, uuids[], tier, afinidad_nombre, diferencia,
+                     moneda_diferencia}] de cada fila con tier `monto_sin_afinidad`,
+                     ordenadas por cargo_id (su situación es `cfdi_por_revisar`, o
+                     `en_revision` si además tiene observaciones)
 veredictos_en_espera [{cargo_id, veredicto, asiento_id}]
 artefactos           {ruta: sha256} de cada archivo escrito, salvo el propio reporte
 ```
@@ -246,6 +254,7 @@ alguno falla, la corrida termina con código 3 y escribe `bloqueo.json`.
 | `totales_resumen` | el total publicado es el de las filas; cada partición publicada en `resumen` (por emisor, por situación, tier más motivo de CFDI, con más sin asiento) suma ese total en cargos y en monto, al centavo; los motivos de libro suman lo que quedó sin asiento |
 | `cuarentena` | una fila tiene observaciones si y solo si su situación es `en_revision` |
 | `cola_completa` | cada observación de la cola sobre un cargo, o sobre un CFDI asignado a un cargo, aparece en la fila de ese cargo; una sobre un cargo que no está en las filas bloquea |
+| `candidato_por_revisar` | una fila sin observaciones tiene situación `cfdi_por_revisar` si y solo si su tier de CFDI es `monto_sin_afinidad`, y toda fila con ese tier publica su `afinidad_nombre`: un CFDI que solo coincide por monto nunca cuenta como conciliado ni como `falta_registro` |
 
 Los candados de cada motor se publican con su nombre original: los del
 universo como `<EMISOR>.<comprobación>`, los invariantes del cruce con CFDI y
@@ -255,7 +264,7 @@ los candados del cruce con libro tal como los nombra su spec.
 
 | Código | Significado |
 |---|---|
-| 0 | Reporte escrito; todos los candados e invariantes en verde. Puede ser provisional y puede traer cargos `en_revision` |
+| 0 | Reporte escrito; todos los candados e invariantes en verde. Puede ser provisional y puede traer cargos `en_revision` o `cfdi_por_revisar` |
 | 2 | Argumento, config o insumo inválido; archivo faltante sin declarar; carpeta de salida inválida; `prompt_guard` no se puede cargar; un motor rechaza el universo en su frontera; no se pudo escribir |
 | 3 | Un candado o invariante bloquea: totales de control del universo, revisión de texto libre, invariantes del cruce con CFDI, candados del cruce con libro o invariantes del pipeline. Solo se escribe `bloqueo.json` |
 

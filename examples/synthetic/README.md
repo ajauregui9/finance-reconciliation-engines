@@ -152,9 +152,12 @@ revision_texto_libre
 ```
 
 - `cfdi.evidencia`: `monto_exacto`, `monto_tolerancia` (0 < diff <= tolerance),
-  `suma` (2-3 CFDIs of one emitter, signed sum exact; includes invoice + credit note), or
+  `suma` (2-3 CFDIs of one emitter, signed sum exact; includes invoice + credit note),
   `moneda_original` (USD invoice equal to the USD charge; the MXN amounts differ because
-  each side used its own exchange rate). `null` when nothing is expected.
+  each side used its own exchange rate), or `monto_sin_afinidad` (the amount matches one
+  CFDI or a sum, but the issuer's name has nothing in common with the charge description:
+  the CFDI is assigned and held for human review, never counted as backing). `null` when
+  nothing is expected.
 - `parametros.banda_fuera_de_tolerancia`: range of `|signed total_mxn - monto|` of the planted
   near misses (`fuera_de_tolerancia`), as text. It is `2 * tolerancia_monto + 0.50` to that plus
   `2.00`, so it moves with `--tolerancia` (`2.00` gives `4.50` to `6.50`). An engine that wants
@@ -185,15 +188,21 @@ revision_texto_libre
    `|amount - |monto|| <= tolerancia_monto`. Recorded entries are dated 0-3 days after the
    charge; bucket-vendor matches need both amount and date and carry `riesgo_cubeta = true`.
 5. Exclusivity: no CFDI and no ledger entry is expected by two charges.
+6. Name affinity: an amount match whose issuer name shares no word initial with the charge
+   description (words of 3+ characters that are not only digits) is `monto_sin_afinidad`.
+   Matches with affinity are decided first, so a same-amount CFDI of the right merchant
+   always wins over an unrelated one, and a CFDI held for review still counts for
+   exclusivity. The self-check also rejects any sum from any non-generic issuer that could
+   reach a charge expected without a match or with a review match.
 
 Random amounts are drawn at least `2 * tolerancia_monto + 0.50` apart, so accidental
 matches only happen where a case is designed to create them.
 
-## Edge-case catalog (default seed, 199 charges, 250 CFDIs, 191 entries)
+## Edge-case catalog (default seed, 199 charges, 254 CFDIs, 191 entries)
 
 | Tag | Count | Setup | Expected answer |
 |---|---|---|---|
-| `normal` | 110 | One invoice, exact amount, small delta | `monto_exacto` |
+| `normal` | 108 | One invoice, exact amount, small delta | `monto_exacto` |
 | `monto_tolerancia` | 8 | Invoice differs by 0.05 to tol-0.05 | `monto_tolerancia` |
 | `fuera_de_tolerancia` | 3 | Invoice differs by `banda_fuera_de_tolerancia` (2.50 to 4.50) | none, `fuera_de_tolerancia`, invoice prohibited |
 | `ventana_borde_inferior` / `_superior` | 2 / 2 | delta exactly `min` / `max` | `monto_exacto` |
@@ -212,7 +221,11 @@ matches only happen where a case is designed to create them.
 | `nomina_distractor` / `libro_nomina_distractor` | 3 / 3 | Payroll CFDI (`N`, emitted) and payroll entry with the charge's exact amount | none, both prohibited |
 | `usd_sin_cfdi` | 6 | Foreign merchant billed in USD, no CFDI | none, `sin_candidato` |
 | `usd_moneda_original` | 3 | USD invoice with its own exchange rate | `moneda_original` |
-| `sin_cfdi` | 14 | Merchant that never invoices (parking, tolls) | none, `sin_candidato` |
+| `sin_cfdi` | 12 | Merchant that never invoices (parking, tolls) | none, `sin_candidato` |
+| `afinidad_emisor_ajeno` | 1 | Merchant that never invoices; an unrelated merchant's invoice has the exact amount | that invoice, `monto_sin_afinidad` |
+| `afinidad_suma_emisor_ajeno` | 1 | As above, with two invoices of one unrelated merchant that add up | both, `monto_sin_afinidad` |
+| `empate_monto_afinidad` | 1 | Normal charge plus an unrelated merchant's invoice with the same amount, dated closer | own invoice, `monto_exacto`; the other one prohibited |
+| `afinidad_descriptor_agregador` | 1 | Normal charge whose descriptor is a payment gateway's (`PGDEMO *PEDIDO nnnn WEB`) | own invoice, `monto_sin_afinidad` |
 | `fila_ininterpretable` | 2 | Impossible date in the raw row | none, `fila_ininterpretable` on both sides |
 | `pago_tarjeta` | 2 | Card payment row | none, `no_aplica` on both sides |
 | `libro_registrado` | 138 | Entry under the merchant's own vendor | that entry |
@@ -223,6 +236,26 @@ matches only happen where a case is designed to create them.
 
 Noise that backs no charge: 38 CFDIs from transfer-paid vendors (35 invoices, 3 credit
 notes) with their payables entries, and 12 regular payroll CFDIs with their payroll entries.
+
+## Planted name-affinity cases
+
+Four charges show what happens when only the amount matches (see the last four rows of
+the catalog). They are planted on the assembled set with their own `random.Random`
+sub-seed, after the verdicts and the injections, so no id, amount or date of any other
+row changes: the step adds four CFDIs (each with the next folio of its series), rewrites
+one statement descriptor, and changes the oracle of those four charges only. It only uses
+charges without a verdict, an injection, a tie group or prohibited records; the gateway
+descriptor goes to a merchant with other charges, so its original descriptor stays in the
+universe.
+
+- "Unrelated" is checked without the engine's heuristic: no word of the issuer's legal
+  name shares an initial with a word of the charge description. Every word-compatibility
+  rule of the engine needs the same initial, so the engine's affinity is 0.
+- The gateway case is the documented limit of name affinity: a descriptor that does not
+  name the merchant cannot be told apart from an unrelated issuer, so the match is held
+  for review instead of being accepted.
+- In the card pipeline, the three `monto_sin_afinidad` charges end up `cfdi_por_revisar`
+  and are listed in `reporte.json -> cfdi_por_revisar` with their affinity (`0.00`).
 
 ## `veredictos_libro.csv`
 

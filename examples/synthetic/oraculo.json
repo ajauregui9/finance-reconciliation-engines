@@ -756,13 +756,16 @@
     {
       "cargo_id": "ALFA-0032",
       "casos": [
-        "libro_no_registrado",
-        "sin_cfdi"
+        "afinidad_suma_emisor_ajeno",
+        "libro_no_registrado"
       ],
       "cfdi": {
-        "esperados": [],
-        "evidencia": null,
-        "motivo_sin_cruce": "sin_candidato",
+        "esperados": [
+          "SINT4619-9B61-4B2E-A798-969AF04C504B",
+          "SINTB8AF-BDCB-442C-9F03-5B512F27DA72"
+        ],
+        "evidencia": "monto_sin_afinidad",
+        "motivo_sin_cruce": null,
         "prohibidos": []
       },
       "grupo_empate": null,
@@ -925,14 +928,14 @@
     {
       "cargo_id": "ALFA-0039",
       "casos": [
-        "libro_no_registrado",
-        "normal"
+        "afinidad_descriptor_agregador",
+        "libro_no_registrado"
       ],
       "cfdi": {
         "esperados": [
           "SINT7997-5ADB-4B47-8481-20BA2C266094"
         ],
-        "evidencia": "monto_exacto",
+        "evidencia": "monto_sin_afinidad",
         "motivo_sin_cruce": null,
         "prohibidos": []
       },
@@ -1407,13 +1410,15 @@
     {
       "cargo_id": "ALFA-0059",
       "casos": [
-        "libro_no_registrado",
-        "sin_cfdi"
+        "afinidad_emisor_ajeno",
+        "libro_no_registrado"
       ],
       "cfdi": {
-        "esperados": [],
-        "evidencia": null,
-        "motivo_sin_cruce": "sin_candidato",
+        "esperados": [
+          "SINT420F-D8BC-4665-840C-5AFBA2D7E615"
+        ],
+        "evidencia": "monto_sin_afinidad",
+        "motivo_sin_cruce": null,
         "prohibidos": []
       },
       "grupo_empate": null,
@@ -4092,8 +4097,8 @@
     {
       "cargo_id": "BETA-0075",
       "casos": [
-        "libro_registrado",
-        "normal"
+        "empate_monto_afinidad",
+        "libro_registrado"
       ],
       "cfdi": {
         "esperados": [
@@ -4101,7 +4106,9 @@
         ],
         "evidencia": "monto_exacto",
         "motivo_sin_cruce": null,
-        "prohibidos": []
+        "prohibidos": [
+          "SINT6F03-D28A-4091-BDAC-91F7D128FA08"
+        ]
       },
       "grupo_empate": null,
       "libro_mayor": {
@@ -4947,8 +4954,12 @@
     "asientos": 191,
     "cargos": 199,
     "casos": {
+      "afinidad_descriptor_agregador": 1,
+      "afinidad_emisor_ajeno": 1,
+      "afinidad_suma_emisor_ajeno": 1,
       "compra_con_reembolso": 3,
       "empate_grupo": 9,
+      "empate_monto_afinidad": 1,
       "empate_monto_fecha_comercios_distintos": 2,
       "empate_monto_fechas_distintas": 4,
       "fila_ininterpretable": 2,
@@ -4963,7 +4974,7 @@
       "libro_registrado": 138,
       "monto_tolerancia": 8,
       "nomina_distractor": 3,
-      "normal": 110,
+      "normal": 108,
       "nota_credito_neta": 3,
       "nota_credito_reembolso": 3,
       "pago_tarjeta": 2,
@@ -4971,7 +4982,7 @@
       "rfc_generico_emisor_suma": 2,
       "rfc_generico_receptor_duplicado": 2,
       "rfc_generico_receptor_unico": 2,
-      "sin_cfdi": 14,
+      "sin_cfdi": 12,
       "suma_2": 6,
       "suma_3": 4,
       "suma_con_distractor": 4,
@@ -4980,7 +4991,7 @@
       "ventana_borde_inferior": 2,
       "ventana_borde_superior": 2
     },
-    "cfdis": 250,
+    "cfdis": 254,
     "lineas_libro": 550
   },
   "revision_texto_libre": {

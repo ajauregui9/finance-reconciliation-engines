@@ -5,6 +5,7 @@ import dataclasses
 import sys
 from datetime import date, timedelta
 from decimal import Decimal
+from fractions import Fraction
 from pathlib import Path
 from typing import Dict, List, Tuple
 
@@ -132,3 +133,59 @@ def test_detalle_nombra_al_cargo() -> None:
     falso = _cambiar(_base(), "ALFA-0001", cfdis=("U-999",))
     detalle = {i.nombre: i.detalle for i in verificar_invariantes(CARGOS, CFDIS, CONFIG, falso)}
     assert "ALFA-0001" in detalle["cfdis_conocidos"]
+
+
+# --- afinidad mínima -------------------------------------------------------------
+GASOLINERA = Cargo("ALFA-0009", DIA, "GASOLINERA SAN JUAN PUE", Decimal("500.00"), "MXN", Decimal("500.00"),
+                   "cargo", "ok")
+AJENO = Cfdi("U-9", DIA, "I", "recibido", "RFC_COM_77", "FLORERIA LAS ROSAS SA DE CV", "RFC_EMPRESA_DEMO", "MXN",
+             Decimal("500.00"), Decimal("500.00"))
+CON_AJENO = CARGOS + (GASOLINERA,)
+POOL_AJENO = CFDIS + (AJENO, _cfdi("U-7", "500.00", dia=3))
+
+
+def _estado_ajeno(resultado: ResultadoCruce) -> List[str]:
+    return [i.nombre for i in verificar_invariantes(CON_AJENO, POOL_AJENO, CONFIG, resultado) if not i.cumple]
+
+
+def test_un_cruce_sin_afinidad_cumple_todo() -> None:
+    base = cruzar(CON_AJENO, POOL_AJENO, CONFIG)
+    assert (base.buscar("ALFA-0009").cfdis, base.buscar("ALFA-0009").evidencia) == (("U-9",), "monto_sin_afinidad")
+    assert _estado_ajeno(base) == []
+
+
+@pytest.mark.parametrize(
+    "cid,campos",
+    [
+        ("ALFA-0009", {"evidencia": "monto_exacto"}),
+        ("ALFA-0001", {"evidencia": "monto_sin_afinidad"}),
+        ("ALFA-0009", {"afinidad": Fraction(1)}),
+        ("ALFA-0002", {"evidencia": "monto_sin_afinidad"}),
+    ],
+)
+def test_coherencia_tier_exige_la_afinidad_de_su_tier(cid: str, campos: Dict[str, object]) -> None:
+    alterado = _cambiar(cruzar(CON_AJENO, POOL_AJENO, CONFIG), cid, **campos)
+    assert "coherencia_tier" in _estado_ajeno(alterado)
+
+
+def test_coherencia_tier_de_un_monto_sin_afinidad_que_no_cuadra() -> None:
+    alterado = _cambiar(cruzar(CON_AJENO, POOL_AJENO, CONFIG), "ALFA-0009", cfdis=("U-4",), afinidad=Fraction(0))
+    assert "coherencia_tier" in _estado_ajeno(alterado)
+
+
+def test_maximalidad_detecta_un_cfdi_afin_desplazado_por_uno_ajeno() -> None:
+    # ALFA-0009 toma el ajeno por revisar y deja libre a U-7, que es afín y de su mismo monto.
+    cargo = dataclasses.replace(GASOLINERA, descripcion="CAFE LUNA AZUL")
+    cargos = CARGOS + (cargo,)
+    base = cruzar(cargos, POOL_AJENO, CONFIG)
+    assert base.buscar("ALFA-0009").cfdis == ("U-7",)
+    alterado = _cambiar(base, "ALFA-0009", cfdis=("U-9",), evidencia="monto_sin_afinidad", afinidad=Fraction(0),
+                        deltas=(0,))
+    fallidos = [i.nombre for i in verificar_invariantes(cargos, POOL_AJENO, CONFIG, alterado) if not i.cumple]
+    assert fallidos == ["maximalidad_uno_a_uno"]
+
+
+def test_maximalidad_detecta_un_cargo_sin_cruce_con_candidato_ajeno_libre() -> None:
+    suelto = _cambiar(cruzar(CON_AJENO, POOL_AJENO, CONFIG), "ALFA-0009", cfdis=(), evidencia=None,
+                      motivo="sin_candidato", diferencia=None, moneda_diferencia=None, deltas=(), afinidad=None)
+    assert _estado_ajeno(suelto) == ["maximalidad_uno_a_uno"]

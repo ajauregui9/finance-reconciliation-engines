@@ -1,4 +1,5 @@
-"""Orquesta una corrida: casos -> libro -> ruido -> ids finales -> veredictos -> inyecciones -> autoverificación.
+"""Orquesta una corrida: casos -> libro -> ruido -> ids finales -> veredictos -> inyecciones -> afinidad
+-> autoverificación.
 
 Si la autoverificación encuentra una coincidencia accidental (por ejemplo, una suma
 de CFDIs que por azar iguala otro cargo), se reintenta con una sub-semilla derivada
@@ -10,7 +11,8 @@ from dataclasses import replace
 from typing import Dict, List, Optional, Tuple
 
 from . import escenarios_cfdi, escenarios_empates, ruido
-from .config import MAX_INTENTOS, ConfigGenerador
+from .afinidad import sembrar_afinidad
+from .config import FOLIO_INICIAL, MAX_INTENTOS, ConfigGenerador
 from .contexto import Contexto
 from .escenarios_libro import completar_libro
 from .fabricas import Escenario, unir
@@ -18,8 +20,6 @@ from .inyecciones import plantar_inyecciones
 from .modelo import Asiento, Cargo, Cfdi, Datos, ExpectativaLibro, GrupoEmpate
 from .verificacion import verificar
 from .veredictos import plantar_veredictos
-
-FOLIO_INICIAL = 1001
 
 
 def _ids_cargos(cargos: Tuple[Cargo, ...]) -> Tuple[Cargo, ...]:
@@ -65,6 +65,8 @@ def _finalizar(config: ConfigGenerador, intento: int, base: Escenario) -> Datos:
                                tuple(sorted(id_asiento[a] for a in g.asientos))) for g in base.grupos)
     veredictos = plantar_veredictos(config, intento, expectativas, asientos)
     cfdis, inyecciones = plantar_inyecciones(config, intento, expectativas, _folios(base.cfdis), veredictos)
+    cargos, cfdis, expectativas = sembrar_afinidad(config, intento, cargos, cfdis, expectativas, veredictos,
+                                                   inyecciones)
     return Datos(config=config, intento=intento, cargos=tuple(sorted(cargos, key=lambda c: c.cargo_id)),
                  cfdis=cfdis, asientos=asientos, expectativas=expectativas, grupos=grupos,
                  veredictos=veredictos, inyecciones=inyecciones)

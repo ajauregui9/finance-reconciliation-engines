@@ -2,17 +2,20 @@
 
 Una fila no recalcula nada: copia el resultado del cruce con CFDI y el resultado
 final del cruce con libro, y deriva de ambos la situación del cargo. El monto es el
-que leyeron los motores en su frontera de entrada (ya `Decimal`).
+que leyeron los motores en su frontera de entrada (ya `Decimal`). Un cruce con CFDI
+de tier `monto_sin_afinidad` no respalda al cargo: la fila queda `cfdi_por_revisar`.
 """
 from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
+from fractions import Fraction
 from typing import Any, Dict, Mapping, Optional, Sequence, Tuple
 
 from . import universo as uv
-from .cruce_cfdi_modelo import ResultadoCargo, ResultadoCruce
+from .cruce_cfdi_modelo import EVIDENCIAS_POR_REVISAR, ResultadoCargo, ResultadoCruce
+from .cruce_cfdi_salida import texto_afinidad
 from .cruce_libro_veredictos import Conciliacion
 from .montos import texto_monto
 from .pipeline_modelo import (
@@ -23,11 +26,17 @@ from .pipeline_modelo import (
     SITUACION_FALTA_REGISTRO,
     SITUACION_ININTERPRETABLE,
     SITUACION_NO_APLICA,
+    SITUACIONES,
 )
 from .pipeline_revision import Observacion, observacion_a_dict, observaciones_de
 
 ESTADO_OK = "ok"
 TIPO_PAGO = "pago"
+
+# El único CFDI candidato (o grupo) coincide solo por monto: ocupa su UUID, pero el
+# cargo no cuenta como respaldado ni como falta_*; una persona confirma o descarta.
+SITUACION_CFDI_POR_REVISAR = "cfdi_por_revisar"
+SITUACIONES_FILA: Tuple[str, ...] = SITUACIONES + (SITUACION_CFDI_POR_REVISAR,)
 
 _POR_EVIDENCIA = {
     (True, True): SITUACION_CONCILIADO,
@@ -45,6 +54,11 @@ class LadoCfdi:
     diferencia: Optional[Decimal]
     moneda_diferencia: Optional[str]
     deltas: Tuple[int, ...]
+    afinidad: Optional[Fraction] = None
+
+    @property
+    def por_revisar(self) -> bool:
+        return self.tier in EVIDENCIAS_POR_REVISAR
 
 
 @dataclass(frozen=True)
@@ -79,24 +93,28 @@ class FilaCargo:
     @property
     def situacion(self) -> str:
         return situacion_de(self.estado, self.tipo_movimiento, bool(self.cfdi.uuids),
-                            self.libro.asiento_id is not None, en_revision=bool(self.revision))
+                            self.libro.asiento_id is not None, en_revision=bool(self.revision),
+                            cfdi_por_revisar=self.cfdi.por_revisar)
 
 
 def situacion_de(estado: str, tipo_movimiento: Optional[str], tiene_cfdi: bool, tiene_asiento: bool, *,
-                 en_revision: bool = False) -> str:
-    """La situación del cargo: la revisión humana gana a todo; luego la fila ilegible y el pago a la tarjeta."""
+                 en_revision: bool = False, cfdi_por_revisar: bool = False) -> str:
+    """La situación del cargo: la revisión de texto libre gana a todo; luego la fila ilegible, el pago a la
+    tarjeta y el CFDI que solo coincide por monto; al final, la combinación de CFDI y asiento."""
     if en_revision:
         return SITUACION_EN_REVISION
     if estado != ESTADO_OK:
         return SITUACION_ININTERPRETABLE
     if tipo_movimiento == TIPO_PAGO:
         return SITUACION_NO_APLICA
+    if cfdi_por_revisar:
+        return SITUACION_CFDI_POR_REVISAR
     return _POR_EVIDENCIA[(tiene_cfdi, tiene_asiento)]
 
 
 def _lado_cfdi(resultado: ResultadoCargo) -> LadoCfdi:
     return LadoCfdi(resultado.cfdis, resultado.evidencia, resultado.motivo, resultado.diferencia,
-                    resultado.moneda_diferencia, resultado.deltas)
+                    resultado.moneda_diferencia, resultado.deltas, resultado.afinidad)
 
 
 def _lado_libro(conciliacion: Conciliacion, cargo_id: str) -> LadoLibro:
@@ -139,7 +157,7 @@ def fila_a_dict(fila: FilaCargo) -> Dict[str, Any]:
         "situacion": fila.situacion, "provisional": fila.provisional,
         "cfdi": {"uuids": list(cfdi.uuids), "tier": cfdi.tier, "motivo_sin_cruce": cfdi.motivo,
                  "diferencia": _texto(cfdi.diferencia), "moneda_diferencia": cfdi.moneda_diferencia,
-                 "delta_dias": list(cfdi.deltas)},
+                 "delta_dias": list(cfdi.deltas), "afinidad_nombre": texto_afinidad(cfdi.afinidad)},
         "libro_mayor": {"asiento_id": libro.asiento_id, "origen": libro.origen,
                         "riesgo_cubeta": libro.riesgo_cubeta, "motivo_sin_cruce": libro.motivo,
                         "propuesta_asiento_id": libro.propuesta_asiento_id, "conflicto": libro.conflicto,
