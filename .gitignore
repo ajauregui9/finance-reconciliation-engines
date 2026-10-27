@@ -26,3 +26,8 @@ htmlcov/
 *.xlsx
 .env
 .env.*
+
+# Packaging (pip install -e .)
+*.egg-info/
+build/
+dist/

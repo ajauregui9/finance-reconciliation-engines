@@ -1,12 +1,13 @@
-# Código clean-room desde specs propias, verificado con una compuerta de similitud
+# Cada motor se escribe desde una spec propia, con datos 100% sintéticos
 
-Este repo es una recreación pública de procesos de conciliación y cierre. Ningún archivo se porta de código existente: cada módulo se escribe desde una spec en palabras propias y se prueba con datos sintéticos. Antes de publicar, una compuerta de similitud por líneas verifica que ningún archivo supere el 30% contra el material de referencia privado, que nunca entra al repo. Todos los umbrales son parámetros de config con valores de ejemplo redondos, no una calibración real.
+Este repo es una recreación ilustrativa de procesos de conciliación y cierre. Cada motor se escribe desde una spec propia que vive junto a él y se prueba solo con datos 100% sintéticos, sembrados por generadores del propio repo. Los resultados esperados no se escriben a mano: los generadores producen oráculos junto con los datos y las pruebas comparan contra ellos. Todos los umbrales, tolerancias, ventanas y bandas son parámetros de config con valores de ejemplo redondos, no una calibración real.
 
 ## Considered Options
 
-- Partir de código existente y renombrar: rechazado, porque la estructura y la calibración no serían propias.
+- Datos reales anonimizados: rechazado, porque la anonimización deja rastros y no permite sembrar casos borde a voluntad.
+- Resultados esperados escritos a mano: rechazado, porque se desincronizan de los datos; el oráculo generado cambia junto con la semilla.
 - Cubrir varios marketplaces: rechazado, porque uno bien hecho (Amazon) demuestra lo mismo con menos superficie.
 
 ## Consequences
 
-La compuerta corre a mano antes de publicar, nunca en CI público, porque necesita el material de referencia. Los specs viven junto a cada motor y son la fuente de verdad del comportamiento.
+Las specs son la fuente de verdad del comportamiento: un cambio de comportamiento empieza en la spec y en sus pruebas. Cualquier persona puede regenerar los datos y los oráculos con la semilla publicada y obtener los mismos bytes. Los valores de config son ilustrativos y deben recalibrarse antes de usar un motor con datos reales.

@@ -57,46 +57,48 @@ design needs it, ARCHITECTURE.md.
 python3 -m venv .venv
 . .venv/bin/activate
 python3 -m pip install -r requirements-dev.txt
+python3 -m pip install -e .
 python3 -m pytest -q --cov
 ```
 
-`requirements.txt` holds the runtime dependencies, `requirements-dev.txt` adds the test and
-lint tools that CI installs, and `requirements-llm.txt` adds the optional `anthropic` SDK,
+`pip install -e .` installs every engine and generator package (`conciliacion`,
+`cierre_amazon`, `flujo`, `netsuite_gl`, `auditoria_pl`, `guardia`, `extraccion_llm` and the
+`generador_*` packages) from its folder, so no `PYTHONPATH` is needed. `requirements.txt`
+holds the runtime dependency ranges, `requirements-dev.txt` pins the exact test and lint tool
+versions that CI installs, and `requirements-llm.txt` adds the optional `anthropic` SDK,
 needed only for the live mode of the LLM demo.
 
 ## Demos
 
-Run from the repository root. Outputs go to a temporary folder; the versioned data is
-never modified.
+Run from the repository root after `pip install -e .`. Outputs go to a temporary folder;
+the versioned data is never modified.
 
 ```bash
 OUT="$(mktemp -d)"
 
 # D1 charge universe from the raw statements, with control-total locks
-PYTHONPATH=skills/credit-card-reconciliation python3 -m conciliacion.universo examples/synthetic \
-    --salida "$OUT/universo.jsonl"
+python3 -m conciliacion.universo examples/synthetic --salida "$OUT/universo.jsonl"
 
 # D2 charge <-> CFDI
-PYTHONPATH=skills/credit-card-reconciliation python3 -m conciliacion.cruce_cfdi \
+python3 -m conciliacion.cruce_cfdi \
     --universo examples/synthetic/universo_cargos_esperado.jsonl \
     --cfdis examples/synthetic/cfdis.jsonl --salida "$OUT/cruce_cfdi.json"
 
 # D3 charge <-> general ledger, with human verdicts
-PYTHONPATH=skills/credit-card-reconciliation python3 -m conciliacion.cruce_libro \
+python3 -m conciliacion.cruce_libro \
     --universo examples/synthetic/universo_cargos_esperado.jsonl \
     --libro examples/synthetic/libro_mayor.csv --veredictos examples/synthetic/veredictos_libro.csv \
     --salida "$OUT/cruce_libro.json"
 
 # D4 whole card pipeline: statements -> universe -> prompt_guard -> CFDI -> ledger
-PYTHONPATH=skills/credit-card-reconciliation python3 -m conciliacion.pipeline \
-    --datos examples/synthetic --salida "$OUT/tarjetas"
+python3 -m conciliacion.pipeline --datos examples/synthetic --salida "$OUT/tarjetas"
 
 # D5 Amazon month-end close (JSON plus a workbook that is re-read and verified)
-PYTHONPATH=skills/marketplace-expenses/amazon python3 -m cierre_amazon \
+python3 -m cierre_amazon \
     --datos examples/synthetic_amazon --salida "$OUT/cierre.json" --xlsx "$OUT/cierre.xlsx"
 
 # D6 13-week cash flow
-PYTHONPATH=skills/cashflow-forecasting python3 -m flujo \
+python3 -m flujo \
     --config skills/cashflow-forecasting/config/flujo_ejemplo.json --corte 2026-11-02 --salida "$OUT/flujo"
 
 # D7 SuiteQL queries on the synthetic schema, then a validated CSV import file
@@ -183,8 +185,8 @@ What the demos report on the versioned data:
 
 ## Verification
 
-CI ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) runs on Python 3.9, 3.10, 3.11 and
-3.12, and every step blocks:
+CI ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) runs on Python 3.9, 3.10, 3.11, 3.12
+and 3.13, installs the repository with `pip install -e .`, and every step blocks:
 
 ```bash
 ruff check .                                  # rules E, F, W, B
@@ -200,7 +202,8 @@ python3 skills/security-guardian/scripts/prompt_guard.py --self-test
 ```
 
 CI also runs the LLM demo twice in recorded mode, with an empty API key, and compares the
-two reports byte for byte.
+two reports byte for byte, and runs the card pipeline and the cash flow demo from outside the
+repository to check that the installed packages work without `PYTHONPATH`.
 
 - **Coverage.** Measured on all source code under `skills/`, `tools/` and `examples/`, with
   branch coverage and no omitted files. The required floor is 80%. The threshold configured in
@@ -214,15 +217,6 @@ two reports byte for byte.
 - **Reference check.** [`tools/check_links.py`](tools/check_links.py) fails when a relative
   Markdown link, or a repository path written in code, points to a file or folder that does not
   exist or is not published.
-- **Similarity gate (manual, before publishing).** [`tools/similarity_gate.py`](tools/similarity_gate.py)
-  compares every code file against private reference material that never enters the repository
-  and fails if any file exceeds 30% line similarity (ADR 0001). It reads the location only
-  from an environment variable, prints only file names and percentages, and does not run in
-  public CI because the reference material is not available there:
-
-  ```bash
-  CLEANROOM_ORIGINAL_DIR=<private reference folder> python3 tools/similarity_gate.py
-  ```
 
 ## Repository layout
 

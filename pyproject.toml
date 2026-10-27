@@ -1,5 +1,6 @@
 [build-system]
-requires = ["setuptools>=65.0"]
+# setuptools >= 64: instalación editable (PEP 660) con `pip install -e .`.
+requires = ["setuptools>=64"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -8,36 +9,86 @@ version = "0.1.0"
 description = "Deterministic Financial Reconciliation, Marketplace Auditing, Cashflow Forecasting & AI Guardrails"
 readme = "README.md"
 requires-python = ">=3.9"
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Operating System :: OS Independent",
+  "Private :: Do Not Upload",
+]
 authors = [
   { name = "Arturo Jáuregui" }
 ]
+# Rangos de runtime; mantener sincronizado con requirements.txt.
 dependencies = [
-  "openpyxl>=3.1.0",
-  "defusedxml>=0.7.1",
+  "openpyxl>=3.1.0,<4",
+  "defusedxml>=0.7.1,<1",
 ]
 
 [project.optional-dependencies]
-# Mantener sincronizado con requirements-dev.txt (lo que instala el CI).
+# Rangos mínimos; las versiones exactas que instala el CI están en requirements-dev.txt.
 dev = [
   "pytest>=7.4.0",
   "pytest-cov>=4.1.0",
   "coverage[toml]>=7.3.0",
   "ruff>=0.6.0",
   "mypy>=1.10.0",
+  "types-openpyxl>=3.1",
 ]
+llm = [
+  "anthropic>=0.40.0",
+]
+
+# ---------------------------------------------------------------- empaquetado
+# Cada paquete de primer nivel vive en la carpeta de su skill (o de examples/);
+# el mapeo explícito permite `pip install -e .` sin PYTHONPATH. Un paquete nuevo
+# se agrega en `packages` y en `package-dir`.
+[tool.setuptools]
+packages = [
+  "conciliacion",
+  "cierre_amazon",
+  "flujo",
+  "flujo.fuentes",
+  "netsuite_gl",
+  "auditoria_pl",
+  "guardia",
+  "extraccion_llm",
+  "generador_sintetico",
+  "generador_flujo",
+  "generador_amazon",
+  "generador_llm",
+]
+include-package-data = false
+
+[tool.setuptools.package-dir]
+conciliacion = "skills/credit-card-reconciliation/conciliacion"
+cierre_amazon = "skills/marketplace-expenses/amazon/cierre_amazon"
+flujo = "skills/cashflow-forecasting/flujo"
+netsuite_gl = "skills/netsuite-gl-reconciliation/netsuite_gl"
+auditoria_pl = "skills/pl-review-methodology/scripts/auditoria_pl"
+guardia = "skills/security-guardian/guardia"
+extraccion_llm = "skills/llm-extraction-qc/extraccion_llm"
+generador_sintetico = "examples/generador_sintetico"
+generador_flujo = "examples/generador_flujo"
+generador_amazon = "examples/generador_amazon"
+generador_llm = "examples/generador_llm"
+
+[tool.setuptools.package-data]
+generador_flujo = ["parametros.json"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+# Los paquetes (conciliacion, flujo, guardia, ...) se importan instalados con
+# `pip install -e .`. Solo quedan aquí las carpetas de scripts sueltos que las
+# pruebas importan como módulo (prompt_guard.py, evaluar_guardia.py,
+# run_pl_audit.py, tools/*.py): son puntos de entrada, no paquetes instalables.
 pythonpath = [
-  ".",
-  "examples",
-  "skills/credit-card-reconciliation",
-  "skills/marketplace-expenses/amazon",
-  "skills/pl-review-methodology/scripts",
-  "skills/cashflow-forecasting",
-  "skills/netsuite-gl-reconciliation",
   "skills/security-guardian/scripts",
-  "skills/llm-extraction-qc",
+  "skills/pl-review-methodology/scripts",
   "tools",
 ]
 
@@ -53,6 +104,8 @@ select = ["E", "F", "W", "B"]
 
 # ---------------------------------------------------------------- mypy
 [tool.mypy]
+# El mínimo soportado (requires-python). requirements-dev.txt fija una versión de
+# mypy que todavía acepta 3.9 como objetivo; al subir mypy, verificar que no avise.
 python_version = "3.9"
 strict = true
 warn_unused_configs = true
@@ -89,6 +142,6 @@ branch = true
 include_namespace_packages = true
 # Ratchet: arranca en la cobertura real medida al configurar el CI (redondeada
 # hacia abajo) y solo sube. El mínimo exigido es 80. Nunca bajarlo.
-fail_under = 90  # ratchet: medido 96.7% al integrar los motores clean-room; el mínimo exigido es 80%
+fail_under = 90  # ratchet: medido 96.7% al integrar los motores; el mínimo exigido es 80%
 show_missing = true
 skip_covered = false

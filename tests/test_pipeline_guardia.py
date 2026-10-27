@@ -13,7 +13,6 @@ import io
 import json
 import shutil
 import sys
-import types
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
@@ -24,7 +23,7 @@ import pytest
 from conciliacion import pipeline, pipeline_filas
 from conciliacion.pipeline import OpcionesPipeline, correr_pipeline
 from conciliacion.pipeline_filas import FilaCargo, LadoCfdi, LadoLibro
-from conciliacion.pipeline_guardia import NOMBRE_REVISOR, RevisorGuardia
+from conciliacion.pipeline_guardia import MODULO_GUARDIA, NOMBRE_REVISOR, RevisorGuardia, cargar_paquete
 from conciliacion.pipeline_invariantes import invariantes_de_filas, resumir
 from conciliacion.pipeline_modelo import Corrida, InsumoPipeline
 from conciliacion.pipeline_revision import Observacion, RevisorIdentidad, TextoLibre
@@ -82,34 +81,31 @@ class TestRevisor:
     def test_sin_textos_no_hay_observaciones(self) -> None:
         assert RevisorGuardia().revisar(()) == ()
 
-    def test_si_no_encuentra_el_guard_es_insumo_invalido(self, tmp_path: Path) -> None:
+    def test_si_no_encuentra_el_guard_es_insumo_invalido(self) -> None:
         textos = (TextoLibre("cargo", "A-1", "descripcion", "x"),)
-        with pytest.raises(InsumoPipeline, match="^revision_texto_libre: .*prompt_guard"):
-            RevisorGuardia(carpeta=tmp_path / "no_existe").revisar(textos)
+        with pytest.raises(InsumoPipeline, match="^revision_texto_libre: .*prompt_guard.*pip install -e"):
+            RevisorGuardia(modulo="guardia_que_no_existe").revisar(textos)
 
-    def test_no_reutiliza_otro_modulo_con_el_mismo_nombre(self, tmp_path: Path,
-                                                          monkeypatch: pytest.MonkeyPatch) -> None:
-        carpeta = tmp_path / "guardia"
-        carpeta.mkdir()
-        (carpeta / "__init__.py").write_text("", encoding="utf-8")
-        intruso = types.ModuleType("guardia")
-        intruso.__file__ = str(tmp_path / "otro" / "__init__.py")
-        monkeypatch.setitem(sys.modules, "guardia", intruso)
-        with pytest.raises(InsumoPipeline, match="otro módulo"):
-            RevisorGuardia(carpeta=carpeta).revisar((TextoLibre("cargo", "A-1", "descripcion", "x"),))
+    def test_importa_el_paquete_guardia_instalado_del_repo(self) -> None:
+        paquete = cargar_paquete()
+        assert paquete.__name__ == MODULO_GUARDIA == "guardia"
+        archivo = Path(str(paquete.__file__)).resolve()
+        assert archivo == RAIZ / "skills" / "security-guardian" / "guardia" / "__init__.py"
 
     @pytest.mark.parametrize("codigo,mensaje", [("X = 1\n", "inspeccionar"),
                                                 ("raise RuntimeError('roto')\n", "roto")])
     def test_un_paquete_inservible_es_insumo_invalido(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
                                                       codigo: str, mensaje: str) -> None:
-        carpeta = tmp_path / "guardia"
+        nombre = f"guardia_falsa_{tmp_path.name}".replace("-", "_")
+        carpeta = tmp_path / nombre
         carpeta.mkdir()
         (carpeta / "__init__.py").write_text(codigo, encoding="utf-8")
-        monkeypatch.delitem(sys.modules, "guardia", raising=False)
+        monkeypatch.syspath_prepend(str(tmp_path))
         with pytest.raises(InsumoPipeline, match=mensaje):
-            RevisorGuardia(carpeta=carpeta).revisar((TextoLibre("cargo", "A-1", "descripcion", "x"),))
+            RevisorGuardia(modulo=nombre).revisar((TextoLibre("cargo", "A-1", "descripcion", "x"),))
         if mensaje == "roto":
-            assert "guardia" not in sys.modules
+            assert nombre not in sys.modules
+        monkeypatch.delitem(sys.modules, nombre, raising=False)
 
 
 # ---------------------------------------------------- sobre examples/synthetic

@@ -1,3 +1,3 @@
-openpyxl>=3.1.0
-defusedxml>=0.7.1
-pytest>=7.4.0
+# Dependencias de runtime (rangos). Mantener sincronizado con [project].dependencies de pyproject.toml.
+openpyxl>=3.1.0,<4
+defusedxml>=0.7.1,<1

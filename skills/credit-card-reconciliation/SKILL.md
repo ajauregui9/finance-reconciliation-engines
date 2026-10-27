@@ -14,10 +14,11 @@ description: Deterministic reconciliation of corporate card statements against r
 1. Put the inputs in one folder with the fixed names of [`specs/pipeline.md`](specs/pipeline.md):
    `resumen_estados_cuenta.json` and the statements it lists, `cfdis.jsonl`, `libro_mayor.csv`
    and, optionally, `veredictos_libro.csv`.
-2. Run the pipeline from the repository root:
+2. Install the repository once (`python3 -m pip install -e .` from its root), then run the
+   pipeline from the repository root:
 
    ```bash
-   PYTHONPATH=skills/credit-card-reconciliation python3 -m conciliacion.pipeline \
+   python3 -m conciliacion.pipeline \
        --datos examples/synthetic --salida <output-dir> \
        [--config-cfdi <json>] [--config-libro <json>] [--sin-estado EMISOR ...] [--sin-veredictos] [--sin-guardia]
    ```

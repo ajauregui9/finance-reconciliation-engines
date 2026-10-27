@@ -14,8 +14,10 @@ advertising, plus a check of the platform withholding.
 
 ## How to run
 
+After `python3 -m pip install -e .` at the repository root:
+
 ```bash
-PYTHONPATH=skills/marketplace-expenses/amazon python3 -m cierre_amazon \
+python3 -m cierre_amazon \
     --datos <directory> [--config <config.json>] [--salida cierre.json] [--xlsx cierre.xlsx] \
     [--mes AAAA-MM] [--fuente-publicidad liquidacion|consola|factura]
 ```
