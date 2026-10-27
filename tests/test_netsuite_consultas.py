@@ -11,7 +11,7 @@ import sys
 from collections import defaultdict
 from decimal import ROUND_HALF_UP, Decimal
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, Iterator, List, Tuple
 
 import pytest
 
@@ -21,7 +21,7 @@ if str(SKILL) not in sys.path:
     sys.path.insert(0, str(SKILL))
 
 from netsuite_gl.compat import CAMPOS_DF  # noqa: E402
-from netsuite_gl.config import CONFIG_DEFAULT  # noqa: E402
+from netsuite_gl.config import CONFIG_DEFAULT, PlanDiscrepancias  # noqa: E402
 from netsuite_gl.consultas import (  # noqa: E402
     DIR_QUERIES,
     ORDEN_CONSULTAS,
@@ -69,8 +69,9 @@ def _filas(resultado: Any) -> List[Dict[str, Any]]:
 
 
 @pytest.fixture(scope="module")
-def base() -> Any:
-    return construir_base(CFDIS)
+def base() -> Iterator[Any]:
+    with construir_base(CFDIS) as abierta:
+        yield abierta
 
 
 @pytest.fixture(scope="module")
@@ -79,8 +80,9 @@ def manifiesto(base: Any) -> Dict[str, Any]:
 
 
 @pytest.fixture()
-def base_nueva() -> Any:
-    return construir_base(CFDIS)
+def base_nueva() -> Iterator[Any]:
+    with construir_base(CFDIS) as abierta:
+        yield abierta
 
 
 # ---------------------------------------------------------------- carga de archivos .sql
@@ -136,8 +138,21 @@ def test_columna_monetaria_ausente_falla(base: Any) -> None:
 
 
 def test_float_en_columna_no_monetaria_falla(base: Any) -> None:
-    consulta = parsear_consulta("p", "-- @descripcion: x\nSELECT 0.5 AS proporcion\n")
+    consulta = parsear_consulta("p", "-- @descripcion: x\nSELECT CAST(5 AS REAL) AS proporcion\n")
     with pytest.raises(ErrorConsulta, match="proporcion"):
+        ejecutar(base.conexion, consulta)
+
+
+@pytest.mark.parametrize("expresion, fragmento", [("CAST(5 AS REAL)", "float"), ("'1.00'", "str")])
+def test_columna_monetaria_que_no_es_centavo_entero_falla(base: Any, expresion: str, fragmento: str) -> None:
+    consulta = parsear_consulta("p", f"-- @descripcion: x\n-- @montos: m\nSELECT {expresion} AS m\n")
+    with pytest.raises(ErrorConsulta, match=fragmento):
+        ejecutar(base.conexion, consulta)
+
+
+def test_literal_decimal_en_una_query_falla_con_su_nombre(base: Any) -> None:
+    consulta = parsear_consulta("umbral", "-- @descripcion: x\nSELECT COUNT(*) AS n FROM account WHERE 1 > 0.5\n")
+    with pytest.raises(ErrorConsulta, match="umbral.*literal decimal"):
         ejecutar(base.conexion, consulta)
 
 
@@ -147,12 +162,42 @@ def test_error_de_sqlite_se_reporta_con_nombre_de_consulta(base: Any) -> None:
         ejecutar(base.conexion, consulta)
 
 
-def test_montos_salen_como_decimal_a_dos_decimales(base: Any) -> None:
-    texto = "-- @descripcion: x\n-- @montos: m, n, v\nSELECT 100 AS m, 0.1 + 0.2 AS n, NULL AS v\n"
+def test_montos_salen_de_centavos_enteros_a_decimal_con_dos_decimales(base: Any) -> None:
+    texto = "-- @descripcion: x\n-- @montos: m, n, v\nSELECT 11600 AS m, -10 - 20 AS n, NULL AS v\n"
     consulta = parsear_consulta("p", texto)
     (fila,) = ejecutar(base.conexion, consulta).filas
-    assert fila == (Decimal("100.00"), Decimal("0.30"), None)
+    assert fila == (Decimal("116.00"), Decimal("-0.30"), None)
     assert all(isinstance(v, Decimal) and v.as_tuple().exponent == -2 for v in fila[:2])
+
+
+def _cfdi_grande(uuid: str, folio: str) -> Dict[str, Any]:
+    return {
+        "uuid": uuid, "serie": "BIG", "folio": folio, "fecha_emision": "2026-07-10", "tipo_comprobante": "I",
+        "direccion": "recibido", "rfc_emisor": "RFC_PRUEBA_01", "nombre_emisor": "PROVEEDOR DE PRUEBA SA DE CV",
+        "rfc_receptor": CONFIG_DEFAULT.rfc_empresa, "nombre_receptor": "EMPRESA DEMO SA DE CV", "moneda": "MXN",
+        "tipo_cambio": None, "subtotal": "100000000000000.00", "iva": "0.01", "total": "100000000000000.01",
+        "total_mxn": "100000000000000.01", "forma_pago": "03", "metodo_pago": "PUE", "uso_cfdi": "G03",
+        "concepto": "SERVICIO DE HOSPEDAJE", "uuid_relacionado": None,
+    }
+
+
+def test_montos_que_un_float_no_representa_salen_exactos(tmp_path: Path) -> None:
+    """100 billones con un centavo: en binario de 64 bits se vuelve ...0.02; en centavos enteros, no."""
+    ruta = tmp_path / "cfdis.jsonl"
+    registros = [_cfdi_grande("SINT0101-AAAA-4AAA-8AAA-0AAAAAAAAA01", "1"),
+                 _cfdi_grande("SINT0102-AAAA-4AAA-8AAA-0AAAAAAAAA02", "2")]
+    ruta.write_text("".join(json.dumps(r) + "\n" for r in registros), encoding="utf-8")
+    plan = PlanDiscrepancias(sin_registro=1, monto_distinto=0, duplicado=0, periodo_equivocado=0)
+    exacto = Decimal("100000000000000.01")
+    with construir_base(ruta, plan=plan) as grande:
+        (sin_registro,) = _filas(ejecutar_por_nombre(grande.conexion, "cfdi_sin_registro"))
+        saldos = _filas(ejecutar_por_nombre(grande.conexion, "saldos_cuenta_periodo_clase"))
+        cuadre = ejecutar_por_nombre(grande.conexion, "cuadre_cfdi_gl").filas
+    assert sin_registro["total"] == exacto
+    proveedores = [f for f in saldos if f["cuenta"].startswith(CONFIG_DEFAULT.cuenta_proveedores + " ")]
+    assert [f["credito"] for f in proveedores] == [exacto]
+    assert sum((f["debito"] for f in saldos), Decimal("0")) == exacto
+    assert cuadre == ()
 
 
 # ---------------------------------------------------------------- saldos
@@ -300,7 +345,7 @@ def test_periodo_equivocado_encuentra_exactamente_lo_plantado(base: Any, manifie
 
 def test_resultados_son_deterministas() -> None:
     def _correr() -> List[str]:
-        conexion = construir_base(CFDIS).conexion
-        return [resultado_a_csv(ejecutar_por_nombre(conexion, n)) for n in ORDEN_CONSULTAS]
+        with construir_base(CFDIS) as nueva:
+            return [resultado_a_csv(ejecutar_por_nombre(nueva.conexion, n)) for n in ORDEN_CONSULTAS]
 
     assert _correr() == _correr()

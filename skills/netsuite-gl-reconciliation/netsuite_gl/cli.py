@@ -1,6 +1,7 @@
 """CLI: corre las queries contra la base sintética, muestra el manifiesto y genera CSV de carga.
 
-Códigos de salida: 0 éxito, 2 entrada o argumentos inválidos, 3 CSV rechazado.
+Códigos de salida: 0 éxito, 2 entrada o argumentos inválidos, 3 CSV rechazado. Cada comando
+abre la base en un bloque `with`, así que la conexión se cierra también cuando hay error.
 """
 from __future__ import annotations
 
@@ -94,8 +95,8 @@ def _consultar(args: argparse.Namespace) -> int:
     nombres: Tuple[str, ...] = tuple(args.consulta) if args.consulta else ORDEN_CONSULTAS
     for nombre in nombres:
         cargar_consulta(nombre)  # valida antes de construir la base
-    base = _base(args)
-    resultados = ejecutar_todas(base.conexion, nombres)
+    with _base(args) as base:
+        resultados = ejecutar_todas(base.conexion, nombres)
     if args.salida is None:
         bloques = [f"# {r.nombre} ({len(r.filas)} filas)\n{resultado_a_csv(r)}" for r in resultados]
         sys.stdout.write("\n".join(bloques))
@@ -112,7 +113,8 @@ def _consultar(args: argparse.Namespace) -> int:
 
 
 def _discrepancias(args: argparse.Namespace) -> int:
-    texto = manifiesto_a_json(_base(args).manifiesto)
+    with _base(args) as base:
+        texto = manifiesto_a_json(base.manifiesto)
     if args.salida is None:
         sys.stdout.write(texto)
     else:
@@ -126,21 +128,22 @@ def _traducir(args: argparse.Namespace) -> int:
 
 
 def _generar_csv(args: argparse.Namespace) -> int:
-    base = _base(args)
-    if args.desde_sin_registro:
-        if args.formato not in (None, FORMATO_VENDOR_BILL):
-            raise ErrorEntrada("--desde-sin-registro solo genera el formato vendor_bill")
-        propuesta = proponer_facturas_sin_registro(base.conexion, CONFIG_DEFAULT)
-        asientos: Tuple[AsientoCarga, ...] = propuesta.asientos
-        formato = FORMATO_VENDOR_BILL
-        avisos = [f"pendiente {p.uuid}: {p.motivo}" for p in propuesta.pendientes]
-    else:
-        if args.formato is None:
-            raise ErrorEntrada("--formato es obligatorio con --asientos")
-        asientos = asientos_desde_json(args.asientos.read_text(encoding="utf-8"))
-        formato = args.formato
-        avisos = []
-    texto = generar_csv(asientos, leer_catalogo(base.conexion), formato)
+    with _base(args) as base:
+        if args.desde_sin_registro:
+            if args.formato not in (None, FORMATO_VENDOR_BILL):
+                raise ErrorEntrada("--desde-sin-registro solo genera el formato vendor_bill")
+            propuesta = proponer_facturas_sin_registro(base.conexion, CONFIG_DEFAULT)
+            asientos: Tuple[AsientoCarga, ...] = propuesta.asientos
+            formato = FORMATO_VENDOR_BILL
+            avisos = [f"pendiente {p.uuid}: {p.motivo}" for p in propuesta.pendientes]
+        else:
+            if args.formato is None:
+                raise ErrorEntrada("--formato es obligatorio con --asientos")
+            asientos = asientos_desde_json(args.asientos.read_text(encoding="utf-8"))
+            formato = args.formato
+            avisos = []
+        catalogo = leer_catalogo(base.conexion)
+    texto = generar_csv(asientos, catalogo, formato)
     _escribir(args.salida, texto)
     print(f"{len(asientos)} asientos validados y escritos en {args.salida.name} (formato {formato})")
     for aviso in avisos:

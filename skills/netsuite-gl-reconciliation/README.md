@@ -11,7 +11,8 @@ The queries are plain SuiteQL. Here they run against an in-memory SQLite databas
 the SuiteQL tables, filled deterministically from the synthetic CFDIs in `examples/synthetic/`. A small,
 documented compatibility layer translates the few SuiteQL constructs that SQLite lacks.
 
-Standard library only (`sqlite3`, `csv`, `json`, `decimal`). All amounts are `Decimal`.
+Standard library only (`sqlite3`, `csv`, `json`, `decimal`). All amounts are `Decimal`; in the
+synthetic database they are stored as integer cents, so every SQL sum is exact integer arithmetic.
 
 ## Quick start
 
@@ -37,7 +38,7 @@ stderr, no file written).
 | `SPEC.md` | Full specification (Spanish) |
 | `queries/*.sql` | The five SuiteQL queries, each with a `-- @descripcion` / `-- @montos` header |
 | `netsuite_gl/cfdis.py` | Reads and validates `cfdis.jsonl`; splits the universe from excluded records |
-| `netsuite_gl/montos.py`, `fechas.py` | The single `Decimal` boundary and strict `YYYY-MM-DD` dates |
+| `netsuite_gl/montos.py`, `fechas.py` | The single `Decimal` boundary (to and from integer cents) and strict `YYYY-MM-DD` dates |
 | `netsuite_gl/esquema.py`, `periodos.py`, `filas.py`, `poblado.py` | Schema DDL and deterministic population |
 | `netsuite_gl/discrepancias.py` | Hash-based choice of planted discrepancies and the manifest model |
 | `netsuite_gl/compat.py` | SuiteQL → SQLite compatibility layer |
@@ -49,7 +50,14 @@ stderr, no file written).
 ## Synthetic schema
 
 Table and column names follow SuiteQL. Booleans are `'T'`/`'F'`, dates are ISO text, and
-`transactionline.id` is only unique inside its transaction.
+`transactionline.id` is only unique inside its transaction. Amounts (`debit`, `credit`,
+`amount` and the custom record's amounts) are integer cents in `INTEGER` columns with a type
+check; NetSuite stores them as decimals, and the compatibility layer below explains why the
+queries do not change. Anything other than a Python integer is rejected before it is inserted.
+
+The database is in memory and is meant to be opened in a `with` block: `construir_base`
+returns an object whose exit closes the connection, also on error. Every CLI command opens it
+that way.
 
 | Table | Columns |
 |---|---|
@@ -109,11 +117,30 @@ comments, and translates code only:
 | `BUILTIN.DF(x.entity)` | scalar subquery: `entityid || ' ' || companyname` |
 | `BUILTIN.DF(x.type)` | `CASE` with display names (`Bill`, `Bill Credit`, `Journal`) |
 | `NVL(a, b)` | `COALESCE(a, b)` |
+| `ROUND(x, n)` | `ROUND_CENTAVOS(x, n)`, a function registered on the connection |
 | `transaction` (table or column) | `"transaction"` (reserved word in SQLite) |
 
 Any other `BUILTIN.*`, a `BUILTIN.DF` on an unmapped field, or an unclosed literal or comment
 raises `ErrorCompatibilidad`. `compat.quitar_comentarios` gives the text that would be sent
 through the MCP connector.
+
+**Amounts: decimals in SuiteQL, integer cents in SQLite.** SQLite has no exact decimal type: a
+`NUMERIC` column stores `100000000000000.01` as the binary float `100000000000000.02`, and `SUM`
+runs in floating point. Storing integer cents makes every sum exact. Adding, subtracting,
+negating, `CASE`, `NVL` and comparing against `0` give the same answer in pesos and in cents,
+so the SuiteQL text stays as it would be in NetSuite; the scale comes back once, when results
+are read. What does depend on the scale is handled explicitly:
+
+| Construct | Treatment |
+|---|---|
+| `ROUND(x, n)` with `n >= 2` | `ROUND_CENTAVOS` returns the same integer (rounding cents to two or more decimals changes nothing) |
+| `ROUND(x, n)` with `n < 2`, or on a float or text | `ROUND_CENTAVOS` fails when the query runs |
+| a decimal literal (`> 100.00`) | rejected when translating: it would compare pesos against cents |
+| division `/` | rejected when translating: SQLite truncates integer division |
+| `AVG`, `CAST(… AS REAL)` | they produce a float, which the read boundary rejects |
+
+Known limit: an integer literal compared against an amount (`debit > 100`) would be read as
+cents, and the layer cannot tell it from a count. The queries here only compare amounts with `0`.
 
 ## CSV load files
 
@@ -143,8 +170,10 @@ same input give byte-identical files (the tests compare SHA-256).
 - The queries were written for this synthetic schema and are checked against SQLite here, not
   against a live account. Field names follow SuiteQL, but a real account may need adjustments
   (for example, a different custom record or CFDI UUID field from a localization bundle).
-- SQLite stores currency columns as binary floating point. Every query rounds sums to cents with
-  `ROUND(…, 2)`, and Python converts once (`str` → `Decimal`), so no float leaks into results.
+- Amounts are integer cents in SQLite, not decimals as in NetSuite. The compatibility layer keeps
+  the SuiteQL text unchanged and rejects the constructs whose result would depend on that scale
+  (see above); results are converted once from cents to `Decimal`, and a float in any result
+  column is an error, so no float touches money.
 - Single currency (MXN) and a single accounting book. USD CFDIs are booked at their MXN total.
 - The CSV date format must match the importing user's date preference.
 

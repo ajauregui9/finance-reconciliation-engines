@@ -31,5 +31,10 @@ to the ERP without a person deciding to do so.
 ## Rules
 - Queries live in `queries/*.sql`, written in SuiteQL. Only the compatibility layer
   (`netsuite_gl/compat.py`) adapts them to SQLite; never fork a query into a SQLite-only copy.
-- Amounts are `Decimal`. Monetary result columns must be listed in the query header (`-- @montos:`).
+- Amounts are `Decimal`. The synthetic database stores them as integer cents, so monetary result
+  columns must be listed in the query header (`-- @montos:`); an unlisted one would come out in
+  cents. Do not write decimal literals or divisions in a query: the compatibility layer rejects
+  them because their result would depend on that scale.
+- When calling the package from code, open the database in a `with` block around
+  `construir_base`, so the SQLite connection is closed even when something fails.
 - See `SPEC.md` for the full contract and `README.md` for the overview.

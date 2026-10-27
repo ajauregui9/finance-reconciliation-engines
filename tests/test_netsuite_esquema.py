@@ -8,11 +8,12 @@ from __future__ import annotations
 import dataclasses
 import hashlib
 import json
+import sqlite3
 import sys
 from collections import Counter
 from decimal import Decimal
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, Iterator, List
 
 import pytest
 
@@ -23,6 +24,8 @@ if str(SKILL) not in sys.path:
 
 from netsuite_gl.cfdis import ErrorInsumo, leer_cfdis  # noqa: E402
 from netsuite_gl.config import CONFIG_DEFAULT, PlanDiscrepancias  # noqa: E402
+from netsuite_gl import esquema  # noqa: E402
+from netsuite_gl.esquema import COLUMNAS_MONTO, crear_conexion, insertar_filas  # noqa: E402
 from netsuite_gl.poblado import ErrorPoblado, construir_base  # noqa: E402
 from netsuite_gl.salida import manifiesto_a_json  # noqa: E402
 
@@ -108,8 +111,32 @@ def _sha_dump(conexion: Any) -> str:
 
 
 @pytest.fixture(scope="module")
-def base() -> Any:
-    return construir_base(CFDIS)
+def base() -> Iterator[Any]:
+    with construir_base(CFDIS) as abierta:
+        yield abierta
+
+
+@pytest.fixture()
+def conexiones(monkeypatch: pytest.MonkeyPatch) -> List[sqlite3.Connection]:
+    """Registra cada conexión que abre el módulo, para comprobar que todas se cierran."""
+    abiertas: List[sqlite3.Connection] = []
+    original = sqlite3.connect
+
+    def registrar(*args: Any, **kwargs: Any) -> sqlite3.Connection:
+        conexion = original(*args, **kwargs)
+        abiertas.append(conexion)
+        return conexion
+
+    monkeypatch.setattr(sqlite3, "connect", registrar)
+    return abiertas
+
+
+def _cerrada(conexion: sqlite3.Connection) -> bool:
+    try:
+        conexion.execute("SELECT 1")
+    except sqlite3.ProgrammingError:
+        return True
+    return False
 
 
 @pytest.fixture(scope="module")
@@ -218,15 +245,62 @@ def test_esquema_tiene_tablas_y_columnas_estilo_suiteql(base: Any) -> None:
 def test_cada_transaccion_cuadra_y_amount_es_debit_menos_credit(base: Any) -> None:
     descuadres = base.conexion.execute(
         "SELECT \"transaction\" FROM transactionaccountingline GROUP BY \"transaction\" "
-        "HAVING ROUND(SUM(COALESCE(debit, 0)) - SUM(COALESCE(credit, 0)), 2) <> 0"
+        "HAVING SUM(COALESCE(debit, 0)) <> SUM(COALESCE(credit, 0))"
     ).fetchall()
     assert descuadres == []
     mal_amount = base.conexion.execute(
         "SELECT COUNT(*) FROM transactionaccountingline "
-        "WHERE ROUND(amount - (COALESCE(debit, 0) - COALESCE(credit, 0)), 2) <> 0 "
+        "WHERE amount <> COALESCE(debit, 0) - COALESCE(credit, 0) "
         "OR (debit IS NULL) = (credit IS NULL)"
     ).fetchone()
     assert mal_amount == (0,)
+
+
+def test_montos_se_guardan_como_centavos_enteros(base: Any) -> None:
+    for tabla, columnas in COLUMNAS_MONTO.items():
+        declarados = {f[1]: f[2] for f in base.conexion.execute(f'PRAGMA table_info("{tabla}")')}
+        for columna in columnas:
+            assert declarados[columna] == "INTEGER", (tabla, columna)
+            tipos = {t for (t,) in base.conexion.execute(f'SELECT DISTINCT typeof("{columna}") FROM "{tabla}"')}
+            assert tipos <= {"integer", "null"} and "integer" in tipos, (tabla, columna, tipos)
+
+
+def test_registro_guarda_el_total_del_cfdi_en_centavos(base: Any) -> None:
+    crudos = {c["uuid"]: c for c in _crudos() if _es_universo(c)}
+    filas = base.conexion.execute(
+        "SELECT custrecord_cfdi_uuid, custrecord_cfdi_total FROM customrecord_cfdi_recibido").fetchall()
+    for uuid, centavos in filas:
+        assert centavos == int(Decimal(crudos[uuid]["total_mxn"]) * 100), uuid
+
+
+@pytest.mark.parametrize("valor", ["116.00", 116.0, Decimal("116.00"), True])
+def test_insertar_rechaza_montos_que_no_son_centavos_enteros(valor: Any) -> None:
+    conexion = crear_conexion()
+    try:
+        fila = (1, "uuid-1", "uuid-1", "2026-07-10", "I", "RFC_X", "X", "A", "1", "C", valor, 0, valor, None)
+        with pytest.raises(ErrorPoblado, match="custrecord_cfdi_subtotal"):
+            insertar_filas(conexion, {"customrecord_cfdi_recibido": (fila,)})
+        assert conexion.execute("SELECT COUNT(*) FROM customrecord_cfdi_recibido").fetchone() == (0,)
+    finally:
+        conexion.close()
+
+
+def test_ddl_que_falla_cierra_la_conexion(
+    monkeypatch: pytest.MonkeyPatch, conexiones: List[sqlite3.Connection]
+) -> None:
+    monkeypatch.setattr(esquema, "DDL", ("CREATE TABLE incompleta (",))
+    with pytest.raises(sqlite3.Error):
+        crear_conexion()
+    assert len(conexiones) == 1 and _cerrada(conexiones[0])
+
+
+def test_insertar_rechaza_tabla_desconocida() -> None:
+    conexion = crear_conexion()
+    try:
+        with pytest.raises(ErrorPoblado, match="no_existe"):
+            insertar_filas(conexion, {"no_existe": ((1,),)})
+    finally:
+        conexion.close()
 
 
 def test_lineas_de_cuenta_y_accounting_line_son_uno_a_uno(base: Any) -> None:
@@ -348,12 +422,28 @@ def test_periodo_equivocado_es_el_mes_siguiente(base: Any, manifiesto: Dict[str,
 
 
 def test_poblado_es_determinista_y_depende_de_la_semilla() -> None:
-    primera = construir_base(CFDIS)
-    segunda = construir_base(CFDIS)
-    assert manifiesto_a_json(primera.manifiesto) == manifiesto_a_json(segunda.manifiesto)
-    assert _sha_dump(primera.conexion) == _sha_dump(segunda.conexion)
-    otra = construir_base(CFDIS, plan=PlanDiscrepancias(semilla=99))
-    assert otra.manifiesto.sin_registro != primera.manifiesto.sin_registro
+    with construir_base(CFDIS) as primera, construir_base(CFDIS) as segunda:
+        assert manifiesto_a_json(primera.manifiesto) == manifiesto_a_json(segunda.manifiesto)
+        assert _sha_dump(primera.conexion) == _sha_dump(segunda.conexion)
+        with construir_base(CFDIS, plan=PlanDiscrepancias(semilla=99)) as otra:
+            assert otra.manifiesto.sin_registro != primera.manifiesto.sin_registro
+
+
+def test_la_base_se_cierra_al_salir_del_bloque(conexiones: List[sqlite3.Connection]) -> None:
+    with construir_base(CFDIS) as base:
+        assert not _cerrada(base.conexion)
+    assert len(conexiones) == 1 and _cerrada(conexiones[0])
+    base.cerrar()  # cerrar dos veces no es un error
+
+
+def test_poblado_que_falla_despues_de_abrir_cierra_la_conexion(
+    tmp_path: Path, conexiones: List[sqlite3.Connection]
+) -> None:
+    repetida = CONFIG_DEFAULT.cuentas + (CONFIG_DEFAULT.cuentas[0],)
+    config = dataclasses.replace(CONFIG_DEFAULT, cuentas=repetida)
+    with pytest.raises(ErrorPoblado, match="account"):
+        construir_base(_escribir(tmp_path, [_cfdi_valido()]), config=config, plan=PLAN_VACIO)
+    assert len(conexiones) == 1 and _cerrada(conexiones[0])
 
 
 # ---------------------------------------------------------------- casos con insumo propio
@@ -371,7 +461,11 @@ def test_nota_de_credito_usa_cuenta_de_la_factura_relacionada(tmp_path: Path) ->
         subtotal="10.00", iva="0.00", total="10.00", total_mxn="10.00",
         uuid_relacionado="SINT9999-AAAA-4AAA-8AAA-0AAAAAAAAAA9",
     )
-    base = construir_base(_escribir(tmp_path, [factura, nota, suelta]), plan=PLAN_VACIO)
+    with construir_base(_escribir(tmp_path, [factura, nota, suelta]), plan=PLAN_VACIO) as base:
+        _revisar_nota_de_credito(base, nota, suelta)
+
+
+def _revisar_nota_de_credito(base: Any, nota: Dict[str, Any], suelta: Dict[str, Any]) -> None:
     consulta = (
         "SELECT t.type, a.acctnumber, tal.debit, tal.credit FROM \"transaction\" t "
         "JOIN transactionaccountingline tal ON tal.\"transaction\" = t.id AND tal.transactionline = ? "
@@ -381,9 +475,9 @@ def test_nota_de_credito_usa_cuenta_de_la_factura_relacionada(tmp_path: Path) ->
     gasto_nota = base.conexion.execute(consulta, (1, nota["uuid"])).fetchone()
     assert gasto_nota[0] == "VendCred"
     assert gasto_nota[1] == cuenta_hospedaje
-    assert gasto_nota[2] is None and Decimal(str(gasto_nota[3])) == Decimal("10.00")
+    assert gasto_nota[2] is None and gasto_nota[3] == 1000
     proveedores_nota = base.conexion.execute(consulta, (0, nota["uuid"])).fetchone()
-    assert Decimal(str(proveedores_nota[2])) == Decimal("11.60") and proveedores_nota[3] is None
+    assert proveedores_nota[2] == 1160 and proveedores_nota[3] is None
     gasto_suelta = base.conexion.execute(consulta, (1, suelta["uuid"])).fetchone()
     assert gasto_suelta[1] == CONFIG_DEFAULT.gasto_default.cuenta
     sin_iva = base.conexion.execute(consulta, (2, suelta["uuid"])).fetchone()
@@ -444,4 +538,12 @@ def test_delta_cero_falla(tmp_path: Path) -> None:
     ruta = _escribir(tmp_path, [_cfdi_valido()])
     plan = dataclasses.replace(PLAN_VACIO, monto_distinto=1, deltas_monto=(Decimal("0.00"),))
     with pytest.raises(ErrorPoblado, match="cero"):
+        construir_base(ruta, plan=plan)
+
+
+@pytest.mark.parametrize("delta", [Decimal("0.005"), Decimal("Infinity")])
+def test_delta_que_no_es_centavo_exacto_falla_sin_redondear(tmp_path: Path, delta: Decimal) -> None:
+    ruta = _escribir(tmp_path, [_cfdi_valido()])
+    plan = dataclasses.replace(PLAN_VACIO, monto_distinto=1, deltas_monto=(delta,))
+    with pytest.raises(ErrorPoblado, match="dos decimales"):
         construir_base(ruta, plan=plan)

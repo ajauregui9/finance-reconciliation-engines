@@ -143,13 +143,14 @@ class TestFuentesYCli:
             assert base.gasto.total - base.gasto.publicidad == alterno.gasto.total - alterno.gasto.publicidad
 
     def test_cli_determinista_y_xlsx_verificado(self, tmp_path: Path) -> None:
+        """Dos corridas dan el mismo SHA-256 en el JSON y en el xlsx (que la CLI ya releyó y verificó)."""
         huellas = []
         for intento in range(2):
-            salida = tmp_path / f"cierre_{intento}.json"
-            codigo = main(["--datos", str(soporte.DIR_SINTETICO), "--salida", str(salida),
-                           "--xlsx", str(tmp_path / f"cierre_{intento}.xlsx")])
+            salida, libro = tmp_path / f"cierre_{intento}.json", tmp_path / f"cierre_{intento}.xlsx"
+            codigo = main(["--datos", str(soporte.DIR_SINTETICO), "--salida", str(salida), "--xlsx", str(libro)])
             assert codigo == 0
-            huellas.append(hashlib.sha256(salida.read_bytes()).hexdigest())
+            huellas.append((hashlib.sha256(salida.read_bytes()).hexdigest(),
+                            hashlib.sha256(libro.read_bytes()).hexdigest()))
         assert huellas[0] == huellas[1]
 
 

@@ -4,10 +4,11 @@ from __future__ import annotations
 import ast
 import hashlib
 import json
+import sqlite3
 import subprocess
 import sys
 from pathlib import Path
-from typing import Dict, List
+from typing import Any, Dict, List
 
 import pytest
 
@@ -116,6 +117,46 @@ def test_generar_csv_con_json_roto_o_sin_formato_sale_con_2(tmp_path: Path, caps
     assert main(["generar-csv", "--asientos", inexistente, "--formato", "journal", "--salida", str(destino)]) == 2
     assert not destino.exists()
     assert capsys.readouterr().err
+
+
+def _rechazable(tmp_path: Path) -> str:
+    documento = json.loads(EJEMPLO_JOURNAL.read_text(encoding="utf-8"))
+    documento["asientos"][0]["lineas"][0]["debito"] = "999999.00"
+    entrada = tmp_path / "malo.json"
+    entrada.write_text(json.dumps(documento), encoding="utf-8")
+    return str(entrada)
+
+
+@pytest.mark.parametrize(
+    "argumentos, codigo",
+    [
+        (["consultar"], 0),
+        (["consultar", "--salida", "{tmp}/c"], 0),
+        (["discrepancias"], 0),
+        (["generar-csv", "--desde-sin-registro", "--salida", "{tmp}/f.csv"], 0),
+        (["generar-csv", "--asientos", str(EJEMPLO_JOURNAL), "--formato", "journal", "--salida", "{tmp}/j.csv"], 0),
+        (["generar-csv", "--asientos", "{malo}", "--formato", "journal", "--salida", "{tmp}/r.csv"], 3),
+        (["generar-csv", "--asientos", str(EJEMPLO_JOURNAL), "--salida", "{tmp}/s.csv"], 2),
+    ],
+)
+def test_cada_comando_cierra_las_conexiones_que_abre(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str],
+    argumentos: List[str], codigo: int,
+) -> None:
+    abiertas: List[sqlite3.Connection] = []
+    original = sqlite3.connect
+
+    def registrar(*args: Any, **kwargs: Any) -> sqlite3.Connection:
+        abiertas.append(original(*args, **kwargs))
+        return abiertas[-1]
+
+    monkeypatch.setattr(sqlite3, "connect", registrar)
+    malo = _rechazable(tmp_path)
+    assert main([a.format(tmp=tmp_path, malo=malo) for a in argumentos]) == codigo
+    capsys.readouterr()
+    assert len(abiertas) == 1
+    with pytest.raises(sqlite3.ProgrammingError):
+        abiertas[0].execute("SELECT 1")
 
 
 def test_script_corre_como_proceso(tmp_path: Path) -> None:

@@ -2,6 +2,10 @@
 
 Cada archivo empieza con un encabezado de comentarios `-- @clave: valor`:
 `descripcion` (obligatoria) y `montos` (columnas que se convierten a `Decimal`).
+
+La base guarda los montos en centavos enteros, así que una columna de `@montos` debe llegar
+como entero (o `NULL`) y se convierte una sola vez con `desde_centavos`. Un `float` en
+cualquier columna es un error: indicaría aritmética no exacta en la query.
 """
 from __future__ import annotations
 
@@ -13,7 +17,7 @@ from pathlib import Path
 from typing import Dict, List, Sequence, Tuple, Union
 
 from netsuite_gl.compat import ErrorCompatibilidad, traducir
-from netsuite_gl.montos import ErrorMonto, a_decimal_opcional
+from netsuite_gl.montos import ErrorMonto, desde_centavos
 
 DIR_QUERIES = Path(__file__).resolve().parent.parent / "queries"
 
@@ -78,7 +82,7 @@ def parsear_consulta(nombre: str, texto: str) -> Consulta:
 
 
 def ejecutar(conexion: sqlite3.Connection, consulta: Consulta) -> ResultadoConsulta:
-    """Traduce, ejecuta y convierte los montos en la frontera única `float → str → Decimal`."""
+    """Traduce, ejecuta y convierte los montos en la frontera única `centavos enteros → Decimal`."""
     try:
         cursor = conexion.execute(traducir(consulta.suiteql))
     except ErrorCompatibilidad as exc:
@@ -139,9 +143,14 @@ def _convertir(consulta: Consulta, columnas: Tuple[str, ...], fila: Sequence[obj
 
 
 def _monto(nombre: str, columna: str, valor: object) -> Union[Decimal, None]:
-    if valor is not None and not isinstance(valor, (str, int, float)):
-        raise ErrorConsulta(f"{nombre}: la columna monetaria {columna} trae {type(valor).__name__}")
+    if valor is None:
+        return None
+    if isinstance(valor, float):
+        raise ErrorConsulta(
+            f"{nombre}: la columna monetaria {columna} trae un float ({valor!r}); la base guarda centavos "
+            "enteros, así que la query hizo aritmética no exacta (por ejemplo AVG o una conversión a REAL)"
+        )
     try:
-        return a_decimal_opcional(valor)
+        return desde_centavos(valor)
     except ErrorMonto as exc:
-        raise ErrorConsulta(f"{nombre}: la columna monetaria {columna} no es un monto: {exc}") from exc
+        raise ErrorConsulta(f"{nombre}: la columna monetaria {columna} no trae centavos enteros: {exc}") from exc

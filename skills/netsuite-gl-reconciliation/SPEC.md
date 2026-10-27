@@ -44,8 +44,12 @@ en el manifiesto):
 ## 3. Esquema sintético
 
 Nombres de tablas y columnas al estilo SuiteQL. Los booleanos son texto `'T'`/`'F'` como en
-NetSuite. Las fechas son texto ISO (`AAAA-MM-DD`). Los montos se guardan en columnas
-`NUMERIC` y se insertan como texto decimal (nunca `float`).
+NetSuite. Las fechas son texto ISO (`AAAA-MM-DD`). Los montos (`debit`, `credit`, `amount` y
+los tres montos del registro personalizado) se guardan como **centavos enteros** en columnas
+`INTEGER` con un `CHECK` de tipo; nunca como `float` ni como texto. En NetSuite esos campos
+son decimales; la sección 5.1 explica la traducción. Antes de insertar, `esquema.insertar_filas`
+rechaza con `ErrorPoblado` cualquier monto que no sea un entero de Python (la afinidad
+`INTEGER` de SQLite convertiría el texto `"116.00"` en `116` sin avisar).
 
 | Tabla | Columnas |
 |---|---|
@@ -110,8 +114,14 @@ recibe a lo sumo una discrepancia.
 | `periodo_equivocado` | `postingperiod` = el mes de registro siguiente al de la fecha; `trandate` no cambia | `periodo_equivocado` |
 
 `ErrorPoblado` (explícito, nunca se ajusta en silencio) si: los bloques piden más CFDIs que
-el universo; un `delta` deja el gasto en cero o negativo; falta el mes de registro de una
-fecha o el mes siguiente para un periodo equivocado.
+el universo; un `delta` deja el gasto en cero o negativo o tiene más de dos decimales; falta
+el mes de registro de una fecha o el mes siguiente para un periodo equivocado; el esquema
+rechaza una fila (por ejemplo, una cuenta repetida en la config). Si la falla ocurre después
+de abrir la conexión, la conexión se cierra antes de propagar el error.
+
+`construir_base` devuelve una `BaseSintetica` (conexión y manifiesto) que se usa como
+administrador de contexto: `with construir_base(ruta) as base:` cierra la conexión al salir,
+también cuando hay error. La CLI abre así la base en cada comando.
 
 ### Manifiesto
 
@@ -149,24 +159,52 @@ Pasos:
 | `BUILTIN.DF(x.entity)` | subconsulta escalar a `vendor`: `entityid || ' ' || companyname` |
 | `BUILTIN.DF(x.type)` | `CASE` con los nombres visibles (`Bill`, `Bill Credit`, `Journal`) |
 | `NVL(a, b)` | `COALESCE(a, b)` |
+| `ROUND(x, n)` | `ROUND_CENTAVOS(x, n)`, función registrada en la conexión (sección 5.1) |
 | identificador `transaction` (tabla o columna) | `"transaction"`: en SQLite es palabra reservada y debe ir citado |
 
    La subconsulta escalar equivale a un `LEFT JOIN` por `id` a la tabla de nombres: si la
    referencia es `NULL`, el nombre es `NULL`.
 4. Falla con `ErrorCompatibilidad` si: un `BUILTIN.DF` apunta a un campo sin traducción;
-   queda cualquier otra construcción `BUILTIN.*`; hay un literal o comentario sin cerrar.
+   queda cualquier otra construcción `BUILTIN.*`; hay un literal o comentario sin cerrar; el
+   código tiene un literal decimal (`100.00`, `.5`, `1e3`) o una división (sección 5.1).
 
-Lo que no necesita traducción: `'T'`/`'F'`, `CASE`, `ROUND`, `COUNT`, `SUM`, `BETWEEN`,
+Lo que no necesita traducción: `'T'`/`'F'`, `CASE`, `COUNT`, `SUM`, `MIN`, `MAX`, `BETWEEN`,
 `NOT EXISTS`, `||` y subconsultas son válidos en ambos dialectos.
+
+### 5.1 Montos: decimales en SuiteQL, centavos enteros en SQLite
+
+En NetSuite los montos son decimales exactos. SQLite no tiene ese tipo: una columna `NUMERIC`
+guarda `"100000000000000.01"` como `REAL` (`100000000000000.02`) y `SUM` corre en punto
+flotante. Por eso la base sintética guarda centavos enteros, que SQLite suma de forma exacta
+(y con error explícito si un entero de 64 bits se desborda).
+
+Las queries no cambian: sumar, restar, negar, `CASE`, `NVL` y comparar contra `0` dan lo
+mismo en pesos que en centavos. La escala solo vuelve en la frontera de lectura (sección 6).
+Lo que sí depende de la escala se trata así:
+
+| Construcción | En centavos enteros | Tratamiento |
+|---|---|---|
+| `ROUND(x, n)` con `n >= 2` | no cambia el valor | `ROUND_CENTAVOS` devuelve el mismo entero |
+| `ROUND(x, n)` con `n < 2` | tendría que redondear centavos | `ROUND_CENTAVOS` falla al ejecutar |
+| literal decimal (`> 100.00`) | sería un monto en pesos contra centavos | `ErrorCompatibilidad` al traducir |
+| división `/` | SQLite trunca entre enteros | `ErrorCompatibilidad` al traducir |
+| `AVG`, `CAST(… AS REAL)` | producen `float` | la frontera de lectura rechaza el `float` |
+
+`ROUND_CENTAVOS` también falla si recibe un `float` o un texto. Límite conocido: un literal
+entero comparado contra un monto (`debit > 100`) se leería en centavos y la capa no lo puede
+distinguir de un conteo; las queries de este módulo solo comparan montos contra `0`.
 
 ## 6. Queries
 
 Cada archivo `.sql` de `queries/` empieza con un encabezado de comentarios:
 
 - `-- @descripcion: …` (obligatorio).
-- `-- @montos: col1, col2` (opcional): columnas monetarias. Se convierten a `Decimal`
-  (frontera única `float → str → Decimal`, 0.01 `ROUND_HALF_UP`). Cualquier `float` en otra
-  columna es un error.
+- `-- @montos: col1, col2` (opcional): columnas monetarias. Llegan de SQLite como centavos
+  enteros y se convierten a `Decimal` con dos decimales en una sola frontera exacta
+  (`montos.desde_centavos`). Un valor que no es entero (ni `NULL`) en una columna monetaria,
+  o un `float` en cualquier columna, es `ErrorConsulta`: indica aritmética no exacta. Una
+  columna monetaria que no se declara saldría en centavos; por eso las pruebas comparan cada
+  monto de cada query contra el manifiesto o contra los CFDIs.
 
 Clave desconocida, encabezado sin descripción o columna monetaria ausente del resultado →
 `ErrorConsulta`. Todas filtran `posting = 'T'` y ordenan por una llave única.

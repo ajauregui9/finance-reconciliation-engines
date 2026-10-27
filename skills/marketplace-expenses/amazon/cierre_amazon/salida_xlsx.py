@@ -2,10 +2,14 @@
 
 La verificación no confía en el objeto en memoria que escribió el libro: abre el xlsx
 guardado, convierte cada celda por la frontera de montos y la compara contra el resultado.
+El libro no depende del reloj: la fecha del documento es el último día del último mes que
+contiene y el zip se guarda con metadatos fijos (`xlsx_reproducible`).
 """
 from __future__ import annotations
 
+import calendar
 from dataclasses import dataclass
+from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
 from typing import Callable, List, Optional, Sequence, Tuple, Union
@@ -19,6 +23,7 @@ from .config import CONCEPTOS_TARIFA
 from .dinero import CERO, a_decimal, a_tasa, texto_tasa
 from .errores import ErrorInsumo
 from .salida_json import seleccionar_meses
+from .xlsx_reproducible import guardar_reproducible
 
 FORMATO_MONTO = "#,##0.00"
 FORMATO_TASA = "0.000000"
@@ -109,9 +114,18 @@ def _filas_gasto(cierres: Sequence[CierreMes]) -> List[List[Valor]]:
     return [[mes, concepto, componente, monto] for c in cierres for mes, concepto, componente, monto in lineas_gasto(c)]
 
 
+def fecha_del_libro(cierres: Sequence[CierreMes]) -> datetime:
+    """Último día del último mes del libro, a las 00:00: la fecha que llevan sus propiedades."""
+    if not cierres:
+        raise ValueError("un libro sin meses no tiene fecha de cierre; no se escribe")
+    anio, mes = (int(parte) for parte in cierres[-1].mes.split("-"))
+    return datetime(anio, mes, calendar.monthrange(anio, mes)[1])
+
+
 def escribir_xlsx(resultado: ResultadoCorrida, ruta: Path, meses: Optional[Sequence[str]] = None) -> None:
-    """Escribe las cuatro hojas. Los montos van como números, nunca como texto."""
+    """Escribe las cuatro hojas. Los montos van como números, nunca como texto, y los bytes son reproducibles."""
     cierres = seleccionar_meses(resultado, meses)
+    fecha = fecha_del_libro(cierres)
     libro = Workbook()
     resumen = libro.active
     if resumen is None:
@@ -126,7 +140,7 @@ def escribir_xlsx(resultado: ResultadoCorrida, ruta: Path, meses: Optional[Seque
     _escribir_tabla(libro.create_sheet(HOJA_ALERTAS), ("Mes", "Código", "Mensaje"), alertas, (TEXTO,) * 3)
     candados = [[c.mes, k.nombre, "sí" if k.ok else "no", k.detalle] for c in cierres for k in c.candados]
     _escribir_tabla(libro.create_sheet(HOJA_CANDADOS), ("Mes", "Candado", "OK", "Detalle"), candados, (TEXTO,) * 4)
-    libro.save(ruta)
+    guardar_reproducible(libro, ruta, fecha)
 
 
 # ------------------------------------------------------------------ verificación

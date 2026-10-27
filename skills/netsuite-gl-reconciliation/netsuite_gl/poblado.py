@@ -1,11 +1,18 @@
-"""Arma la base SQLite sintética a partir de los CFDIs y devuelve el manifiesto de lo plantado."""
+"""Arma la base SQLite sintética a partir de los CFDIs y devuelve el manifiesto de lo plantado.
+
+La base vive en memoria y se cierra al salir de su bloque::
+
+    with construir_base(ruta_cfdis) as base:
+        resultados = ejecutar_todas(base.conexion)
+"""
 from __future__ import annotations
 
 import sqlite3
 from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Sequence
+from types import TracebackType
+from typing import Dict, List, Optional, Sequence, Type
 
 from netsuite_gl.cfdis import LecturaCfdis, leer_cfdis
 from netsuite_gl.config import CONFIG_DEFAULT, ConfigEsquema, PlanDiscrepancias
@@ -18,7 +25,7 @@ from netsuite_gl.discrepancias import (
     asignar,
 )
 from netsuite_gl.errores import ErrorPoblado as ErrorPoblado  # reexportada para quien llama
-from netsuite_gl.esquema import COLUMNAS, crear_conexion, sentencia_insercion
+from netsuite_gl.esquema import crear_conexion, insertar_filas
 from netsuite_gl.filas import FilasEsquema, TransaccionArmada, armar_filas
 from netsuite_gl.periodos import Periodo, construir_periodos, periodo_de_registro
 
@@ -27,28 +34,46 @@ PLAN_DEFAULT = PlanDiscrepancias()
 
 @dataclass(frozen=True)
 class BaseSintetica:
+    """La conexión poblada y su manifiesto. Se usa con `with`, que cierra la conexión al salir."""
+
     conexion: sqlite3.Connection
     manifiesto: Manifiesto
+
+    def cerrar(self) -> None:
+        """Cierra la conexión; llamarla otra vez no hace nada."""
+        self.conexion.close()
+
+    def __enter__(self) -> "BaseSintetica":
+        return self
+
+    def __exit__(
+        self,
+        tipo: Optional[Type[BaseException]],
+        error: Optional[BaseException],
+        rastro: Optional[TracebackType],
+    ) -> None:
+        self.cerrar()
 
 
 def construir_base(
     ruta_cfdis: Path, config: ConfigEsquema = CONFIG_DEFAULT, plan: PlanDiscrepancias = PLAN_DEFAULT
 ) -> BaseSintetica:
-    """Lee los CFDIs, planta las discrepancias del plan y llena una base en memoria."""
+    """Lee los CFDIs, planta las discrepancias del plan y llena una base en memoria.
+
+    Si algo falla después de abrir la conexión, la conexión se cierra antes de propagar el error.
+    """
     lectura = leer_cfdis(ruta_cfdis, config.rfc_empresa)
     periodos = construir_periodos(config)
     asignacion = asignar(lectura.universo, plan)
     filas = armar_filas(lectura.universo, asignacion, config, periodos)
-    conexion = crear_conexion()
-    _insertar(conexion, filas)
     manifiesto = _manifiesto(lectura, plan, config, asignacion, filas, periodos)
+    conexion = crear_conexion()
+    try:
+        insertar_filas(conexion, filas.por_tabla)
+    except BaseException:
+        conexion.close()
+        raise
     return BaseSintetica(conexion, manifiesto)
-
-
-def _insertar(conexion: sqlite3.Connection, filas: FilasEsquema) -> None:
-    with conexion:
-        for tabla, columnas in COLUMNAS:
-            conexion.executemany(sentencia_insercion(tabla, columnas), filas.por_tabla[tabla])
 
 
 def _manifiesto(

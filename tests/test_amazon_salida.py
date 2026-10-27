@@ -1,10 +1,13 @@
 """Pruebas de la salida del cierre: JSON determinista, xlsx numérico verificado y CLI."""
 from __future__ import annotations
 
+import dataclasses
 import hashlib
 import json
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List
+from zipfile import ZipFile
 
 import pytest
 from openpyxl import load_workbook
@@ -138,6 +141,42 @@ class TestXlsx:
         del libro["Resumen"]
         libro.save(ruta)
         assert any("Resumen" in d for d in verificar_xlsx(ruta, resultado))
+
+
+class TestXlsxReproducible:
+    """El libro no depende del reloj: ni las entradas del zip ni las propiedades del documento."""
+
+    def test_dos_escrituras_dan_el_mismo_sha256(self, datos: Path, tmp_path: Path) -> None:
+        resultado = _resultado(datos)
+        primero, segundo = tmp_path / "a.xlsx", tmp_path / "b.xlsx"
+        escribir_xlsx(resultado, primero)
+        escribir_xlsx(resultado, segundo)
+        assert hashlib.sha256(primero.read_bytes()).hexdigest() == hashlib.sha256(segundo.read_bytes()).hexdigest()
+        assert verificar_xlsx(primero, resultado) == ()
+
+    def test_entradas_del_zip_con_fecha_y_permisos_fijos(self, datos: Path, tmp_path: Path) -> None:
+        ruta = tmp_path / "cierre.xlsx"
+        escribir_xlsx(_resultado(datos), ruta)
+        with ZipFile(ruta) as archivo:
+            entradas = archivo.infolist()
+        assert entradas and {e.date_time for e in entradas} == {(1980, 1, 1, 0, 0, 0)}
+        assert {(e.create_system, e.external_attr >> 16) for e in entradas} == {(3, 0o100644)}
+
+    def test_propiedades_fijas_al_ultimo_dia_del_ultimo_mes_del_libro(self, datos: Path, tmp_path: Path) -> None:
+        resultado = _resultado(datos)
+        ruta, solo_abril = tmp_path / "cierre.xlsx", tmp_path / "abril.xlsx"
+        escribir_xlsx(resultado, ruta)
+        escribir_xlsx(resultado, solo_abril, ["2026-04"])
+        propiedades = load_workbook(ruta).properties
+        assert (propiedades.creator, propiedades.lastModifiedBy) == ("cierre_amazon", "cierre_amazon")
+        assert propiedades.created == propiedades.modified == datetime(2026, 5, 31)
+        assert load_workbook(solo_abril).properties.modified == datetime(2026, 4, 30)
+
+    def test_libro_sin_meses_falla_sin_escribir(self, datos: Path, tmp_path: Path) -> None:
+        vacio = dataclasses.replace(_resultado(datos), meses=())
+        with pytest.raises(ValueError, match="sin meses"):
+            escribir_xlsx(vacio, tmp_path / "vacio.xlsx")
+        assert not (tmp_path / "vacio.xlsx").exists()
 
 
 class TestCli:

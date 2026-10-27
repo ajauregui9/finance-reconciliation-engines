@@ -1,7 +1,7 @@
 """Construcción pura de las filas de cada tabla a partir del universo de CFDIs.
 
-No toca SQLite: devuelve tuplas listas para insertar. Los montos salen como texto decimal
-(`formatear`), nunca como `float`.
+No toca SQLite: devuelve tuplas listas para insertar. Los montos salen como centavos
+enteros (`a_centavos`), nunca como `float` ni como texto.
 """
 from __future__ import annotations
 
@@ -15,7 +15,7 @@ from netsuite_gl.cfdis import Cfdi
 from netsuite_gl.config import TIPO_PROVEEDORES, ConfigEsquema, CuentaConfig, ReglaGasto
 from netsuite_gl.discrepancias import Asignacion
 from netsuite_gl.errores import ErrorPoblado
-from netsuite_gl.montos import CERO, formatear
+from netsuite_gl.montos import CERO, a_centavos
 from netsuite_gl.periodos import Periodo, mes_siguiente, periodo_de_registro
 
 Valor = Union[str, int, None]
@@ -179,12 +179,11 @@ def _fila_linea(transaccion: int, partida: _Partida, clase: int, proveedor: int)
 
 
 def _fila_contable(transaccion: int, partida: _Partida) -> Fila:
-    texto = formatear(partida.monto)
-    firmado = partida.monto if partida.al_debe else -partida.monto
+    centavos = a_centavos(partida.monto)
     return (
         transaccion, partida.linea, partida.cuenta.id,
-        texto if partida.al_debe else None, None if partida.al_debe else texto,
-        formatear(firmado), "T",
+        centavos if partida.al_debe else None, None if partida.al_debe else centavos,
+        centavos if partida.al_debe else -centavos, "T",
     )
 
 
@@ -202,7 +201,7 @@ def _fila_periodo(p: Periodo) -> Fila:
 def _fila_registro(id_registro: int, c: Cfdi) -> Fila:
     return (
         id_registro, c.uuid, c.uuid, c.fecha.isoformat(), c.tipo, c.rfc_emisor, c.nombre_emisor, c.serie,
-        c.folio, c.concepto, formatear(c.subtotal_mxn), formatear(c.iva_mxn), formatear(c.total_mxn),
+        c.folio, c.concepto, a_centavos(c.subtotal_mxn), a_centavos(c.iva_mxn), a_centavos(c.total_mxn),
         c.uuid_relacionado,
     )
 

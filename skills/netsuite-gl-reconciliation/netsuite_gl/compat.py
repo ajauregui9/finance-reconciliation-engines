@@ -7,7 +7,15 @@ Los comentarios se quitan (`quitar_comentarios` da el texto que iría por el con
 |---------------------------------|------------------------------------------------------|
 | BUILTIN.DF(x.<campo>)           | subconsulta escalar a la tabla de nombres (CAMPOS_DF) |
 | NVL(a, b)                       | COALESCE(a, b)                                       |
+| ROUND(x, n)                     | ROUND_CENTAVOS(x, n), registrada en la conexión      |
 | transaction (tabla o columna)   | "transaction" (palabra reservada en SQLite)          |
+
+Montos: en NetSuite `debit`, `credit`, `amount` y los campos de moneda son decimales; en la
+base sintética son centavos enteros, para que SQLite sume sin punto flotante. Sumar, restar,
+negar y comparar contra cero dan lo mismo en pesos que en centavos, así que las queries no
+cambian. Lo que sí depende de la escala se rechaza aquí con un error explícito: un literal
+decimal (sería un monto en pesos), la división (SQLite trunca entre enteros) y `ROUND` a
+menos de dos decimales (que `round_centavos` rechaza al ejecutar).
 
 Cualquier otra construcción `BUILTIN.*` es un error explícito, nunca se deja pasar.
 """
@@ -16,7 +24,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 from types import MappingProxyType
-from typing import List, Mapping, Optional, Tuple
+from typing import Callable, List, Mapping, Optional, Tuple
 
 CODIGO = "codigo"
 LITERAL = "literal"
@@ -38,13 +46,44 @@ CAMPOS_DF: Mapping[str, str] = MappingProxyType(
 
 _RE_DF = re.compile(r"\bBUILTIN\s*\.\s*DF\s*\(\s*((?:[A-Za-z_]\w*\s*\.\s*)?([A-Za-z_]\w*))\s*\)", re.IGNORECASE)
 _RE_NVL = re.compile(r"\bNVL\s*\(", re.IGNORECASE)
+_RE_ROUND = re.compile(r"\bROUND\s*\(", re.IGNORECASE)
+# Número con punto decimal o exponente que no es parte de un identificador (`tal2.debit` no cuenta).
+_RE_LITERAL_DECIMAL = re.compile(r"(?<![\w.])(?:\d+\.\d*|\.\d+|\d+(?=[eE][+-]?\d))")
 _RE_TRANSACTION = re.compile(r"\btransaction\b", re.IGNORECASE)
 _RE_BUILTIN = re.compile(r"\bBUILTIN\s*\.\s*(\w+)", re.IGNORECASE)
 _RE_ESPECIAL = re.compile(r"'|\"|--|/\*")
 
 
+DECIMALES_MINIMOS_ROUND = 2  # redondear centavos enteros a 2 o más decimales no cambia nada
+FUNCION_ROUND = "ROUND_CENTAVOS"
+
+
 class ErrorCompatibilidad(ValueError):
     """El texto SuiteQL usa algo que esta capa no sabe traducir, o está mal cerrado."""
+
+
+def round_centavos(centavos: object, decimales: object) -> Optional[int]:
+    """`ROUND(x, n)` de SuiteQL sobre centavos enteros: con `n >= 2` el valor no cambia.
+
+    Falla con un `float` o un texto (señal de aritmética no exacta) y con `n < 2`, que en
+    centavos necesitaría redondear de verdad y no se usa en estas queries.
+    """
+    if centavos is None:
+        return None
+    if isinstance(centavos, bool) or not isinstance(centavos, int):
+        raise ValueError(f"ROUND recibe centavos enteros y llegó {type(centavos).__name__}: {centavos!r}")
+    if isinstance(decimales, bool) or not isinstance(decimales, int):
+        raise ValueError(f"ROUND necesita un número entero de decimales, llegó {decimales!r}")
+    if decimales < DECIMALES_MINIMOS_ROUND:
+        raise ValueError(f"ROUND a {decimales} decimales no está soportado: se requieren al menos "
+                         f"{DECIMALES_MINIMOS_ROUND} decimales sobre centavos enteros")
+    return centavos
+
+
+# Funciones que el SQL traducido necesita; `esquema.crear_conexion` las registra.
+FUNCIONES_SQLITE: Mapping[str, Tuple[int, Callable[[object, object], Optional[int]]]] = MappingProxyType(
+    {FUNCION_ROUND: (2, round_centavos)}
+)
 
 
 @dataclass(frozen=True)
@@ -110,13 +149,26 @@ def traducir(suiteql: str) -> str:
 
 
 def _traducir_codigo(codigo: str) -> str:
+    _rechazar_aritmetica_de_escala(codigo)
     # El identificador se cita antes de expandir BUILTIN.DF: las plantillas no lo usan.
     citado = _RE_TRANSACTION.sub('"transaction"', codigo)
     expandido = _RE_DF.sub(_expandir_df, citado)
     restante = _RE_BUILTIN.search(expandido)
     if restante:
         raise ErrorCompatibilidad(f"construcción SuiteQL sin traducción: BUILTIN.{restante.group(1).upper()}")
-    return _RE_NVL.sub("COALESCE(", expandido)
+    return _RE_ROUND.sub(FUNCION_ROUND + "(", _RE_NVL.sub("COALESCE(", expandido))
+
+
+def _rechazar_aritmetica_de_escala(codigo: str) -> None:
+    """Lo que daría otro resultado en centavos que en pesos no se traduce: falla aquí."""
+    literal = _RE_LITERAL_DECIMAL.search(codigo)
+    if literal:
+        raise ErrorCompatibilidad(
+            f"literal decimal en la posición {literal.start()} del código: los montos de la base sintética "
+            "son centavos enteros, así que un monto en pesos no se compararía bien; compara contra 0"
+        )
+    if "/" in codigo:
+        raise ErrorCompatibilidad("la división no se traduce: SQLite trunca entre enteros y los montos son centavos")
 
 
 def _expandir_df(coincidencia: "re.Match[str]") -> str:

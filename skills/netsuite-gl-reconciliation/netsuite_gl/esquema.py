@@ -2,11 +2,22 @@
 
 `transaction` es palabra reservada en SQLite, por eso aquí va citado. Las queries `.sql`
 lo escriben sin comillas, como en SuiteQL, y la capa de compatibilidad lo cita.
+
+Los montos (`COLUMNAS_MONTO`) son centavos enteros: en NetSuite son decimales, pero en
+SQLite una columna decimal se guarda como REAL y `SUM` correría en punto flotante. Con
+enteros la aritmética es exacta y la conversión a `Decimal` ocurre una sola vez, al leer
+(`consultas.ejecutar`). La capa de compatibilidad explica por qué las queries no cambian.
 """
 from __future__ import annotations
 
 import sqlite3
-from typing import Tuple
+from types import MappingProxyType
+from typing import FrozenSet, Mapping, Sequence, Tuple, Union
+
+from netsuite_gl.compat import FUNCIONES_SQLITE
+from netsuite_gl.errores import ErrorPoblado
+
+ValorFila = Union[str, int, None]
 
 # Orden de creación: primero los catálogos que otras tablas referencian.
 DDL: Tuple[str, ...] = (
@@ -66,9 +77,9 @@ DDL: Tuple[str, ...] = (
         "transaction" INTEGER NOT NULL,
         transactionline INTEGER NOT NULL,
         account INTEGER NOT NULL REFERENCES account (id),
-        debit NUMERIC,
-        credit NUMERIC,
-        amount NUMERIC NOT NULL,
+        debit INTEGER CHECK (typeof(debit) IN ('integer', 'null')),
+        credit INTEGER CHECK (typeof(credit) IN ('integer', 'null')),
+        amount INTEGER NOT NULL CHECK (typeof(amount) = 'integer'),
         posting TEXT NOT NULL CHECK (posting IN ('T', 'F')),
         PRIMARY KEY ("transaction", transactionline),
         FOREIGN KEY ("transaction", transactionline) REFERENCES transactionline ("transaction", id)
@@ -84,9 +95,9 @@ DDL: Tuple[str, ...] = (
         custrecord_cfdi_serie TEXT NOT NULL,
         custrecord_cfdi_folio TEXT NOT NULL,
         custrecord_cfdi_concepto TEXT NOT NULL,
-        custrecord_cfdi_subtotal NUMERIC NOT NULL,
-        custrecord_cfdi_iva NUMERIC NOT NULL,
-        custrecord_cfdi_total NUMERIC NOT NULL,
+        custrecord_cfdi_subtotal INTEGER NOT NULL CHECK (typeof(custrecord_cfdi_subtotal) = 'integer'),
+        custrecord_cfdi_iva INTEGER NOT NULL CHECK (typeof(custrecord_cfdi_iva) = 'integer'),
+        custrecord_cfdi_total INTEGER NOT NULL CHECK (typeof(custrecord_cfdi_total) = 'integer'),
         custrecord_cfdi_uuid_relacionado TEXT
     )""",
 )
@@ -115,18 +126,64 @@ COLUMNAS: Tuple[Tuple[str, Tuple[str, ...]], ...] = (
 )
 
 
+# Columnas monetarias, en centavos enteros. Cualquier otro tipo se rechaza antes de insertar:
+# la afinidad INTEGER de SQLite convertiría el texto "116.00" en 116 sin avisar.
+COLUMNAS_MONTO: Mapping[str, FrozenSet[str]] = MappingProxyType({
+    "transactionaccountingline": frozenset({"debit", "credit", "amount"}),
+    "customrecord_cfdi_recibido": frozenset({
+        "custrecord_cfdi_subtotal", "custrecord_cfdi_iva", "custrecord_cfdi_total",
+    }),
+})
+
+
 def citar(identificador: str) -> str:
     """Cita un identificador para SQLite (siempre: así `transaction` nunca choca)."""
     return '"' + identificador.replace('"', '""') + '"'
 
 
 def crear_conexion() -> sqlite3.Connection:
-    """Base en memoria con llaves foráneas activas y el esquema creado."""
+    """Base en memoria con llaves foráneas, el esquema y las funciones de la capa de compatibilidad.
+
+    Quien la recibe la cierra (`BaseSintetica` lo hace al salir de su bloque `with`).
+    """
     conexion = sqlite3.connect(":memory:")
-    conexion.execute("PRAGMA foreign_keys = ON")
-    for sentencia in DDL:
-        conexion.execute(sentencia)
+    try:
+        conexion.execute("PRAGMA foreign_keys = ON")
+        for nombre, (argumentos, funcion) in FUNCIONES_SQLITE.items():
+            conexion.create_function(nombre, argumentos, funcion, deterministic=True)
+        for sentencia in DDL:
+            conexion.execute(sentencia)
+    except BaseException:
+        conexion.close()
+        raise
     return conexion
+
+
+def insertar_filas(conexion: sqlite3.Connection, por_tabla: Mapping[str, Sequence[Sequence[ValorFila]]]) -> None:
+    """Inserta las filas en el orden de la DDL, en una sola transacción; nada se inserta si algo falla."""
+    columnas_por_tabla = dict(COLUMNAS)
+    desconocidas = sorted(set(por_tabla) - set(columnas_por_tabla))
+    if desconocidas:
+        raise ErrorPoblado(f"tablas que no están en el esquema: {', '.join(desconocidas)}")
+    for tabla, filas in por_tabla.items():
+        _validar_montos(tabla, columnas_por_tabla[tabla], filas)
+    try:
+        with conexion:
+            for tabla, columnas in COLUMNAS:
+                conexion.executemany(sentencia_insercion(tabla, columnas), por_tabla.get(tabla, ()))
+    except sqlite3.Error as exc:
+        raise ErrorPoblado(f"el esquema rechazó las filas a insertar: {exc}") from exc
+
+
+def _validar_montos(tabla: str, columnas: Tuple[str, ...], filas: Sequence[Sequence[ValorFila]]) -> None:
+    monetarias = COLUMNAS_MONTO.get(tabla, frozenset())
+    for numero, fila in enumerate(filas, start=1):
+        for columna, valor in zip(columnas, fila):
+            if columna in monetarias and valor is not None and type(valor) is not int:
+                raise ErrorPoblado(
+                    f"{tabla}.{columna}, fila {numero}: un monto se guarda como centavos enteros, "
+                    f"llegó {type(valor).__name__} {valor!r}"
+                )
 
 
 def sentencia_insercion(tabla: str, columnas: Tuple[str, ...]) -> str:

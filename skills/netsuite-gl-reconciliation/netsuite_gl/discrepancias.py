@@ -15,6 +15,7 @@ from typing import Dict, FrozenSet, Mapping, Sequence, Tuple
 from netsuite_gl.cfdis import Cfdi
 from netsuite_gl.config import PlanDiscrepancias
 from netsuite_gl.errores import ErrorPoblado
+from netsuite_gl.montos import tiene_centavos_exactos
 
 SIN_REGISTRO = "sin_registro"
 MONTO_DISTINTO = "monto_distinto"
@@ -106,6 +107,8 @@ def _validar_plan(plan: PlanDiscrepancias, disponibles: int) -> Tuple[int, ...]:
         raise ErrorPoblado("monto_distinto > 0 requiere al menos un valor en deltas_monto")
     if any(d == 0 for d in plan.deltas_monto):
         raise ErrorPoblado("deltas_monto no puede contener cero: no plantaría ninguna diferencia")
+    if any(not d.is_finite() or not tiene_centavos_exactos(d) for d in plan.deltas_monto):
+        raise ErrorPoblado("deltas_monto solo admite montos finitos con a lo sumo dos decimales")
     if sum(tamanos) > disponibles:
         raise ErrorPoblado(
             f"el plan pide {sum(tamanos)} CFDIs con discrepancia, pero el universo solo tiene {disponibles}"

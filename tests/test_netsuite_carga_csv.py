@@ -10,7 +10,7 @@ import sys
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, Iterator, List, Tuple
 
 import pytest
 
@@ -105,8 +105,16 @@ def _factura(id_externo: str = "VB-0001", **cambios: Any) -> AsientoCarga:
 
 
 @pytest.fixture(scope="module")
-def base() -> Any:
-    return construir_base(CFDIS)
+def base() -> Iterator[Any]:
+    with construir_base(CFDIS) as abierta:
+        yield abierta
+
+
+@pytest.fixture()
+def base_aislada() -> Iterator[Any]:
+    """Una base propia para las pruebas que la modifican; se cierra al terminar."""
+    with construir_base(CFDIS) as abierta:
+        yield abierta
 
 
 @pytest.fixture(scope="module")
@@ -350,8 +358,8 @@ def test_propuestas_cubren_cada_cfdi_sin_registro(base: Any) -> None:
         assert sum(linea.debito for linea in asiento.lineas) == proveedores[0].credito
 
 
-def test_propuesta_en_periodo_cerrado_rechaza_todo_el_archivo() -> None:
-    base = construir_base(CFDIS)
+def test_propuesta_en_periodo_cerrado_rechaza_todo_el_archivo(base_aislada: Any) -> None:
+    base = base_aislada
     propuesta = proponer_facturas_sin_registro(base.conexion, CONFIG_DEFAULT)
     assert propuesta.asientos
     periodo = propuesta.asientos[0].periodo
@@ -363,8 +371,8 @@ def test_propuesta_en_periodo_cerrado_rechaza_todo_el_archivo() -> None:
     assert set(_reglas(rechazo.value.errores)) == {"periodo_cerrado"}
 
 
-def test_propuesta_sin_periodo_queda_rechazada() -> None:
-    base = construir_base(CFDIS)
+def test_propuesta_sin_periodo_queda_rechazada(base_aislada: Any) -> None:
+    base = base_aislada
     uuid = base.manifiesto.sin_registro[0]
     base.conexion.execute(
         "UPDATE customrecord_cfdi_recibido SET custrecord_cfdi_fecha = '2031-01-15', custrecord_cfdi_tipo = 'I' "
@@ -378,8 +386,8 @@ def test_propuesta_sin_periodo_queda_rechazada() -> None:
     assert "periodo_inexistente" in _reglas(errores)
 
 
-def test_nota_de_credito_y_proveedor_faltante_quedan_pendientes() -> None:
-    base = construir_base(CFDIS)
+def test_nota_de_credito_y_proveedor_faltante_quedan_pendientes(base_aislada: Any) -> None:
+    base = base_aislada
     nota, sin_proveedor = base.manifiesto.sin_registro[:2]
     base.conexion.execute(
         "UPDATE customrecord_cfdi_recibido SET custrecord_cfdi_tipo = 'E' WHERE custrecord_cfdi_uuid = ?", (nota,)
