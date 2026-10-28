@@ -32,12 +32,6 @@ Shared rules across modules:
 
 Specs, code comments and the [glossary](GLOSSARY.md) are in Spanish; READMEs are in English.
 
-## Impact
-
-<!-- IMPACT: pending figures from author -->
-Impact figures will be added here by the author. Every other figure in this README comes
-from the demos on synthetic data.
-
 ## Capabilities
 
 Every row links to the code, its spec and its tests; the demo label refers to the commands
