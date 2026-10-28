@@ -2,8 +2,7 @@
 
 Este documento es la spec del módulo `scripts/auditoria_pl/` y de su CLI
 `scripts/run_pl_audit.py`. Describe solo lo que el código hace hoy. Todo número
-que aparece en `config/parametros.example.json` es un valor de ejemplo redondo;
-no viene de ninguna empresa.
+que aparece en `config/parametros.example.json` es un valor de ejemplo redondo.
 
 ## 1. Propósito
 

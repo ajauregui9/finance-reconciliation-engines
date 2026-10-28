@@ -71,7 +71,8 @@ dropped silently, and every zero-amount record is counted.
   no row and is counted (`cxc_saldo_cero`). Alerts are always present, at zero when unused.
 - **Strict parsing.** CSV headers must have exactly the expected columns; JSON configs reject
   unknown or repeated keys and are parsed with `Decimal` so no float ever exists. Amount
-  strings are converted in one place (`dinero.a_monto`) and rounded half-up to cents.
+  strings are converted in one place (`dinero.a_monto`, on top of the shared `frontera`
+  package): ASCII digits only, at most two decimals, never rounded.
 - **Determinism.** JSON and JSONL use sorted keys, fixed row order, LF and no timestamps or
   absolute paths, so identical inputs give an identical SHA-256. The xlsx is deterministic
   too: `empaque_xlsx.py` sets a fixed author and created/modified dates (midnight of the

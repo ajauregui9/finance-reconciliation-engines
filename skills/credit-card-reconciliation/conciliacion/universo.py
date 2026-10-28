@@ -6,7 +6,7 @@ layout por el encabezado exacto, se interpreta cada fila sin descartar ninguna
 y se comparan los totales calculados contra los del resumen. La spec completa
 está en `specs/universo.md`.
 
-Uso, con cwd en `skills/credit-card-reconciliation`:
+Uso, desde la raíz del repo tras `pip install -e .`:
 
     python3 -m conciliacion.universo <dir_crudos> --salida <universo.jsonl>
         [--control <control.json>] [--sin-estado EMISOR ...]

@@ -318,7 +318,6 @@ termina con código 3.
 ## CLI
 
 ```bash
-cd skills/credit-card-reconciliation
 python3 -m conciliacion.cruce_cfdi --universo <jsonl> --cfdis <jsonl> --salida <json> [--config <json>]
 python3 -m conciliacion.cruce_cfdi --universo <jsonl> --cfdis-xml <dir> --salida <json> [--config <json>]
 ```

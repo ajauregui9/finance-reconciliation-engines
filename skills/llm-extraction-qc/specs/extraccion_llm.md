@@ -72,7 +72,7 @@ al modelo; nada se salta.
 ## Guard antes del modelo
 
 El texto completo del documento, tal como se enviaría, pasa por
-`guardia.inspeccionar` (cargado por ruta explícita con
+`guardia.inspeccionar` (importado como paquete instalado con
 `conciliacion.pipeline_guardia.cargar_inspector`). Si el paquete no se puede
 cargar, la corrida es inválida (código 2).
 

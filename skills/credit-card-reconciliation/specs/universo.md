@@ -236,7 +236,6 @@ cuadra. Mismas reglas de determinismo que el universo.
 ## CLI y códigos de salida
 
 ```bash
-# con cwd en skills/credit-card-reconciliation
 python3 -m conciliacion.universo <dir_crudos> --salida <universo.jsonl> \
     [--control <control.json>] [--sin-estado EMISOR ...]
 ```

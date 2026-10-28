@@ -61,7 +61,8 @@ resumen_estados_cuenta.json + statement CSVs
 ## Design decisions
 
 - **One money boundary per engine.** Amounts become `Decimal` once, when read
-  (`Decimal(str(x))`, quantized to cents with `ROUND_HALF_UP`). Configs reject JSON floats.
+  through the shared `frontera` package: ASCII digits only, at most two decimals, never
+  rounded. Configs reject JSON floats.
 - **Layout by exact header, never by content.** Guessing from the rows cannot tell
   `DD/MM` from `MM/DD`. An unknown header stops the run and shows the header read.
 - **Nothing is dropped.** An unparseable row enters the universe with `estado =

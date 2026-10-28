@@ -97,7 +97,9 @@ A metric without a band is still computed and reported, just not evaluated.
 account with `anterior`, `actual` and the optional `polizas_manuales_actual`),
 `marcas[]` (`venta`, `publicidad`) and `provisiones[]` (`creado`). Amounts are
 JSON strings such as `"-1234.56"`; they become `Decimal` once, at the input
-boundary, rounded half-up to cents. Unknown keys, duplicate accounts, brands
+boundary
+through the shared `frontera` package: ASCII digits only, at most two decimals, never
+rounded. Unknown keys, duplicate accounts, brands
 or provisions, and duplicate JSON keys are rejected.
 
 ## Output

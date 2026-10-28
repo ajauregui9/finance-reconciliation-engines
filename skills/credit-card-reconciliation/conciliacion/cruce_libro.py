@@ -1,6 +1,5 @@
 """Cruce cargo ↔ libro mayor: fachada y línea de comandos.
 
-    cd skills/credit-card-reconciliation
     python3 -m conciliacion.cruce_libro --universo <jsonl> --libro <csv> \\
         --veredictos <csv> --salida <json> [--config <json>]
 

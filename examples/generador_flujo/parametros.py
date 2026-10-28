@@ -6,18 +6,17 @@ valida su forma. Los montos se escriben como texto decimal, nunca como float.
 from __future__ import annotations
 
 import json
-import re
 from dataclasses import dataclass
 from datetime import date
-from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
+from decimal import Decimal
 from pathlib import Path
 from typing import Any, FrozenSet, Mapping, Optional, Tuple
 
+from frontera import ErrorFrontera, leer_fecha, leer_importe
+
 ESQUEMA_PARAMETROS = "parametros_generador_flujo/v1"
-CENTAVO = Decimal("0.01")
 DIA_MAXIMO_FIJO = 28
-PATRON_FECHA = re.compile(r"^\d{4}-\d{2}-\d{2}$")
-PATRON_MONEDA = re.compile(r"^[A-Z]{3}$")
+LARGO_MONEDA = 3
 LLAVES_RAIZ = frozenset({"esquema", "semilla", "corte", "moneda", "dias_programacion", "saldos_bancarios",
                          "cxc_antiguedad", "cxp_programadas", "nomina", "impuestos"})
 LLAVES_RANGO = frozenset({"monto_min", "monto_max"})
@@ -159,12 +158,9 @@ def _monto(valor: object, contexto: str) -> Decimal:
     if not isinstance(valor, str):
         raise ErrorParametros(f"{contexto} debe ser texto decimal como \"1000.00\"")
     try:
-        numero = Decimal(valor)
-    except InvalidOperation:
-        raise ErrorParametros(f"{contexto}: '{valor}' no es texto decimal") from None
-    if not numero.is_finite():
-        raise ErrorParametros(f"{contexto}: '{valor}' no es un monto finito")
-    return numero.quantize(CENTAVO, rounding=ROUND_HALF_UP)
+        return leer_importe(valor)
+    except ErrorFrontera as exc:
+        raise ErrorParametros(f"{contexto}: {exc}") from None
 
 
 def _rango(datos: Mapping[str, Any], contexto: str, positivo: bool = True) -> RangoMonto:
@@ -280,12 +276,15 @@ def _concepto(crudo: object, indice: int) -> ConceptoImpuesto:
 
 
 def _corte(valor: object) -> date:
-    if not isinstance(valor, str) or not PATRON_FECHA.match(valor):
-        raise ErrorParametros("corte debe ser una fecha AAAA-MM-DD")
     try:
-        return date.fromisoformat(valor)
-    except ValueError:
-        raise ErrorParametros(f"corte '{valor}' no es una fecha válida") from None
+        return leer_fecha(valor)
+    except ErrorFrontera as exc:
+        raise ErrorParametros(f"corte: {exc}") from None
+
+
+def _es_moneda(valor: object) -> bool:
+    return (isinstance(valor, str) and len(valor) == LARGO_MONEDA
+            and all("A" <= c <= "Z" for c in valor))
 
 
 def parametros_desde_dict(crudo: object) -> Parametros:
@@ -293,7 +292,7 @@ def parametros_desde_dict(crudo: object) -> Parametros:
     if datos["esquema"] != ESQUEMA_PARAMETROS:
         raise ErrorParametros(f"esquema {datos['esquema']!r} no soportado (se espera '{ESQUEMA_PARAMETROS}')")
     moneda = datos["moneda"]
-    if not isinstance(moneda, str) or not PATRON_MONEDA.match(moneda):
+    if not _es_moneda(moneda):
         raise ErrorParametros("moneda debe ser un código de tres letras mayúsculas")
     dias = _conteo(datos["dias_programacion"], "dias_programacion")
     return Parametros(

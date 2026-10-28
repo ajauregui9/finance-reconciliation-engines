@@ -34,7 +34,7 @@ Es un filtro de cuarentena con revisión humana:
 | `scripts/evaluar_guardia.py` | set de evaluación: detección y falsos positivos |
 
 `guardia` es un paquete sin dependencias fuera de la biblioteca estándar. El
-pipeline de tarjetas lo carga por ruta
+pipeline de tarjetas lo importa como paquete instalado
 (`skills/credit-card-reconciliation/conciliacion/pipeline_guardia.py`).
 
 ## Normalización

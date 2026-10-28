@@ -19,8 +19,9 @@ extraction pipeline in which the model proposes and deterministic code decides.
 Shared rules across modules:
 
 - **`Decimal` money with one input boundary.** External values become `Decimal` once
-  (`Decimal(str(x))`, quantized to cents with `ROUND_HALF_UP`); no float enters a money
-  calculation.
+  (the shared `frontera` package: ASCII digits only, at most two decimals unless a format
+  says otherwise, never rounded; a float is read through `repr` and rejected if it carries
+  more precision than cents); no float enters a money calculation.
 - **Locks, not warnings.** Integrity checks (control totals, exclusivity, coverage,
   double entry) stop the run with a non-zero exit code. No row is dropped silently.
 - **Deterministic output.** Sorted keys, no timestamps, no absolute paths in output files:
@@ -70,7 +71,7 @@ python3 -m pytest -q --cov
 ```
 
 `pip install -e .` installs every engine and generator package (`conciliacion`,
-`cierre_amazon`, `flujo`, `netsuite_gl`, `auditoria_pl`, `guardia`, `extraccion_llm` and the
+`frontera`, `cierre_amazon`, `flujo`, `netsuite_gl`, `auditoria_pl`, `guardia`, `extraccion_llm` and the
 `generador_*` packages) from its folder, so no `PYTHONPATH` is needed. `requirements.txt`
 holds the runtime dependency ranges, `requirements-dev.txt` pins the exact test and lint tool
 versions that CI installs, and `requirements-llm.txt` adds the optional `anthropic` SDK,
@@ -217,7 +218,7 @@ repository to check that the installed packages work without `PYTHONPATH`.
   branch coverage and no omitted files. The required floor is 80%. The threshold configured in
   `pyproject.toml` (`fail_under = 90`) is a ratchet above that floor: it may only move up and
   may never drop below 80, so CI fails on any change that lowers coverage under the ratchet.
-  The suite currently measures about 97%.
+  The suite currently measures about 98%.
 - **Sanitizer.** [`tools/sanitize_audit.py`](tools/sanitize_audit.py) blocks credentials,
   local paths, non-placeholder RFCs and UUIDs, bank account numbers, non-example e-mail
   domains and narrative traces in everything that is published. Legitimate exceptions are
@@ -231,6 +232,7 @@ repository to check that the installed packages work without `PYTHONPATH`.
 ```text
 .
 ├── skills/
+│   ├── _comun/                       frontera: the shared money and date input boundary (frontera/)
 │   ├── credit-card-reconciliation/   statements -> charge universe -> CFDI -> ledger (conciliacion/)
 │   ├── marketplace-expenses/         Amazon month-end accrual close (amazon/cierre_amazon/)
 │   ├── cashflow-forecasting/         13-week cash flow (flujo/)

@@ -275,8 +275,7 @@ falló (`universo:`, `revision_texto_libre:`, `cruce_cfdi:`, `cruce_libro:`,
 ## CLI y API
 
 ```bash
-cd skills/credit-card-reconciliation
-python3 -m conciliacion.pipeline --datos ../../examples/synthetic --salida <dir> \
+python3 -m conciliacion.pipeline --datos examples/synthetic --salida <dir> \
     [--config-cfdi <json>] [--config-libro <json>] [--sin-estado EMISOR ...] [--sin-veredictos] \
     [--sin-guardia]
 ```

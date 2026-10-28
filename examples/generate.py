@@ -12,12 +12,12 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Optional, Sequence
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+from frontera import leer_importe  # noqa: E402
 from generador_sintetico import ConfigGenerador, escribir_salida, generar  # noqa: E402
 from generador_sintetico.config import SEMILLA_POR_DEFECTO  # noqa: E402
 
@@ -41,8 +41,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     args = _argumentos(argv)
     try:
         config = ConfigGenerador(semilla=args.semilla, ventana_min=args.ventana_min,
-                                 ventana_max=args.ventana_max, tolerancia_monto=Decimal(args.tolerancia))
-    except (ValueError, TypeError, InvalidOperation) as exc:
+                                 ventana_max=args.ventana_max, tolerancia_monto=leer_importe(args.tolerancia))
+    except (ValueError, TypeError) as exc:
         print(f"Parámetros inválidos: {exc}", file=sys.stderr)
         return CODIGO_PARAMETROS
     try:

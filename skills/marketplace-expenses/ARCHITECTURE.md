@@ -50,9 +50,10 @@ config.json ─► config.Config ─► ubicacion.ubicar   (month, category, coh
 
 ## Design decisions
 
-**One money boundary.** Readers call `dinero.a_decimal` for every amount. A float goes
-through `Decimal(str(x))` and everything is quantized to cents with `ROUND_HALF_UP` right
-there. After that point no float exists; rates are exact `Decimal` quotients and are only
+**One money boundary.** Readers call `dinero.a_decimal` for every amount. Values are
+parsed by the shared `frontera` package right there: ASCII digits only, at most two
+decimals, never rounded; a float goes through `repr` and is rejected if it carries more
+precision than cents. After that point no float exists; rates are exact `Decimal` quotients and are only
 rounded when printed.
 
 **Cut-off from the declared zone.** Each file carries its own offset, and the generator

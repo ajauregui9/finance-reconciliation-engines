@@ -1,6 +1,6 @@
 """Pipeline de tarjetas de punta a punta: estado de cuenta crudo → reporte de conciliación.
 
-Uso, con cwd en `skills/credit-card-reconciliation`:
+Uso, desde la raíz del repo tras `pip install -e .`:
 
     python3 -m conciliacion.pipeline --datos <carpeta> --salida <carpeta>
         [--config-cfdi <json>] [--config-libro <json>] [--sin-estado EMISOR ...] [--sin-veredictos]
