@@ -27,12 +27,14 @@ Module design is in [`ARCHITECTURE.md`](ARCHITECTURE.md).
 
 ## Quick start
 
+After `python3 -m pip install -e .` at the repository root:
+
 ```bash
 # Close every month in the synthetic data set; JSON to a file, workbook optional.
-PYTHONPATH=skills/marketplace-expenses/amazon python3 -m cierre_amazon \
+python3 -m cierre_amazon \
     --datos examples/synthetic_amazon --salida cierre.json --xlsx cierre.xlsx
 
-# Same thing without PYTHONPATH, and only one month in the output.
+# The package folder also runs by path; here only one month goes to the output.
 python3 skills/marketplace-expenses/amazon/cierre_amazon --datos examples/synthetic_amazon --mes 2026-06
 
 # Regenerate the synthetic inputs (deterministic, seed 2026).
@@ -118,7 +120,10 @@ Across a run without gaps, total accrued fees equal real settled fees plus the l
 Deterministic JSON (`cierre_amazon/v1`): sorted keys, amounts as strings, rates with six
 decimals, file names without paths, no timestamps. Two runs give the same SHA-256. The
 optional workbook has `Resumen`, `Gasto devengado`, `Alertas` and `Candados` sheets with
-numeric amounts; the CLI reopens it and compares every amount against the result.
+numeric amounts; the CLI reopens it and compares every amount against the result. The
+workbook is byte-reproducible too: fixed document metadata (author, and created/modified set
+to the last day of the last month it contains) and fixed zip entry dates, so two runs give
+the same SHA-256 (a test checks it).
 
 ## Tests
 

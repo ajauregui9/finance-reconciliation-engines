@@ -46,7 +46,7 @@ config.json ─► config.Config ─► ubicacion.ubicar   (month, category, coh
 | `gasto.py` | Accrued expense lines |
 | `validacion.py` | Candados |
 | `cierre.py` | Closes all declared months in order and chains provisions |
-| `salida_json.py`, `salida_xlsx.py`, `cli.py` | Output and command line |
+| `salida_json.py`, `salida_xlsx.py`, `xlsx_reproducible.py`, `cli.py` | Output (workbook saved with reproducible bytes) and command line |
 
 ## Design decisions
 
@@ -86,8 +86,11 @@ category and cohort and sums again, without reusing the aggregates. Tests tamper
 result (duplicated ad line, broken total, missing row) and check that the right candado fails.
 
 **Determinism.** Mappings are sorted, JSON uses `sort_keys`, file names carry no path and
-nothing records the time of the run. The workbook is not byte-identical (the library stamps
-metadata), so it is verified by content instead.
+nothing records the time of the run. The workbook is byte-identical across runs:
+`xlsx_reproducible.py` sets fixed document properties (the date is the last day of the last
+month in the workbook, never the clock), serializes the workbook without `Workbook.save` and
+copies every zip entry with a fixed date, permissions and origin system. It is also verified
+by content: the CLI reopens the file and compares every amount against the result.
 
 ## Fee reference ranges
 

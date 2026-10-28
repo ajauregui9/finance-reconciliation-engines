@@ -1,15 +1,16 @@
 # Finance automation blueprint: deterministic reconciliation, month-end close and AI guardrails
 
-**Author:** Arturo Jáuregui · **Stack:** Python 3.9-3.12, standard library plus openpyxl
-(xlsx output) and defusedxml (CFDI XML) · **Published:** October 2026
+**Author:** Arturo Jáuregui · **Stack:** Python 3.9-3.13, standard library plus openpyxl
+(xlsx output) and defusedxml (CFDI XML), installed with `pip install -e .` ·
+**Published:** October 2026
 
-> **Clean-room illustrative recreation with 100% synthetic data.** Every module in this
-> repository was written from a spec that lives next to it ([ADR 0001](docs/adr/0001-clean-room-rewrite.md))
+> **Spec-first implementation, 100% synthetic data.** Every module in this repository is
+> written from a spec that lives next to it ([ADR 0001](docs/adr/0001-spec-first-synthetic-data.md))
 > and runs only on seeded, synthetic data: company and vendor names, RFCs (`RFC_*`
 > placeholders), UUIDs and amounts are fictitious. Every tolerance, window, rate and band
 > is a round example value in a config file, not a calibration.
 
-The repository recreates, for illustration, a set of finance-operations workflows: corporate
+The repository implements a set of finance-operations workflows: corporate
 card reconciliation against Mexican CFDIs (tax invoices) and the general ledger, an Amazon
 month-end accrual close, a 13-week cash flow, CFDI-to-ledger checks written in SuiteQL, a
 pre-close P&L review, a quarantine filter for prompt injection in free text, and an LLM
@@ -23,11 +24,18 @@ Shared rules across modules:
 - **Locks, not warnings.** Integrity checks (control totals, exclusivity, coverage,
   double entry) stop the run with a non-zero exit code. No row is dropped silently.
 - **Deterministic output.** Sorted keys, no timestamps, no absolute paths in output files:
-  two runs on the same inputs produce the same SHA-256, and tests check it.
+  two runs on the same inputs produce the same SHA-256, and tests check it. That includes
+  the xlsx workbooks, written with fixed document metadata and fixed zip entry dates.
 - **Free text is data.** `prompt_guard` flags suspicious text for human review; it never
   approves anything, and nothing in the repository writes to an ERP.
 
 Specs, code comments and the [glossary](GLOSSARY.md) are in Spanish; READMEs are in English.
+
+## Impact
+
+<!-- IMPACT: pending figures from author -->
+Impact figures will be added here by the author. Every other figure in this README comes
+from the demos on synthetic data.
 
 ## Capabilities
 
@@ -37,15 +45,15 @@ in [Demos](#demos), all of which run on the versioned synthetic data.
 | Capability | Code | Spec | Tests | Demo |
 |---|---|---|---|---|
 | Raw card statements to a charge universe: layout by exact header, control totals to the cent, unparseable rows kept and flagged | [`universo.py`](skills/credit-card-reconciliation/conciliacion/universo.py) | [`universo.md`](skills/credit-card-reconciliation/specs/universo.md) | `tests/test_universo_*.py` | D1 |
-| Charge ↔ CFDI: exact amount, original currency, tolerance or sum of 2-3 CFDIs of one issuer; exclusive greedy assignment; one reason per unmatched charge; XML through `defusedxml` | [`cruce_cfdi_motor.py`](skills/credit-card-reconciliation/conciliacion/cruce_cfdi_motor.py) | [`cruce_cfdi.md`](skills/credit-card-reconciliation/specs/cruce_cfdi.md) | `tests/test_cruce_cfdi_*.py` | D2 |
+| Charge ↔ CFDI: exact amount, original currency, tolerance or sum of 2-3 CFDIs of one issuer, backing a charge only when the issuer name has enough affinity with its descriptor; an amount-only match gets the `monto_sin_afinidad` tier and goes to human review, never counted as backed; exclusive greedy assignment, affinity first; one reason per unmatched charge; XML through `defusedxml` | [`cruce_cfdi_motor.py`](skills/credit-card-reconciliation/conciliacion/cruce_cfdi_motor.py) | [`cruce_cfdi.md`](skills/credit-card-reconciliation/specs/cruce_cfdi.md) | `tests/test_cruce_cfdi_*.py` | D2 |
 | Charge ↔ general ledger: exact name similarity, bucket-vendor risk, human verdicts as input with conflicts reported | [`cruce_libro_motor.py`](skills/credit-card-reconciliation/conciliacion/cruce_libro_motor.py) | [`cruce_libro.md`](skills/credit-card-reconciliation/specs/cruce_libro.md) | `tests/test_cruce_libro_*.py` | D3 |
-| End-to-end card pipeline with a human review queue for flagged free text | [`pipeline.py`](skills/credit-card-reconciliation/conciliacion/pipeline.py) | [`pipeline.md`](skills/credit-card-reconciliation/specs/pipeline.md) | `tests/test_pipeline_*.py` | D4 |
-| Amazon month-end accrual close: settlement time zones, tail cohort, provision and reversal, advertising counted once, withholding band | [`cierre_amazon/`](skills/marketplace-expenses/amazon/cierre_amazon/) | [`cierre_amazon.md`](skills/marketplace-expenses/amazon/specs/cierre_amazon.md) | `tests/test_amazon_*.py` | D5 |
+| End-to-end card pipeline with a human review queue for flagged free text and a `cfdi_por_revisar` list for amount-only CFDI matches | [`pipeline.py`](skills/credit-card-reconciliation/conciliacion/pipeline.py) | [`pipeline.md`](skills/credit-card-reconciliation/specs/pipeline.md) | `tests/test_pipeline_*.py` | D4 |
+| Amazon month-end accrual close: settlement time zones, tail cohort, provision and reversal, advertising counted once, withholding band; a reproducible xlsx workbook, re-read and verified | [`cierre_amazon/`](skills/marketplace-expenses/amazon/cierre_amazon/) | [`cierre_amazon.md`](skills/marketplace-expenses/amazon/specs/cierre_amazon.md) | `tests/test_amazon_*.py` | D5 |
 | 13-week cash flow from bank balances, receivables aging and payment schedules, reconciled per source | [`flujo/`](skills/cashflow-forecasting/flujo/) | [`flujo-13-semanas.md`](skills/cashflow-forecasting/specs/flujo-13-semanas.md) | `tests/test_flujo_*.py` | D6 |
-| CFDI ↔ ledger checks as SuiteQL over a synthetic SQLite schema, plus validated CSV import files | [`netsuite_gl/`](skills/netsuite-gl-reconciliation/netsuite_gl/), [`queries/`](skills/netsuite-gl-reconciliation/queries/) | [`SPEC.md`](skills/netsuite-gl-reconciliation/SPEC.md) | `tests/test_netsuite_*.py` | D7 |
+| CFDI ↔ ledger checks as SuiteQL over a synthetic SQLite schema that stores amounts as integer cents (exact sums, `Decimal` on read), plus validated CSV import files | [`netsuite_gl/`](skills/netsuite-gl-reconciliation/netsuite_gl/), [`queries/`](skills/netsuite-gl-reconciliation/queries/) | [`SPEC.md`](skills/netsuite-gl-reconciliation/SPEC.md) | `tests/test_netsuite_*.py` | D7 |
 | Pre-close P&L review: blockers, ratio corridors, brand advertising, month-over-month materiality | [`auditoria_pl/`](skills/pl-review-methodology/scripts/auditoria_pl/) | [`auditoria_pl.md`](skills/pl-review-methodology/specs/auditoria_pl.md) | `tests/test_pl_audit_*.py` | D8 |
 | `prompt_guard`: quarantine and human review for free text, domain allowlist, sensitive-path filter | [`guardia/`](skills/security-guardian/guardia/) | [`prompt_guard.md`](skills/security-guardian/specs/prompt_guard.md), [`evasiones_conocidas.md`](skills/security-guardian/specs/evasiones_conocidas.md) | `tests/test_prompt_guard_*.py` | D9 |
-| LLM extraction QC: forced tool use, guard before the call, deterministic rules and a cross-check against known CFDIs after it | [`extraccion_llm/`](skills/llm-extraction-qc/extraccion_llm/) | [`extraccion_llm.md`](skills/llm-extraction-qc/specs/extraccion_llm.md) | `tests/test_extraccion_llm_*.py` | D10 |
+| LLM extraction QC: forced tool use, guard before the call, retries with backoff on transient API errors, then deterministic rules (the full CFDI balance: subtotal, discount, VAT, IEPS, withheld ISR and VAT) and a cross-check against known CFDIs | [`extraccion_llm/`](skills/llm-extraction-qc/extraccion_llm/) | [`extraccion_llm.md`](skills/llm-extraction-qc/specs/extraccion_llm.md) | `tests/test_extraccion_llm_*.py` | D10 |
 | Seeded synthetic data generators with known answers (oracles) | [`generate.py`](examples/generate.py), `examples/generador_*/` | the README of each `examples/synthetic*/` folder | `tests/test_generador_sintetico.py`, `tests/test_*_generador.py` | D11 |
 
 Each skill folder has its own README (overview), SKILL.md (how to use it) and, where the
@@ -128,15 +136,15 @@ What the demos report on the versioned data:
 | Demo | Result |
 |---|---|
 | D1 | 199 charges from two statements; all 12 control-total checks reconcile to the cent; 2 unparseable rows kept |
-| D2 | 161 of 199 charges backed by at least one CFDI; every unmatched charge has one reason |
+| D2 | 160 of 199 charges backed by CFDIs (136 exact amount, 3 original currency, 8 within tolerance, 13 sums); 3 amount-only matches left `monto_sin_afinidad` for review; 36 unmatched, each with one reason; 181 of the 254 CFDIs in the pool assigned |
 | D3 | 145 charges with a ledger entry; 5 conflicts between human verdicts and the engine's proposal reported |
-| D4 | 3 free-text records flagged by `prompt_guard`, 2 charges left `en_revision`; 31 locks green |
-| D5 | Four months closed, all locks green; one alert: June withholding outside its band |
+| D4 | 3 free-text records flagged by `prompt_guard`, 2 charges left `en_revision`, 3 listed in `cfdi_por_revisar`; 32 locks green |
+| D5 | Four months closed, all locks green; one alert: June withholding outside its band; the workbook has the same SHA-256 on every run |
 | D6 | 13 weeks; 2 credit balances and 2 overdue payments placed in week 1, 1 zero balance counted |
 | D7 | Each query returns exactly the planted discrepancies: 6 unposted CFDIs, 6 amount mismatches, 4 duplicates (also visible in the balance check) and 4 wrong periods; 6 vendor bills validated and written |
 | D8 | No blockers; selling expense at 22.80% against a 15-20% corridor; one brand advertising alert; 2 material variances |
 | D9 | 44/44 injections flagged, 0/44 benign texts flagged, 0/10 documented evasions flagged |
-| D10 | 40 documents: 6 blocked by the guard before the model, 24 `concordante`, 16 `revision_humana` |
+| D10 | 50 documents: 6 blocked by the guard before the model, 32 `concordante`, 18 `revision_humana`; precision and recall for each of the 12 fields, including discount, IEPS and withheld ISR and VAT (precision 0.9318-1.0000, recall 0.6667-1.0000 on the synthetic fixtures) |
 
 ## Limits
 
@@ -232,7 +240,7 @@ repository to check that the installed packages work without `PYTHONPATH`.
 │   └── llm-extraction-qc/            LLM proposes, deterministic code decides (extraccion_llm/)
 ├── examples/                         seeded generators and the synthetic data they write
 ├── tests/                            pytest suite (one file group per module)
-├── tools/                            sanitizer, reference check, similarity gate
+├── tools/                            sanitizer and reference check
 ├── docs/adr/                         architecture decision records
 ├── GLOSSARY.md                       domain vocabulary (Spanish)
 ├── pyproject.toml                    ruff, mypy, pytest and coverage configuration

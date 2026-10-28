@@ -5,13 +5,16 @@ accounts receivable aging report and three schedules of planned payments (suppli
 payroll, taxes), turns every source into **contract rows**, and assembles a weekly table
 whose balances reconcile to the cent. All inputs in this repo are synthetic.
 
+After `python3 -m pip install -e .` at the repository root:
+
 ```bash
-cd skills/cashflow-forecasting
-python3 -m flujo --config config/flujo_ejemplo.json --corte 2026-11-02 --salida /tmp/flujo
+python3 -m flujo --config skills/cashflow-forecasting/config/flujo_ejemplo.json \
+    --corte 2026-11-02 --salida "$(mktemp -d)"
 ```
 
 `--config`, `--corte` (cutoff date, `YYYY-MM-DD`) and `--salida` (output directory) are all
-required. On success the command prints a one-line JSON summary and writes three files.
+required. Input paths inside the config are relative to the config file, not to the current
+folder. On success the command prints a one-line JSON summary and writes three files.
 
 ## What it does
 
@@ -118,7 +121,7 @@ See [`ARCHITECTURE.md`](./ARCHITECTURE.md) for the design decisions.
 ## Synthetic data and tests
 
 ```bash
-PYTHONPATH=examples python3 -m generador_flujo     # regenerates examples/synthetic_flujo/
+python3 -m generador_flujo                         # regenerates examples/synthetic_flujo/
 python3 -m pytest tests/test_flujo_*.py -q
 ```
 

@@ -114,7 +114,7 @@ Contrato (`conciliacion/pipeline_revision.py`, `conciliacion/pipeline_guardia.py
   `revisar(textos) -> observaciones`, recibido en `OpcionesPipeline.revisor`. Por
   omisión es `RevisorGuardia` (nombre `prompt_guard`): una observación por cada
   familia que el guard detecta en cada texto, con su fragmento. El paquete del guard
-  se carga por ruta explícita (`skills/security-guardian/guardia`); si no existe, no
+  se importa como paquete instalado (`guardia`, con `pip install -e .`); si falta, no
   carga o no ofrece `inspeccionar`, la corrida es inválida (código 2) en lugar de
   seguir sin revisión. `RevisorIdentidad` (nombre `identidad`, opción
   `--sin-guardia`) desactiva la revisión: no observa nada y la CLI lo avisa.

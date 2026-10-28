@@ -8,7 +8,7 @@ never writes to one; it reads two JSON files and prints one JSON report.
 The full rule set (in Spanish) is the spec in [`specs/auditoria_pl.md`](specs/auditoria_pl.md);
 module design is in [`ARCHITECTURE.md`](ARCHITECTURE.md).
 Every number in [`config/parametros.example.json`](config/parametros.example.json)
-is a round illustrative value, not a calibration taken from any company.
+is a round illustrative value, not a calibration.
 
 ## Quick start
 

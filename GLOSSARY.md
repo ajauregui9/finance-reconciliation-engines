@@ -1,6 +1,6 @@
 # Conciliación y cierre financiero
 
-Vocabulario de los procesos de conciliación tarjeta ↔ CFDI ↔ libro mayor, cierre de marketplaces y flujo de efectivo que este repo recrea con datos sintéticos.
+Vocabulario de los procesos de conciliación tarjeta ↔ CFDI ↔ libro mayor, cierre de marketplaces y flujo de efectivo que este repo implementa con datos sintéticos.
 
 ## Conciliación de tarjetas
 

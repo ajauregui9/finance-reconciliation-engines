@@ -101,10 +101,12 @@ def _aviso_revision(revision: Revision, filas: Sequence[FilaCargo]) -> Tuple[str
 
 def _avisos_ok(filas: Sequence[FilaCargo], motivos: Sequence[MotivoProvisional], candados: int,
                revision: Revision) -> Tuple[str, ...]:
-    con_cfdi = sum(1 for f in filas if f.cfdi.uuids)
+    # Un CFDI que solo coincide por monto (`monto_sin_afinidad`) ocupa su UUID pero no respalda al cargo.
+    respaldados = sum(1 for f in filas if f.cfdi.uuids and not f.cfdi.por_revisar)
+    por_revisar = sum(1 for f in filas if f.cfdi.uuids and f.cfdi.por_revisar)
     con_asiento = sum(1 for f in filas if f.libro.asiento_id is not None)
-    avisos = [f"{PREFIJO}: {len(filas)} cargos; {con_cfdi} con CFDI; {con_asiento} con asiento en el libro mayor; "
-              f"{candados} candados en verde"]
+    avisos = [f"{PREFIJO}: {len(filas)} cargos; {respaldados} respaldados por CFDI; {por_revisar} con CFDI por "
+              f"revisar; {con_asiento} con asiento en el libro mayor; {candados} candados en verde"]
     avisos.extend(f"{PREFIJO}: PROVISIONAL: {m.etapa}/{m.motivo}: {m.detalle}" for m in motivos)
     avisos.extend(_aviso_revision(revision, filas))
     return tuple(avisos)

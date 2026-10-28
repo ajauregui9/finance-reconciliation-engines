@@ -46,7 +46,7 @@ resumen_estados_cuenta.json + statement CSVs
 | `cruce_cfdi_insumos.py`, `cruce_cfdi_xml.py` | Input boundary of the CFDI engine: JSONL or XML (`defusedxml` only) to frozen records |
 | `cruce_cfdi_config.py` | Config schema, example defaults and range checks |
 | `cruce_cfdi_candidatos.py`, `cruce_cfdi_nombres.py` | Candidate rules, date and amount indexes, name affinity |
-| `cruce_cfdi_motor.py` | Two-phase greedy assignment (one-to-one, then sums) and the reason for each unmatched charge |
+| `cruce_cfdi_motor.py` | Four-phase greedy assignment (one-to-one, then sums, first with enough name affinity and then by amount only as `monto_sin_afinidad`) and the reason for each unmatched charge |
 | `cruce_cfdi_invariantes.py`, `cruce_cfdi_salida.py`, `cruce_cfdi.py` | Invariants recomputed on the result, deterministic output, CLI |
 | `cruce_libro_insumos.py`, `cruce_libro_config.py` | Input boundary and config of the ledger engine |
 | [`nombres.py`](conciliacion/nombres.py) | Integer-only name similarity with per-side stopwords (`fractions.Fraction`) |
@@ -54,8 +54,8 @@ resumen_estados_cuenta.json + statement CSVs
 | `cruce_libro_veredictos.py` | Human verdicts: proposal, conflicts and final result |
 | `cruce_libro_salida.py`, `cruce_libro.py` | Locks, summary, deterministic output, CLI |
 | `pipeline_etapas.py` | Reads every input and wraps each engine without relaxing its boundary |
-| `pipeline_revision.py`, `pipeline_guardia.py` | Free-text review stage and the `prompt_guard` reviewer loaded by explicit path |
-| `pipeline_filas.py`, `pipeline_invariantes.py` | Per-charge rows, summary partitions and pipeline invariants |
+| `pipeline_revision.py`, `pipeline_guardia.py` | Free-text review stage and the `prompt_guard` reviewer, imported as the installed `guardia` package (exit 2 if it cannot be imported) |
+| `pipeline_filas.py`, `pipeline_invariantes.py` | Per-charge rows (an amount-only CFDI match is `cfdi_por_revisar`, never backed), summary partitions and pipeline invariants |
 | `pipeline_reporte.py`, `pipeline_modelo.py`, `pipeline.py` | Output documents, shared vocabulary, orchestration and CLI |
 
 ## Design decisions
@@ -70,9 +70,13 @@ resumen_estados_cuenta.json + statement CSVs
 - **Greedy with a total order.** Both engines sort every proposal by a key that ends in
   identifiers, so two proposals never tie and the result does not depend on input order.
   It is not an optimal assignment, and the specs say so.
-- **One-to-one before sums.** A charge resolved one-to-one never reaches the sum tier, and a
-  CFDI claimed one-to-one is not available for another charge's sum. Sums are bounded by a
-  per-issuer candidate cap, so the work per charge is fixed.
+- **Affinity first, then one-to-one before sums.** Evidence with enough issuer-name affinity
+  is assigned before any amount-only match, and within each level one-to-one goes before
+  sums. A charge resolved in one phase never reaches the next, and a CFDI taken in one phase
+  is not available to another charge later. An amount-only match keeps its CFDIs but is
+  published as `monto_sin_afinidad` and never counted as backed, so the error goes to a
+  person instead of a silent match. Sums are bounded by a per-issuer candidate cap, so the
+  work per charge is fixed.
 - **Invariants recomputed independently.** Coverage, exclusivity, tier coherence and
   totals are recalculated on the result without trusting the algorithm. A failure exits
   with 3: the CFDI engine writes nothing, the ledger engine writes its document with the

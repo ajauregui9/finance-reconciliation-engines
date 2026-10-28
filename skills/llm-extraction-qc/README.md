@@ -39,8 +39,9 @@ Two recorded runs produce byte-identical files (same SHA-256).
 
 ## How it works
 
-1. **Guard first.** The full document text goes through `guardia.inspeccionar` (loaded by
-   path through `conciliacion.pipeline_guardia`). **A flagged document is not sent to the
+1. **Guard first.** The full document text goes through `guardia.inspeccionar` (the installed
+   `guardia` package, imported through `conciliacion.pipeline_guardia`; exit 2 if it cannot be
+   imported). **A flagged document is not sent to the
    model**: it goes straight to human review with reason `bloqueado_por_guardia`. Sending it
    could never make it acceptable and would only spend tokens; ADR 0003 places the guard
    before any LLM call. Not being flagged does not make a document trustworthy, which is why

@@ -116,6 +116,16 @@ class TestCorridaCompleta:
         assert en_revision == [f["cargo_id"] for f in filas if f["situacion"] == "en_revision"]
         assert len(en_revision) == 2
 
+    def test_el_aviso_separa_respaldados_de_por_revisar(self, tmp_path: Path) -> None:
+        codigo, salida, errores = correr(argv(SINTETICO, tmp_path))
+        assert codigo == 0, errores
+        resumen = leer_json(tmp_path / "etapas" / "cruce_cfdi.json")["resumen"]
+        assert resumen["por_revisar"] > 0
+        primera = salida.splitlines()[0]
+        assert f"; {resumen['respaldados']} respaldados por CFDI; " in primera
+        assert f"; {resumen['por_revisar']} con CFDI por revisar; " in primera
+        assert f"{resumen['con_cruce']} con CFDI" not in primera
+
     def test_modulo_corre_desde_la_carpeta_de_la_skill(self, tmp_path: Path) -> None:
         proceso = subprocess.run(
             [sys.executable, "-m", "conciliacion.pipeline", "--datos", str(SINTETICO), "--salida", str(tmp_path)],

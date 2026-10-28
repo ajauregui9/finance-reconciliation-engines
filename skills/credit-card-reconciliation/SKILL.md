@@ -26,7 +26,9 @@ description: Deterministic reconciliation of corporate card statements against r
 3. Read the exit code first: `0` report written, `2` invalid input or `prompt_guard` cannot be
    loaded (nothing written), `3` a lock or invariant failed (only `bloqueo.json` is written).
 4. In `reporte.json`, check `provisional` (true only when an input was declared missing),
-   then the `revision_humana` queue, then the partitions in `resumen`.
+   then the `revision_humana` queue, then `cfdi_por_revisar` (CFDIs that match a charge only
+   by amount, tier `monto_sin_afinidad`: confirm or reject each one), then the partitions in
+   `resumen`.
 5. In `cargos.jsonl`, each row carries its CFDI(s), tier, ledger entry, reason and review
    observations.
 
@@ -40,6 +42,8 @@ description: Deterministic reconciliation of corporate card statements against r
 - Amounts are `Decimal` from the input boundary on. Do not edit tolerances or windows to make
   a result go away; they live in `config/*.example.json` as round example values.
 - The matching is greedy with a documented total order, not an optimal assignment.
+- An amount-only CFDI match (`monto_sin_afinidad`) is never a backed charge. Do not lower
+  `afinidad_minima` to turn review items into matches.
 - The pipeline does not suggest expense accounts and never writes to an ERP.
 
 See [`README.md`](README.md) for the overview and the four specs in `specs/` for the contracts.

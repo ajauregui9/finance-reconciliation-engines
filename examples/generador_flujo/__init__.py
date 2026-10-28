@@ -1,7 +1,9 @@
 """Generador sintético determinista de insumos para el flujo de efectivo de 13 semanas.
 
-    PYTHONPATH=examples python3 -m generador_flujo            # reescribe examples/synthetic_flujo/
-    PYTHONPATH=examples python3 -m generador_flujo --salida /tmp/x --semilla 7
+    python3 -m generador_flujo                        # reescribe examples/synthetic_flujo/
+    python3 -m generador_flujo --salida /ruta --semilla 7
+
+(con el repo instalado: `pip install -e .`).
 
 Uso como biblioteca:
 

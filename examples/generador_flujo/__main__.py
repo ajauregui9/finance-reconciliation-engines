@@ -1,4 +1,4 @@
-"""CLI del generador: `PYTHONPATH=examples python3 -m generador_flujo [--parametros] [--salida] [--semilla]`.
+"""CLI del generador: `python3 -m generador_flujo [--parametros] [--salida] [--semilla]` (tras `pip install -e .`).
 
 Códigos de salida: 0 = archivos escritos; 2 = parámetros inválidos (no se escribe nada).
 """

@@ -8,17 +8,17 @@ All inputs in this repo are synthetic ([`examples/synthetic/`](../../examples/sy
 | Stage | Code | Spec (Spanish) | What it decides |
 |---|---|---|---|
 | Charge universe | [`conciliacion/universo.py`](conciliacion/universo.py), [`layouts.py`](conciliacion/layouts.py), [`montos.py`](conciliacion/montos.py) | [`specs/universo.md`](specs/universo.md) | Raw statement rows become normalized charges. The layout comes only from an exact header match; control totals must reconcile to the cent; unparseable rows are kept and flagged, never dropped |
-| Charge ↔ CFDI | `conciliacion/cruce_cfdi*.py` | [`specs/cruce_cfdi.md`](specs/cruce_cfdi.md) | Which received CFDIs back each charge (exact amount, original currency, amount within tolerance, or a sum of 2-3 CFDIs of one issuer) and, if none, one reason why |
+| Charge ↔ CFDI | `conciliacion/cruce_cfdi*.py` | [`specs/cruce_cfdi.md`](specs/cruce_cfdi.md) | Which received CFDIs back each charge (exact amount, original currency, amount within tolerance, or a sum of 2-3 CFDIs of one issuer, always with enough issuer-name affinity), which charges match a CFDI only by amount (`monto_sin_afinidad`, left for review) and, if none, one reason why |
 | Charge ↔ ledger | `conciliacion/cruce_libro*.py`, [`nombres.py`](conciliacion/nombres.py) | [`specs/cruce_libro.md`](specs/cruce_libro.md) | Whether an entry on the card's ledger account records the charge, with bucket-vendor risk; human verdicts are an input that is never overwritten, and disagreements are reported |
 | Pipeline | `conciliacion/pipeline*.py` | [`specs/pipeline.md`](specs/pipeline.md) | Runs the stages in order, screens free text with `prompt_guard`, re-checks the cross-stage invariants and publishes one row per charge |
 
 ## Usage
 
-One command runs the whole pipeline on the synthetic inputs:
+Install the repository once from its root (`python3 -m pip install -e .`). Then one command
+runs the whole pipeline on the synthetic inputs:
 
 ```bash
-PYTHONPATH=skills/credit-card-reconciliation python3 -m conciliacion.pipeline \
-    --datos examples/synthetic --salida "$(mktemp -d)"
+python3 -m conciliacion.pipeline --datos examples/synthetic --salida "$(mktemp -d)"
 ```
 
 Optional flags: `--config-cfdi <json>`, `--config-libro <json>`, `--sin-estado EMISOR`
@@ -29,7 +29,6 @@ off; not recommended, and the run says so).
 Each stage also has its own command line:
 
 ```bash
-export PYTHONPATH=skills/credit-card-reconciliation
 OUT="$(mktemp -d)"
 python3 -m conciliacion.universo examples/synthetic --salida "$OUT/universo.jsonl"
 python3 -m conciliacion.cruce_cfdi --universo examples/synthetic/universo_cargos_esperado.jsonl \
@@ -55,23 +54,31 @@ data plants three injected CFDI concepts so the demo shows the queue.
 
 ## Output
 
-`reporte.json` (every stage lock, pipeline invariants, totals and the human review queue),
+`reporte.json` (every stage lock, pipeline invariants, totals, the human review queue and the
+`cfdi_por_revisar` list of amount-only CFDI matches),
 `cargos.jsonl` (one row per charge with its CFDI(s), tier, ledger entry, reason and review
 observations) and each engine's own document under `<output-dir>/etapas/`. Exit codes: `0`
 report written, `2` invalid argument or input, or `prompt_guard` cannot be loaded (nothing
 written), `3` a lock or invariant failed (only `bloqueo.json` is written).
 
-On the synthetic data: 199 charges, 161 backed by a CFDI, 145 with a ledger entry, 2 left
-`en_revision`, 5 verdict conflicts reported, all locks green.
+On the synthetic data: 199 charges, 160 backed by a CFDI, 3 matched only by amount and left
+`cfdi_por_revisar`, 145 with a ledger entry, 2 left `en_revision`, 5 verdict conflicts
+reported, all 32 locks green. The command prints the backed and to-review counts separately.
 
 ## Matching rules in one paragraph each
 
 - **CFDI.** A received CFDI is a candidate when its receiver is the company, its issuer is
-  not a generic RFC and its date falls in an asymmetric window around the charge. A greedy
-  pass with a documented total order assigns one-to-one matches first; only then are sums
-  of 2-3 CFDIs of one issuer tried, bounded by a per-issuer candidate cap. A CFDI backs at
-  most one charge. A charge without a match gets exactly one reason (`sin_candidato`,
-  `fuera_de_ventana`, `fuera_de_tolerancia`, `solo_rfc_generico`, ...).
+  not a generic RFC and its date falls in an asymmetric window around the charge. A match
+  first qualifies by amount, then by the affinity between the charge descriptor and the
+  issuer name (`afinidad_minima` in the config). A greedy assignment with a documented total
+  order runs in four phases: one-to-one matches with enough affinity, then sums of 2-3 CFDIs
+  of one issuer with enough affinity (bounded by a per-issuer candidate cap), then the same
+  two by amount only. Those last two publish the `monto_sin_afinidad` tier: the CFDI is
+  taken, so no other charge gets it, but the charge is never counted as backed and the
+  pipeline lists it under `cfdi_por_revisar`. When two CFDIs share an amount, the one with
+  affinity wins. A CFDI is assigned to at most one charge. A charge without a match gets
+  exactly one reason (`sin_candidato`, `fuera_de_ventana`, `fuera_de_tolerancia`,
+  `solo_rfc_generico`, ...).
 - **Ledger.** Only lines on the card's own account, on the right side and within the amount
   tolerance are candidates. Names are compared with an exact, integer-only similarity
   measure (stopwords computed per side); a bucket vendor's name proves nothing, so it needs
@@ -89,8 +96,10 @@ example values that fit the synthetic data, not a calibration.
   engine reports it as `candidato_ocupado`.
 - The two statement layouts (`ALFA_V1`, `BETA_V1`) are synthetic. No PDF or xlsx statement
   is parsed.
-- The ledger engine does not resolve aliases (a payment gateway descriptor versus the legal
-  name) and does not match one entry against several charges.
+- Neither engine resolves aliases. In the CFDI engine, a payment gateway descriptor that does
+  not name the merchant, or a trade name unlike the legal name, has no affinity, so its match
+  goes to review as `monto_sin_afinidad` instead of being backed. The ledger engine does not
+  match one entry against several charges.
 - Nothing here suggests an expense account, writes to an ERP, validates CFDI seals or SAT
   status, or calls a language model.
 
