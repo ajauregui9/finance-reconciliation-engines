@@ -4,11 +4,12 @@ from __future__ import annotations
 import csv
 import io
 import json
-from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
 from types import MappingProxyType
 from typing import Any, Dict, List, Mapping, Tuple
+
+from frontera import ErrorFrontera, leer_fecha
 
 from .dinero import a_decimal
 from .errores import ErrorInsumo
@@ -62,9 +63,9 @@ def _gasto_consola(celdas: List[str], numero: int, nombre: str) -> GastoConsola:
         raise ErrorInsumo(f"{lugar}: se esperan {len(ENCABEZADO_CONSOLA)} columnas y hay {len(celdas)}")
     texto_fecha, campana, texto_gasto = (c.strip() for c in celdas)
     try:
-        fecha = datetime.strptime(texto_fecha, "%Y-%m-%d").date()
-    except ValueError as exc:
-        raise ErrorInsumo(f"{lugar}, columna 'Fecha': fecha inválida {texto_fecha!r}") from exc
+        fecha = leer_fecha(texto_fecha)
+    except ErrorFrontera as exc:
+        raise ErrorInsumo(f"{lugar}, columna 'Fecha': fecha inválida: {exc}") from exc
     if not campana:
         raise ErrorInsumo(f"{lugar}, columna 'Campaña': vacía")
     return GastoConsola(fecha=fecha, campana=campana, gasto=_monto(texto_gasto, lugar, "columna 'Gasto'"))

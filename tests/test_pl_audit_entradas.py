@@ -25,14 +25,18 @@ from auditoria_pl.validacion import leer_monto, leer_porcentaje
 
 
 class TestFronteraDeMontos(unittest.TestCase):
-    def test_texto_y_entero_se_redondean_a_centavos(self) -> None:
+    def test_texto_y_entero_se_llevan_a_centavos_sin_redondear(self) -> None:
         self.assertEqual(leer_monto("1234.5", "x"), Decimal("1234.50"))
         self.assertEqual(leer_monto(7, "x"), Decimal("7.00"))
-        self.assertEqual(leer_monto("-0.005", "x"), Decimal("-0.01"))
+        with self.assertRaises(ErrorEntrada):
+            leer_monto("-0.005", "x")
 
-    def test_float_pasa_por_str_y_redondea_mitad_hacia_arriba(self) -> None:
-        self.assertEqual(leer_monto(1234.565, "x"), Decimal("1234.57"))
-        self.assertEqual(leer_monto(0.1 + 0.2, "x"), Decimal("0.30"))
+    def test_float_pasa_por_repr_y_no_se_redondea(self) -> None:
+        self.assertEqual(leer_monto(1234.56, "x"), Decimal("1234.56"))
+        for ambiguo in (1234.565, 0.1 + 0.2):
+            with self.subTest(valor=ambiguo):
+                with self.assertRaises(ErrorEntrada):
+                    leer_monto(ambiguo, "x")
 
     def test_rechaza_valores_que_no_son_montos(self) -> None:
         for malo in ("abc", "1,000.00", "", True, None, [1], float("nan"), float("inf"), "NaN", "Infinity"):
@@ -47,9 +51,11 @@ class TestFronteraDeMontos(unittest.TestCase):
         self.assertIn("fuera de rango", str(ctx.exception))
 
     def test_porcentaje_rechaza_negativos(self) -> None:
-        self.assertEqual(leer_porcentaje("12.345", "p"), Decimal("12.35"))
-        with self.assertRaises(ErrorEntrada):
-            leer_porcentaje("-1", "p")
+        self.assertEqual(leer_porcentaje("12.35", "p"), Decimal("12.35"))
+        for malo in ("-1", "12.345"):
+            with self.subTest(valor=malo):
+                with self.assertRaises(ErrorEntrada):
+                    leer_porcentaje(malo, "p")
 
 
 class TestConfigEjemplo(unittest.TestCase):

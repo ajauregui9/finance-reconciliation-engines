@@ -9,17 +9,22 @@ traduce al mismo registro que `cfdis.jsonl` y pasa por la misma validación.
 cruce cargo ↔ CFDI no usa): `SubTotal`, `Descuento`, los traslados por impuesto (IVA 002,
 IEPS 003), las retenciones por impuesto (ISR 001, IVA 002) y los totales declarados de
 traslados y retenciones. Solo lee: no valida que el desglose cuadre con `Total`.
+
+Los atributos pasan por la frontera compartida: montos con hasta dos decimales (nunca se
+redondean), `TipoCambio` positivo con hasta seis decimales (Anexo 20) y `Fecha` con la forma
+exacta `AAAA-MM-DDTHH:MM:SS`, todo con dígitos ASCII.
 """
 from __future__ import annotations
 
 import hashlib
 import importlib
 from dataclasses import dataclass
-from datetime import datetime
 from decimal import ROUND_HALF_UP, Decimal
 from pathlib import Path
 from types import ModuleType
 from typing import Any, Callable, Dict, Mapping, Optional, Tuple, Type, TypeVar, cast
+
+from frontera import ErrorFrontera, FormaImporte, leer_fecha_hora, leer_importe
 
 from .cruce_cfdi_insumos import a_monto, cfdi_desde_dict, verificar_unicos
 from .cruce_cfdi_modelo import MONEDA_LOCAL, Cfdi, InsumoInvalido
@@ -27,7 +32,8 @@ from .cruce_cfdi_modelo import MONEDA_LOCAL, Cfdi, InsumoInvalido
 ESPACIOS_CFDI = ("http://www.sat.gob.mx/cfd/4", "http://www.sat.gob.mx/cfd/3")
 ESPACIO_TIMBRE = "http://www.sat.gob.mx/TimbreFiscalDigital"
 MONEDA_SIN_VALOR = "XXX"
-DIEZMILESIMO = Decimal("0.0001")
+DECIMALES_TIPO_CAMBIO = 6
+FORMA_TIPO_CAMBIO = FormaImporte(decimales=None, negativo=False, recortar=False)
 CENTAVO = Decimal("0.01")
 CERO = Decimal("0.00")
 IMPUESTO_ISR = "001"
@@ -107,11 +113,25 @@ def _total_en_pesos(total: Decimal, moneda: str, tipo_cambio: Optional[str], arc
         return total
     if tipo_cambio is None:
         raise InsumoInvalido(f"{archivo}: falta TipoCambio para un comprobante en {moneda}")
-    try:
-        tasa = Decimal(tipo_cambio).quantize(DIEZMILESIMO, rounding=ROUND_HALF_UP)
-    except ArithmeticError:
-        raise InsumoInvalido(f"{archivo}: TipoCambio ilegible {tipo_cambio!r}") from None
+    tasa = _tipo_cambio(tipo_cambio, archivo)
     return (total * tasa).quantize(CENTAVO, rounding=ROUND_HALF_UP)
+
+
+def _tipo_cambio(texto: str, archivo: str) -> Decimal:
+    """Positivo, con hasta seis decimales y sin redondear: el producto es lo único que se redondea."""
+    try:
+        tasa = leer_importe(texto, FORMA_TIPO_CAMBIO)
+    except ErrorFrontera as exc:
+        raise InsumoInvalido(f"{archivo}: TipoCambio ilegible: {exc}") from None
+    if tasa <= 0 or -_exponente(tasa) > DECIMALES_TIPO_CAMBIO:
+        raise InsumoInvalido(f"{archivo}: TipoCambio {texto!r} debe ser positivo y con hasta "
+                             f"{DECIMALES_TIPO_CAMBIO} decimales")
+    return tasa
+
+
+def _exponente(numero: Decimal) -> int:
+    exponente = numero.as_tuple().exponent
+    return exponente if isinstance(exponente, int) else 0
 
 
 def _espacio(raiz: Any) -> str:
@@ -133,9 +153,9 @@ def _registro(raiz: Any, archivo: str, rfc_empresa: str) -> Dict[str, Any]:
     rfc_emisor = _atributo(emisor, "Rfc", archivo)
     fecha = _atributo(raiz, "Fecha", archivo) or ""
     try:
-        emision = datetime.fromisoformat(fecha).date().isoformat()
-    except ValueError:
-        raise InsumoInvalido(f"{archivo}: Fecha ilegible {fecha!r}") from None
+        emision = leer_fecha_hora(fecha, separador="T").date().isoformat()
+    except ErrorFrontera as exc:
+        raise InsumoInvalido(f"{archivo}: Fecha ilegible: {exc}") from None
     return {
         "uuid": _atributo(timbre, "UUID", archivo),
         "fecha_emision": emision,

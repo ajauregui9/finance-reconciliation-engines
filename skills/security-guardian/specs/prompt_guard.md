@@ -189,6 +189,9 @@ cargos y conceptos de CFDI en español e inglés, con benignos difíciles como
 `IGNORAR CARGO DUPLICADO` o `SYSTEM SOFTWARE SA`) y evasiones conocidas.
 `scripts/evaluar_guardia.py` publica la tasa de detección sobre las
 inyecciones, la tasa de falsos positivos sobre los benignos y, aparte, cuántas
-evasiones conocidas se detectan. Las pruebas fijan los umbrales mínimos. El set
+evasiones conocidas se detectan. Las pruebas fijan los umbrales mínimos. Los
+umbrales de la CLI (`--deteccion-minima`, `--falsos-maximos`) son texto decimal
+con dígitos ASCII entre 0 y 1, leído con la frontera compartida (`frontera`);
+otra forma (`NaN`, `1e-1`, `٠.٥`) sale con código 2. El set
 se escribió junto con los patrones, así que mide regresiones, no la eficacia
 ante un atacante nuevo.

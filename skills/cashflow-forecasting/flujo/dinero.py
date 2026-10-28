@@ -1,11 +1,18 @@
-"""Frontera única de montos: todo importe del flujo es `Decimal` con dos decimales."""
+"""Frontera única de montos: todo importe del flujo es `Decimal` con dos decimales.
+
+La lectura delega en la frontera compartida (`frontera.leer_importe`): texto con signo
+opcional y hasta dos decimales, dígitos ASCII, sin separador de miles. Un insumo nunca se
+redondea; `centavos` redondea solo valores calculados.
+"""
 from __future__ import annotations
 
-from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
+from decimal import ROUND_HALF_UP, Decimal
 
-CENTAVO = Decimal("0.01")
+from frontera import CENTAVO, ErrorFrontera, FormaImporte, leer_importe
+
 CERO = Decimal("0.00")
 EXPONENTE_CENTAVOS = CENTAVO.as_tuple().exponent
+FORMA_MONTO = FormaImporte(decimales=2)
 
 
 def centavos(valor: Decimal) -> Decimal:
@@ -15,31 +22,16 @@ def centavos(valor: Decimal) -> Decimal:
 
 
 def a_monto(valor: object) -> Decimal:
-    """Convierte texto, entero, `Decimal` o `float` en un monto en centavos.
+    """Convierte el texto de un monto (`-1234.56`, hasta dos decimales) en un `Decimal` en centavos.
 
-    Es el único lugar donde un `float` puede volverse dinero (vía su `str`).
-    Lanza `ValueError` con un mensaje legible si el valor no es un monto.
+    Solo texto: un número, un float, más de dos decimales, dígitos no ASCII o un separador
+    de miles lanzan `ValueError` con un mensaje legible. `-0.00` se normaliza a `0.00`.
     """
-    if isinstance(valor, bool):
-        raise ValueError("un booleano no es un monto")
-    if isinstance(valor, float):
-        valor = str(valor)
-    if isinstance(valor, str):
-        texto = valor.strip()
-        try:
-            numero = Decimal(texto)
-        except InvalidOperation:
-            raise ValueError(f"'{texto}' no es un número decimal (usa punto y sin separador de miles)") from None
-    elif isinstance(valor, (int, Decimal)):
-        numero = Decimal(valor)
-    else:
-        raise ValueError(f"tipo {type(valor).__name__} no es un monto")
-    if not numero.is_finite():
-        raise ValueError(f"'{valor}' no es un monto finito")
     try:
-        return centavos(numero)
-    except InvalidOperation:
-        raise ValueError(f"'{valor}' está fuera del rango representable") from None
+        numero = leer_importe(valor, FORMA_MONTO)
+    except ErrorFrontera as exc:
+        raise ValueError(str(exc)) from None
+    return numero if numero != 0 else CERO
 
 
 def es_centavos(valor: object) -> bool:

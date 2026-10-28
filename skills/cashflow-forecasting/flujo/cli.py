@@ -7,11 +7,12 @@ from __future__ import annotations
 
 import argparse
 import json
-import re
 import sys
 from datetime import date
 from pathlib import Path
 from typing import Dict, List, Optional, Sequence, Tuple
+
+from frontera import ErrorFrontera, leer_fecha
 
 from .avisos import avisos
 from .config import cargar_config
@@ -26,17 +27,14 @@ ARCHIVO_JSON = "flujo_13_semanas.json"
 ARCHIVO_JSONL = "filas_contrato.jsonl"
 ARCHIVO_XLSX = "flujo_13_semanas.xlsx"
 CODIFICACION_SALIDA = "utf-8"
-PATRON_CORTE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
 
 def fecha_corte(texto: str) -> date:
     """Tipo de argparse para `--corte`: exige AAAA-MM-DD y una fecha real."""
-    if not PATRON_CORTE.match(texto):
-        raise argparse.ArgumentTypeError(f"'{texto}' no tiene la forma AAAA-MM-DD")
     try:
-        return date.fromisoformat(texto)
-    except ValueError:
-        raise argparse.ArgumentTypeError(f"'{texto}' no es una fecha válida") from None
+        return leer_fecha(texto)
+    except ErrorFrontera as exc:
+        raise argparse.ArgumentTypeError(str(exc)) from None
 
 
 def _argumentos(argv: Optional[Sequence[str]]) -> argparse.Namespace:

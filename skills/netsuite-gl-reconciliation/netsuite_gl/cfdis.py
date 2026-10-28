@@ -14,6 +14,8 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import Any, Dict, List, Mapping, Optional, Tuple
 
+from frontera import ErrorFrontera, FormaImporte, leer_importe
+
 from netsuite_gl.fechas import fecha_iso
 from netsuite_gl.montos import CENTAVO, ErrorMonto, a_decimal
 
@@ -31,6 +33,9 @@ MOTIVO_EMITIDO = "emitido"
 MOTIVO_RECEPTOR_AJENO = "receptor_ajeno"
 MOTIVO_TIPO_NO_APLICA = "tipo_no_aplica"
 
+
+# Tipo de cambio: texto positivo con hasta seis decimales (Anexo 20), sin redondear.
+FORMA_TIPO_CAMBIO = FormaImporte(decimales=6, negativo=False)
 
 class ErrorInsumo(ValueError):
     """El archivo de CFDIs no existe o trae un registro inválido."""
@@ -168,10 +173,10 @@ def _subtotal_mxn(
     if not isinstance(tipo_cambio, str):
         raise ErrorInsumo(f"línea {numero}: tipo_cambio es obligatorio (texto) en moneda extranjera")
     try:
-        tasa = Decimal(tipo_cambio)
-    except ArithmeticError as exc:
-        raise ErrorInsumo(f"línea {numero}: tipo_cambio inválido {tipo_cambio!r}") from exc
-    if not tasa.is_finite() or tasa <= 0:
+        tasa = leer_importe(tipo_cambio, FORMA_TIPO_CAMBIO)
+    except ErrorFrontera as exc:
+        raise ErrorInsumo(f"línea {numero}: tipo_cambio inválido: {exc}") from None
+    if tasa <= 0:
         raise ErrorInsumo(f"línea {numero}: tipo_cambio debe ser positivo")
     return (subtotal * tasa).quantize(CENTAVO, rounding=ROUND_HALF_UP)
 

@@ -9,14 +9,14 @@ import csv
 import hashlib
 import io
 import json
-import re
 from datetime import date
-from decimal import ROUND_HALF_UP, Decimal
+from decimal import Decimal
 from pathlib import Path
 from typing import Dict, Iterator, List, Mapping, Optional, Sequence, Set, Tuple
 
+from frontera import ErrorFrontera, FormaImporte, leer_entero, leer_fecha, leer_importe
+
 from .cruce_libro_modelo import (
-    CENTAVO,
     ESTADO_OK,
     TIPOS_MOVIMIENTO,
     VEREDICTO_NO_REGISTRADO,
@@ -31,9 +31,10 @@ COLUMNAS_LIBRO = ("asiento_id", "linea", "fecha", "cuenta", "proveedor_id", "pro
                   "debe", "haber", "moneda")
 COLUMNAS_VEREDICTOS = ("cargo_id", "veredicto", "asiento_id", "nota")
 
-_MONTO_TEXTO = re.compile(r"^-?\d+(\.\d+)?$")
-_FECHA_ISO = re.compile(r"^\d{4}-\d{2}-\d{2}$")
-_ENTERO = re.compile(r"^\d+$")
+# Montos: texto con signo opcional y hasta dos decimales, sin separador de miles.
+FORMA_MONTO = FormaImporte(decimales=2)
+# Umbrales de config: texto decimal exacto, con todos sus decimales.
+FORMA_DECIMAL_EXACTO = FormaImporte(decimales=None)
 
 
 class ErrorInsumo(ValueError):
@@ -42,25 +43,22 @@ class ErrorInsumo(ValueError):
 
 # ------------------------------------------------------------------ primitivas
 def a_monto(valor: object, contexto: str) -> Decimal:
-    """Única frontera numérica: texto o número a `Decimal` en centavos (ROUND_HALF_UP)."""
-    if isinstance(valor, str) and _MONTO_TEXTO.match(valor.strip()):
-        numero = Decimal(valor.strip())
-    elif isinstance(valor, (int, float, Decimal)) and not isinstance(valor, bool):
-        numero = Decimal(str(valor))
-    else:
-        raise ErrorInsumo(f"{contexto}: monto inválido {valor!r} (se espera texto como -1234.56).")
-    if not numero.is_finite():
-        raise ErrorInsumo(f"{contexto}: monto no finito {valor!r}.")
-    return numero.quantize(CENTAVO, rounding=ROUND_HALF_UP)
+    """Única frontera de montos: texto `-1234.56` (hasta dos decimales) a `Decimal` en centavos.
+
+    Nunca redondea: más de dos decimales, dígitos no ASCII, separador de miles o un número
+    JSON (int o float) son error.
+    """
+    try:
+        return leer_importe(valor, FORMA_MONTO)
+    except ErrorFrontera as exc:
+        raise ErrorInsumo(f"{contexto}: monto inválido: {exc}.") from None
 
 
 def a_fecha(valor: object, contexto: str) -> date:
-    if not isinstance(valor, str) or not _FECHA_ISO.match(valor):
-        raise ErrorInsumo(f"{contexto}: fecha inválida {valor!r} (se espera AAAA-MM-DD).")
     try:
-        return date.fromisoformat(valor)
-    except ValueError as exc:
-        raise ErrorInsumo(f"{contexto}: fecha imposible {valor!r}.") from exc
+        return leer_fecha(valor)
+    except ErrorFrontera as exc:
+        raise ErrorInsumo(f"{contexto}: fecha inválida: {exc}.") from None
 
 
 def _texto(registro: Mapping[str, object], campo: str, contexto: str, *, vacio: bool = False) -> str:
@@ -160,13 +158,14 @@ def _monto_no_negativo(fila: Mapping[str, str], campo: str, contexto: str) -> De
 
 def _linea_de(fila: Mapping[str, str], contexto: str, moneda: str) -> LineaLibro:
     asiento = _texto(fila, "asiento_id", contexto)
-    numero = fila["linea"].strip()
-    if not _ENTERO.match(numero):
-        raise ErrorInsumo(f"{contexto}: campo linea debe ser un entero ({numero!r}).")
+    try:
+        numero = leer_entero(fila["linea"])
+    except ErrorFrontera as exc:
+        raise ErrorInsumo(f"{contexto}: campo linea debe ser un entero: {exc}.") from None
     if fila["moneda"].strip() != moneda:
         raise ErrorInsumo(f"{contexto}: campo moneda {fila['moneda']!r}; el motor solo acepta {moneda}.")
     return LineaLibro(
-        asiento_id=asiento, linea=int(numero), fecha=a_fecha(fila["fecha"].strip(), f"{contexto}, campo fecha"),
+        asiento_id=asiento, linea=numero, fecha=a_fecha(fila["fecha"].strip(), f"{contexto}, campo fecha"),
         cuenta=_texto(fila, "cuenta", contexto), proveedor_id=fila["proveedor_id"].strip(),
         proveedor_nombre=fila["proveedor_nombre"].strip(),
         debe=_monto_no_negativo(fila, "debe", contexto), haber=_monto_no_negativo(fila, "haber", contexto))
@@ -225,6 +224,7 @@ def leer_veredictos(ruta: Optional[Path], cargos: frozenset[str],
 
 def a_decimal_exacto(valor: object, contexto: str) -> Decimal:
     """Texto decimal sin redondear (umbrales); rechaza números JSON para no admitir floats."""
-    if not isinstance(valor, str) or not _MONTO_TEXTO.match(valor.strip()):
-        raise ErrorInsumo(f"{contexto}: se espera texto decimal como \"0.50\" ({valor!r}).")
-    return Decimal(valor.strip())
+    try:
+        return leer_importe(valor, FORMA_DECIMAL_EXACTO)
+    except ErrorFrontera as exc:
+        raise ErrorInsumo(f"{contexto}: se espera texto decimal como \"0.50\": {exc}.") from None

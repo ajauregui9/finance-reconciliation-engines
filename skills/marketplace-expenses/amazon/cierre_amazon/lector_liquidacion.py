@@ -12,6 +12,8 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Dict, List, Mapping, Optional, Sequence, Tuple
 
+from frontera import ErrorFrontera, leer_entero
+
 from .dinero import a_decimal
 from .errores import ErrorInsumo
 from .huso import interpretar_huso, leer_fecha_hora, validar_mes
@@ -83,20 +85,19 @@ def _fecha(texto: str, huso: timezone, ctx: _Contexto, numero: int, columna: str
 
 def _monto(valores: Mapping[str, str], columna: str, ctx: _Contexto, numero: int) -> Decimal:
     try:
-        return a_decimal(valores[columna])
+        return a_decimal(valores[columna], vacio_es_cero=True)
     except ValueError as exc:
         raise ctx.error(str(exc), numero, columna) from exc
 
 
 
 def _cantidad(texto: str, ctx: _Contexto, numero: int) -> int:
-    limpio = texto.strip()
-    if not limpio:
+    if not texto.strip():
         return 0
     try:
-        return int(limpio)
-    except ValueError as exc:
-        raise ctx.error(f"se espera un entero, llegó {texto!r}", numero, COLUMNA_CANTIDAD) from exc
+        return leer_entero(texto, negativo=True)
+    except ErrorFrontera as exc:
+        raise ctx.error(f"se espera un entero: {exc}", numero, COLUMNA_CANTIDAD) from exc
 
 
 def _fila(celdas: List[str], numero: int, periodo: str, huso: timezone, ctx: _Contexto) -> FilaLiquidacion:

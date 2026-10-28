@@ -1,6 +1,8 @@
 """Frontera de entrada: lectura estricta de JSON ya decodificado.
 
-Es el único lugar donde un dato externo se convierte a tipos del dominio. Cada
+Es el único lugar donde un dato externo se convierte a tipos del dominio; montos y
+fechas pasan por la frontera compartida (`frontera`): dígitos ASCII, hasta dos decimales,
+ningún redondeo del insumo. Cada
 lector recibe la ruta del dato (por ejemplo `cuentas[3].actual`) para que el
 mensaje de error diga exactamente qué falló. Una llave desconocida es error: en
 este revisor no existen llaves que se lean "por si acaso".
@@ -11,15 +13,17 @@ from __future__ import annotations
 import calendar
 import re
 from datetime import date
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal
 from typing import Any, Iterable, Mapping, Sequence, Set, Tuple
 
-from .dinero import CERO, redondear
+from frontera import ErrorFrontera, FormaImporte, leer_importe
+from frontera import leer_fecha as _leer_fecha
 
-# Texto decimal plano: signo opcional, dígitos ASCII y parte decimal opcional.
-_PATRON_MONTO = re.compile(r"[+-]?[0-9]+(?:\.[0-9]+)?")
+from .dinero import CERO
+
+# Texto (signo + o - opcional, sin miles) o número JSON; hasta dos decimales, sin redondear.
+FORMA_MONTO = FormaImporte(decimales=2, positivo_explicito=True, numeros=True)
 _PATRON_PERIODO = re.compile(r"[1-9][0-9]{3}-(?:0[1-9]|1[0-2])")
-_PATRON_FECHA = re.compile(r"[0-9]{4}-[0-9]{2}-[0-9]{2}")
 
 
 class ErrorEntrada(ValueError):
@@ -76,18 +80,18 @@ def leer_entero(valor: Any, ruta: str, minimo: int) -> int:
 
 
 def leer_monto(valor: Any, ruta: str) -> Decimal:
-    """Convierte texto, entero o float a `Decimal` con centavos (única conversión)."""
+    """Convierte texto, entero o float (vía `repr`) a `Decimal` con centavos (única conversión).
+
+    Más de dos decimales, dígitos no ASCII, separador de miles o un float ambiguo son error:
+    un insumo nunca se redondea.
+    """
     if isinstance(valor, bool) or not isinstance(valor, (str, int, float)):
         raise ErrorEntrada(f"{ruta}: monto inválido {valor!r}")
-    if isinstance(valor, str) and not _PATRON_MONTO.fullmatch(valor):
-        raise ErrorEntrada(f"{ruta}: monto inválido {valor!r} (se espera texto como -1234.56)")
     try:
-        numero = Decimal(str(valor))
-        if not numero.is_finite():
-            raise ErrorEntrada(f"{ruta}: monto inválido {valor!r}")
-        return redondear(numero)
-    except InvalidOperation:
-        raise ErrorEntrada(f"{ruta}: monto inválido o fuera de rango {valor!r}") from None
+        return leer_importe(valor, FORMA_MONTO)
+    except ErrorFrontera as exc:
+        mensaje = str(exc).replace("está fuera del rango representable", "está fuera de rango")
+        raise ErrorEntrada(f"{ruta}: monto inválido: {mensaje} (se espera texto como -1234.56)") from None
 
 
 def leer_porcentaje(valor: Any, ruta: str) -> Decimal:
@@ -126,12 +130,10 @@ def leer_periodo(valor: Any, ruta: str) -> str:
 
 
 def leer_fecha(valor: Any, ruta: str) -> date:
-    if not isinstance(valor, str) or not _PATRON_FECHA.fullmatch(valor):
-        raise ErrorEntrada(f"{ruta}: se esperaba una fecha ISO AAAA-MM-DD, llegó {valor!r}")
     try:
-        return date.fromisoformat(valor)
-    except ValueError:
-        raise ErrorEntrada(f"{ruta}: la fecha {valor!r} no existe") from None
+        return _leer_fecha(valor)
+    except ErrorFrontera as exc:
+        raise ErrorEntrada(f"{ruta}: se esperaba una fecha ISO AAAA-MM-DD: {exc}") from None
 
 
 def fin_de_periodo(periodo: str) -> date:

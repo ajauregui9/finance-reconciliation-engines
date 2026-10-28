@@ -24,7 +24,8 @@ todo cuadra se escriben las salidas (JSON, JSONL y xlsx).
 ## 3. Config (`flujo_config/v1`)
 
 JSON estricto: llaves desconocidas o faltantes son error. Los números se leen como
-`Decimal` (nunca `float`).
+`Decimal` (nunca `float`); un peso de la curva escrito como texto usa solo dígitos
+ASCII (`"٠.٥"` es error).
 
 ```text
 esquema          "flujo_config/v1"
@@ -47,9 +48,13 @@ fila y campo. Ninguna fila se descarta en silencio: o entra al flujo, o se repor
 una partida de conciliación (fuera de horizonte, no cobrable), o se cuenta como
 registro en cero (solo CxC, sección 4.2), o la corrida falla.
 
-Montos: texto decimal (`1234.56`), convertido a `Decimal` en una sola frontera y
-redondeado a centavos con `ROUND_HALF_UP`. Texto vacío, no numérico, infinito o NaN
-es error. Fechas ISO `AAAA-MM-DD`; otra forma es error.
+Montos: texto decimal (`1234.56`) con signo opcional y hasta dos decimales,
+convertido a `Decimal` en una sola frontera (la compartida, `frontera`): solo
+dígitos ASCII, sin separador de miles, exponentes ni espacios internos. **Un insumo
+nunca se redondea**: `10.005`, `١٠٠.٠٠` o `1,000.00` son error (código 3), no un
+monto redondeado; `-0.00` se lee como `0.00`. Texto vacío, no numérico, infinito o
+NaN es error. Fechas ISO `AAAA-MM-DD` con dígitos ASCII, también en `--corte`
+(código 2); otra forma (`20261102`, `2026-W45-1`) es error.
 
 | Fuente | Columnas | Llave única | Reglas |
 |---|---|---|---|

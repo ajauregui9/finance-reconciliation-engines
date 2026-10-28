@@ -20,7 +20,7 @@ from openpyxl.worksheet.worksheet import Worksheet
 
 from .cierre import CierreMes, ResultadoCorrida
 from .config import CONCEPTOS_TARIFA
-from .dinero import CERO, a_decimal, a_tasa, texto_tasa
+from .dinero import CERO, a_decimal, tasa_releida, texto_tasa
 from .errores import ErrorInsumo
 from .salida_json import seleccionar_meses
 from .xlsx_reproducible import guardar_reproducible
@@ -155,10 +155,13 @@ def _comparar_celda(lugar: str, tipo: str, leido: object, esperado: Valor) -> Op
         return f"{lugar}: se esperaba un número y se leyó {leido!r}"
     if not isinstance(esperado, Decimal):
         return f"{lugar}: valor esperado no numérico {esperado!r}"
-    if tipo == TASA:
-        leido_texto, esperado_texto = texto_tasa(a_tasa(str(leido))), texto_tasa(esperado)
-        return None if leido_texto == esperado_texto else f"{lugar}: tasa {leido_texto} vs {esperado_texto}"
-    leido_monto = a_decimal(leido)
+    try:
+        if tipo == TASA:
+            leido_texto, esperado_texto = texto_tasa(tasa_releida(leido)), texto_tasa(esperado)
+            return None if leido_texto == esperado_texto else f"{lugar}: tasa {leido_texto} vs {esperado_texto}"
+        leido_monto = a_decimal(leido)
+    except ValueError as exc:
+        return f"{lugar}: valor releído inválido ({exc})"
     return None if leido_monto == esperado else f"{lugar}: monto {leido_monto} vs {esperado}"
 
 

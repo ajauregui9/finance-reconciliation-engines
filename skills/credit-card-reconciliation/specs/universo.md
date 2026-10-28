@@ -40,8 +40,16 @@ El resumen es dato externo y se valida completo antes de leer ningún CSV:
   empezando con letra); se usa para formar el `cargo_id`.
 - `emisor` y `archivo` no se repiten entre estados.
 - Las fechas son ISO (`AAAA-MM-DD`) y `periodo_inicio <= periodo_fin`.
-- Los montos son texto con exactamente dos decimales (`-1234.56`). Un número
-  JSON se rechaza: el resumen nunca trae floats y aquí no se convierte ninguno.
+- Los montos son texto con exactamente dos decimales (`-1234.56`), sin
+  separador de miles ni espacios. Un número JSON se rechaza: el resumen nunca
+  trae floats y aquí no se convierte ninguno.
+- Montos del resumen, importes de celda y tipos de cambio se leen con la
+  frontera compartida (`frontera`, en `skills/_comun/frontera`): solo dígitos
+  ASCII (`١٢.٣٤` no es 12.34) y ningún redondeo (`12.345` no es 12.35). En una
+  celda se recortan espacios y tabuladores ASCII al borde; cualquier otro
+  carácter (un espacio no ASCII, una coma de miles mal puesta) deja la fila
+  como `monto_invalido` (o `moneda_original_invalida`, si es el importe de
+  origen o el tipo de cambio).
 - `num_movimientos` es un entero no negativo (no se aceptan booleanos).
 - `layout` debe ser un layout conocido y `moneda` debe ser la moneda de
   facturación de ese layout.

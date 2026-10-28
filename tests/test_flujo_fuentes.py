@@ -137,9 +137,10 @@ def test_monto_invalido_es_error(tmp_path: Path, monto: str) -> None:
         leer_saldos(ruta, CORTE, "MXN")
 
 
-def test_monto_con_mas_de_dos_decimales_se_redondea_medio_hacia_arriba(tmp_path: Path) -> None:
+def test_monto_con_mas_de_dos_decimales_es_error_no_se_redondea(tmp_path: Path) -> None:
     ruta = _csv(tmp_path, "saldos.csv", COLS_SALDOS, [["CTA-1", "BANCO UNO", _dia(0), "MXN", "10.005"]])
-    assert leer_saldos(ruta, CORTE, "MXN").total_insumo == D("10.01")
+    with pytest.raises(ErrorInsumo, match=r"columna 'saldo'.*a lo más 2 decimales"):
+        leer_saldos(ruta, CORTE, "MXN")
 
 
 @pytest.mark.parametrize("fecha", ["", "2026-02-30", "02/11/2026", "2026-11-2"])
@@ -246,7 +247,7 @@ def test_cxc_saldo_negativo_resta_integro_en_la_semana_1(tmp_path: Path) -> None
     assert suma + resultado.fuera_horizonte + resultado.no_cobrable == resultado.total_insumo
 
 
-@pytest.mark.parametrize("saldo", ["0.00", "0", "-0.00", "0.004", "-0.004"])
+@pytest.mark.parametrize("saldo", ["0.00", "0", "-0.00", "-0"])
 def test_cxc_saldo_cero_no_genera_filas_y_se_cuenta(tmp_path: Path, saldo: str) -> None:
     ruta = _csv(tmp_path, "cxc.csv", COLS_CXC, [
         ["CLI-1", "C", "FV-1", _dia(-30), _dia(0), "MXN", saldo],
@@ -320,7 +321,7 @@ def test_cxp_misma_factura_de_otro_proveedor_no_es_duplicado(tmp_path: Path) -> 
 @pytest.mark.parametrize("fecha, monto, mensaje", [
     (_dia(5), "0.00", "mayor que cero"),
     (_dia(-5), "0.00", "mayor que cero"),
-    (_dia(5), "0.004", "mayor que cero"),
+    (_dia(5), "0.004", "a lo más 2 decimales"),
     (_dia(5), "-10.00", "mayor que cero"),
 ])
 def test_cxp_valores_invalidos(tmp_path: Path, fecha: str, monto: str, mensaje: str) -> None:

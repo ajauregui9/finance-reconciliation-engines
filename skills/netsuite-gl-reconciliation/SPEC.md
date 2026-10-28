@@ -24,8 +24,11 @@ indicando número de línea y campo:
 - Campos obligatorios: `uuid`, `serie`, `folio`, `fecha_emision`, `tipo_comprobante`,
   `direccion`, `rfc_emisor`, `nombre_emisor`, `rfc_receptor`, `moneda`, `tipo_cambio`,
   `subtotal`, `iva`, `total`, `total_mxn`, `concepto`, `uuid_relacionado`.
-- Los montos son texto decimal (nunca números JSON). Se convierten a `Decimal` con
-  cuantización a 0.01 `ROUND_HALF_UP`.
+- Los montos son texto decimal (nunca números JSON) con hasta dos decimales, leídos con
+  la frontera compartida (`frontera`): solo dígitos ASCII, sin separador de miles ni
+  exponentes. Un insumo nunca se redondea: `8488.375` o `٨٤٨٨.٣٧` son `ErrorInsumo`.
+  `tipo_cambio` es texto positivo con hasta seis decimales, sin redondear; solo el
+  producto se redondea a centavos. Las fechas tienen la forma exacta `AAAA-MM-DD`.
 - `subtotal + iva = total`. En MXN, `total_mxn = total`. En USD, `tipo_cambio` es
   obligatorio; el subtotal en MXN es `round(subtotal × tipo_cambio, 2)` y el IVA en MXN es
   `total_mxn − subtotal_mxn` (nunca negativo).
@@ -223,8 +226,10 @@ Modelo: un asiento tiene `id_externo`, `fecha`, `periodo` (nombre), `memo`, `ref
 opcional y líneas (`cuenta` por número, `debito`, `credito`, `clase` opcional, `entidad`
 opcional por `entityid`, `memo`).
 
-Entrada JSON: `{"asientos": [...]}`. Los montos son texto; un número JSON, una fecha que no
-es ISO o un campo faltante es `ErrorEntrada` inmediato.
+Entrada JSON: `{"asientos": [...]}`. Los montos son texto decimal exacto con dígitos ASCII
+(se leen sin redondear, para que la validación vea si traen más de dos decimales); un número
+JSON, un texto con dígitos no ASCII, exponente o separador de miles, una fecha que no es ISO
+o un campo faltante es `ErrorEntrada` inmediato.
 
 Validación previa: se revisan todos los asientos y se juntan todos los errores. Si hay uno
 solo, se rechaza el archivo completo (`CargaRechazada` con la lista ordenada) y no se

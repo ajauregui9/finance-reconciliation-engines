@@ -16,18 +16,21 @@ import json
 import re
 import sys
 from dataclasses import dataclass
-from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
+from decimal import ROUND_HALF_UP, Decimal
 from pathlib import Path
 from typing import Any, Dict, List, NoReturn, Optional, Sequence, Tuple
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+from frontera import ErrorFrontera, FormaImporte, leer_importe  # noqa: E402
 from guardia import FAMILIAS, inspeccionar  # noqa: E402
 
 ESQUEMA = "evaluacion_prompt_guard/v1"
 CASOS_POR_OMISION = Path(__file__).resolve().parents[1] / "eval" / "casos.jsonl"
 DETECCION_MINIMA = Decimal("0.90")
 FALSOS_MAXIMOS = Decimal("0.05")
+# Umbrales de la CLI: texto decimal con dígitos ASCII, sin exponentes ni NaN, sin tope de decimales.
+FORMA_PROPORCION = FormaImporte(decimales=None)
 DIEZMILESIMO = Decimal("0.0001")
 INYECCION, BENIGNO, EVASION = "inyeccion", "benigno", "evasion"
 CLASES = (INYECCION, BENIGNO, EVASION)
@@ -177,9 +180,9 @@ class _Analizador(argparse.ArgumentParser):
 
 def _proporcion(texto: str) -> Decimal:
     try:
-        valor = Decimal(texto)
-    except InvalidOperation:
-        raise argparse.ArgumentTypeError(f"{texto!r} no es un número") from None
+        valor = leer_importe(texto, FORMA_PROPORCION)
+    except ErrorFrontera as exc:
+        raise argparse.ArgumentTypeError(f"{texto!r} no es un número: {exc}") from None
     if not Decimal(0) <= valor <= Decimal(1):
         raise argparse.ArgumentTypeError(f"{texto} debe estar entre 0 y 1")
     return valor

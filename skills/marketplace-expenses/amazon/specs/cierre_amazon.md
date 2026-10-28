@@ -55,12 +55,14 @@ Retención de plataforma,Comisión por venta,Tarifa de logística,Otras tarifas,
 
 (una sola línea en el archivo). Reglas por fila:
 
-- `Fecha y hora` y `Fecha del pedido` usan `AAAA-MM-DD HH:MM:SS` en el huso del archivo.
+- `Fecha y hora` y `Fecha del pedido` usan exactamente `AAAA-MM-DD HH:MM:SS` (dos dígitos
+  ASCII por campo) en el huso del archivo.
   `Fecha del pedido` puede ir vacía en filas que no son de pedido.
 - La fecha local de `Fecha y hora` debe caer dentro del `Periodo` del archivo.
 - Si hay fecha del pedido, no puede ser posterior a `Fecha y hora`.
-- Los montos aceptan separador de miles (`"1,234.56"`); vacío significa cero.
-- `Cantidad` es un entero; vacío significa cero.
+- Los montos aceptan separador de miles bien colocado (`"1,234.56"`; `"1,23.45"` es
+  error); vacío significa cero.
+- `Cantidad` es un entero con dígitos ASCII y signo `-` opcional; vacío significa cero.
 - La suma de las diez columnas de montos debe ser igual a `Total`, al centavo.
 - Signos: lo que recibe el vendedor es positivo; tarifas, retenciones y reembolsos de
   venta son negativos.
@@ -71,7 +73,7 @@ Ninguna fila se descarta.
 
 ### 2.2 Consola de publicidad
 
-CSV con encabezado exacto `Fecha,Campaña,Gasto`. `Fecha` es `AAAA-MM-DD` (fecha
+CSV con encabezado exacto `Fecha,Campaña,Gasto`. `Fecha` es exactamente `AAAA-MM-DD` (fecha
 calendario del huso de cierre); `Gasto` es el gasto sin IVA. El mes de la fila es el de su
 fecha.
 
@@ -95,9 +97,19 @@ del pedido, sin IVA. Es el ancla del devengo.
 
 ### 2.5 Conversión de montos
 
-Existe un solo punto de conversión a `Decimal`: `dinero.a_decimal`. Recibe texto, entero,
-`float` o `Decimal`; un `float` pasa por `Decimal(str(x))`. Rechaza booleanos, texto no
-numérico, infinitos y NaN. El resultado siempre se cuantiza a 0.01 con `ROUND_HALF_UP`.
+Existe un solo punto de conversión a `Decimal`: `dinero.a_decimal`, sobre la frontera
+compartida (`frontera`). Recibe texto, entero, `float` o `Decimal`, con hasta dos
+decimales y solo dígitos ASCII. **Un insumo nunca se redondea**: `"100.005"`, `"١٠٠.٠٠"` o
+`"1,00.00"` son error (código 2). Un `float` (números JSON, celdas que openpyxl relee del
+xlsx) pasa por su `repr` y se rechaza si tiene más de dos decimales significativos o más de
+15 dígitos (`0.1 + 0.2`). Rechaza booleanos, texto no numérico, exponentes, infinitos y NaN.
+El texto vacío es cero solo en las celdas de la liquidación (2.1); en la consola, las
+facturas y la venta del ERP es error. El resultado queda en centavos sin cambiar su valor.
+
+Las tasas de la config (`dinero.a_tasa`) son texto o `Decimal` con dígitos ASCII y todos sus
+decimales. Husos (`UTC±HH:MM`), meses (`AAAA-MM`) y fechas usan la misma frontera. Al
+verificar el xlsx, la tasa releída se convierte por su `repr` y se compara a seis decimales;
+un monto releído que no cumple la regla se reporta como diferencia (código 1).
 
 ## 3. Config
 

@@ -76,12 +76,16 @@ Validaciones cruzadas: `minimo_pct <= maximo_pct`; `objetivo_pct <= alerta_pct`;
 
 ## 3. Montos y redondeo
 
-Todo monto es `Decimal`. La conversión ocurre una sola vez, al leer: texto o
-número JSON pasa por `Decimal(str(x))` y se redondea a centavos con
-`ROUND_HALF_UP`. Se rechazan booleanos, `NaN`, infinitos y textos que no sean un
-número. Los porcentajes se redondean igual, a dos decimales, y toda comparación
-contra un umbral usa el porcentaje ya redondeado: el mismo valor que sale en el
-reporte.
+Todo monto es `Decimal`. La conversión ocurre una sola vez, al leer, con la
+frontera compartida (`frontera`): texto (signo `+` o `-` opcional) o número JSON
+con hasta dos decimales y solo dígitos ASCII. **Un insumo nunca se redondea**:
+`"100.005"`, `"١٠٠.٠٠"` o `"1,000.00"` son error (código 2). Un float pasa por su
+`repr` y se rechaza si tiene más de dos decimales significativos o más de 15
+dígitos (`0.1 + 0.2`). Se rechazan booleanos, `NaN`, infinitos, exponentes y
+textos que no sean un número. Los porcentajes de la config siguen la misma regla.
+Los porcentajes calculados se redondean a dos decimales con `ROUND_HALF_UP`, y
+toda comparación contra un umbral usa el porcentaje ya redondeado: el mismo valor
+que sale en el reporte. Las fechas tienen la forma exacta `AAAA-MM-DD`.
 
 El CLI rechaza además un JSON con la misma llave repetida en un objeto, en lugar
 de quedarse en silencio con la última.

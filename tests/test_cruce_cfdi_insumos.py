@@ -63,12 +63,13 @@ def escribir(ruta: Path, lineas: Any) -> Path:
 class TestMonto:
     @pytest.mark.parametrize(
         "valor,esperado",
-        [("100", "100.00"), ("-1234.565", "-1234.57"), (100, "100.00"), (100.005, "100.01"), ("0.004", "0.00")],
+        [("100", "100.00"), ("-1234.56", "-1234.56"), (100, "100.00"), (100.5, "100.50"), ("0.04", "0.04")],
     )
     def test_frontera_decimal(self, valor: Any, esperado: str) -> None:
         assert a_monto(valor, "monto") == Decimal(esperado)
 
-    @pytest.mark.parametrize("valor", [True, None, "abc", "", "NaN", "Infinity", [1]])
+    @pytest.mark.parametrize("valor", [True, None, "abc", "", "NaN", "Infinity", [1],
+                                       "-1234.565", 100.005, "0.004"])
     def test_valores_invalidos(self, valor: Any) -> None:
         with pytest.raises(InsumoInvalido, match="monto"):
             a_monto(valor, "monto")

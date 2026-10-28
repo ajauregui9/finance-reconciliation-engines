@@ -18,19 +18,23 @@ class TestADecimal:
     def test_texto_con_separador_de_miles(self) -> None:
         assert dinero.a_decimal("1,234.56") == Decimal("1234.56")
 
-    def test_vacio_es_cero(self) -> None:
-        assert dinero.a_decimal("") == Decimal("0.00")
-        assert dinero.a_decimal("   ") == Decimal("0.00")
+    def test_vacio_es_cero_solo_en_celdas_de_liquidacion(self) -> None:
+        assert dinero.a_decimal("", vacio_es_cero=True) == Decimal("0.00")
+        assert dinero.a_decimal("   ", vacio_es_cero=True) == Decimal("0.00")
+        with pytest.raises(ValueError, match="vacío"):
+            dinero.a_decimal("")
 
-    def test_float_pasa_por_str_y_se_cuantiza_half_up(self) -> None:
-        assert dinero.a_decimal(0.1 + 0.2) == Decimal("0.30")
-        assert dinero.a_decimal(2.675) == Decimal("2.68")
-        assert dinero.a_decimal("2.345") == Decimal("2.35")
-        assert dinero.a_decimal("-2.345") == Decimal("-2.35")
+    def test_float_pasa_por_repr_y_nunca_se_redondea(self) -> None:
+        assert dinero.a_decimal(2.67) == Decimal("2.67")
+        for valor in (0.1 + 0.2, 2.675, "2.345", "-2.345"):
+            with pytest.raises(ValueError, match="a lo más 2 decimales"):
+                dinero.a_decimal(valor)
 
     def test_entero_y_decimal(self) -> None:
         assert dinero.a_decimal(7) == Decimal("7.00")
-        assert dinero.a_decimal(Decimal("1.005")) == Decimal("1.01")
+        assert dinero.a_decimal(Decimal("1.50")) == Decimal("1.50")
+        with pytest.raises(ValueError, match="a lo más 2 decimales"):
+            dinero.a_decimal(Decimal("1.005"))
 
     @pytest.mark.parametrize("valor", ["abc", "1.2.3", "NaN", "Infinity", "--5", True, None, [1]])
     def test_rechaza_valores_invalidos(self, valor: object) -> None:

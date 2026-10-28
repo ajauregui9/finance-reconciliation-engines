@@ -9,9 +9,11 @@ from __future__ import annotations
 import json
 import re
 from dataclasses import dataclass
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal
 from pathlib import Path
 from typing import Any, Dict, FrozenSet, List, Mapping, Optional, Sequence, Tuple
+
+from frontera import ErrorFrontera, FormaImporte, leer_importe
 
 from .contrato import FUENTES
 from .errores import ErrorConfig
@@ -21,6 +23,8 @@ LLAVES_CONFIG = frozenset({"esquema", "moneda", "insumos", "curva_cobranza"})
 LLAVES_TRAMO = frozenset({"tramo", "dias_desde", "dias_hasta", "pesos"})
 PATRON_MONEDA = re.compile(r"^[A-Z]{3}$")
 UNO = Decimal(1)
+# Pesos de la curva: texto decimal o número JSON (leído como `Decimal`), sin tope de decimales.
+FORMA_PESO = FormaImporte(decimales=None, numeros=True)
 
 
 @dataclass(frozen=True)
@@ -95,13 +99,11 @@ def _entero_o_nulo(valor: object, contexto: str) -> Optional[int]:
 def _fraccion(valor: object, contexto: str) -> Decimal:
     if isinstance(valor, float):
         raise ErrorConfig(f"{contexto}: el peso es float; escríbelo como texto decimal o número JSON")
-    if isinstance(valor, bool) or not isinstance(valor, (str, int, Decimal)):
-        raise ErrorConfig(f"{contexto}: el peso {valor!r} no es un decimal")
     try:
-        peso = Decimal(valor.strip() if isinstance(valor, str) else valor)
-    except InvalidOperation:
-        raise ErrorConfig(f"{contexto}: el peso {valor!r} no es un decimal") from None
-    if not peso.is_finite() or not 0 <= peso <= UNO:
+        peso = leer_importe(valor, FORMA_PESO)
+    except ErrorFrontera as exc:
+        raise ErrorConfig(f"{contexto}: el peso {valor!r} no es un decimal ({exc})") from None
+    if not 0 <= peso <= UNO:
         raise ErrorConfig(f"{contexto}: el peso {valor!r} debe estar entre 0 y 1")
     return peso
 

@@ -28,20 +28,21 @@ from netsuite_gl.montos import (  # noqa: E402
 @pytest.mark.parametrize(
     "crudo, esperado",
     [
-        ("10.005", Decimal("10.01")),
+        ("10.01", Decimal("10.01")),
         (100, Decimal("100.00")),
-        (Decimal("-2.345"), Decimal("-2.35")),
+        (Decimal("-2.5"), Decimal("-2.50")),
         (" 7.1 ", Decimal("7.10")),
-        ("-0.001", Decimal("0.00")),
+        ("-0.00", Decimal("0.00")),
     ],
 )
-def test_a_decimal_cuantiza_al_centavo_half_up(crudo: Any, esperado: Decimal) -> None:
+def test_a_decimal_lleva_al_centavo_sin_redondear(crudo: Any, esperado: Decimal) -> None:
     resultado = a_decimal(crudo)
     assert resultado == esperado and resultado.as_tuple().exponent == -2
     assert str(resultado) == str(esperado)
 
 
-@pytest.mark.parametrize("crudo", [True, "abc", "NaN", "Infinity", float("inf"), "", 0.1 + 0.2, 1.5])
+@pytest.mark.parametrize("crudo", [True, "abc", "NaN", "Infinity", float("inf"), "", 0.1 + 0.2, 1.5,
+                                   "10.005", Decimal("-2.345"), "-0.001"])
 def test_a_decimal_rechaza_lo_que_no_es_monto(crudo: Any) -> None:
     with pytest.raises(ErrorMonto):
         a_decimal(crudo)

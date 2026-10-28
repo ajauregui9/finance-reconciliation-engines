@@ -1,10 +1,10 @@
 """Lectura y formato de importes del universo de cargos.
 
-Todo importe se representa con `Decimal`. Ningún insumo de esta etapa trae
-floats: los CSV son texto y el resumen exige texto. Por eso las funciones de
-lectura validan la forma exacta del texto con expresiones que solo aceptan
-dígitos ASCII (`[0-9]`, nunca `\\d`, que en Python admite dígitos de cualquier
-alfabeto) y construyen el `Decimal` directamente del texto validado.
+La lectura delega en la frontera compartida (`frontera.leer_importe`): dígitos solo
+ASCII, ningún redondeo de insumos, espacios ASCII recortados al borde de las celdas.
+Este módulo fija las formas del universo: celdas con exactamente dos decimales, tipo de
+cambio positivo con hasta cuatro y montos del resumen como texto `-1234.56` sin
+separador de miles ni espacios.
 
 Las funciones de lectura de celdas devuelven `None` cuando el texto no tiene la
 forma esperada: quien llama decide el motivo con que se marca la fila. La
@@ -13,37 +13,29 @@ formado detiene la corrida.
 """
 from __future__ import annotations
 
-import re
 from decimal import ROUND_HALF_UP, Decimal
-from typing import Optional, Pattern
+from typing import Optional
 
-CENTAVO = Decimal("0.01")
+from frontera import CENTAVO, ErrorFrontera, FormaImporte
+from frontera import leer_importe as _leer
+
 DIEZMILESIMA = Decimal("0.0001")
 DECIMALES_TIPO_CAMBIO = 4
 
-# Parte entera con comas de miles bien colocadas, o sin agrupar.
-_ENTERO_CON_MILES = r"(?:[0-9]{1,3}(?:,[0-9]{3})+|[0-9]+)"
-_ENTERO_SIMPLE = r"[0-9]+"
-_CENTAVOS = r"\.[0-9]{2}"
-
-
-def _patron_importe(con_signo: bool, con_miles: bool) -> Pattern[str]:
-    signo = "-?" if con_signo else ""
-    entero = _ENTERO_CON_MILES if con_miles else _ENTERO_SIMPLE
-    return re.compile(f"{signo}{entero}{_CENTAVOS}")
-
-
-_PATRONES_IMPORTE = {
-    (signo, miles): _patron_importe(signo, miles)
+_FORMAS_CELDA = {
+    (signo, miles): FormaImporte(decimales=2, exactos=True, negativo=signo, miles=miles)
     for signo in (False, True)
     for miles in (False, True)
 }
-_PATRON_TIPO_CAMBIO = re.compile(r"[0-9]+(?:\.[0-9]{1,%d})?" % DECIMALES_TIPO_CAMBIO)
-_PATRON_MONTO_RESUMEN = _patron_importe(con_signo=True, con_miles=False)
+_FORMA_TIPO_CAMBIO = FormaImporte(decimales=DECIMALES_TIPO_CAMBIO, negativo=False)
+_FORMA_RESUMEN = FormaImporte(decimales=2, exactos=True, recortar=False)
+
+__all__ = ["CENTAVO", "DIEZMILESIMA", "ErrorFrontera", "a_centavos", "leer_importe", "leer_monto_resumen",
+           "leer_tipo_cambio", "texto_monto", "texto_tipo_cambio"]
 
 
 def a_centavos(valor: Decimal) -> Decimal:
-    """Redondea a dos decimales con mitad hacia arriba."""
+    """Redondea a dos decimales con mitad hacia arriba (solo valores calculados, nunca insumos)."""
     return valor.quantize(CENTAVO, rounding=ROUND_HALF_UP)
 
 
@@ -53,18 +45,18 @@ def leer_importe(texto: str, *, con_signo: bool, con_miles: bool) -> Optional[De
     `con_signo` permite un `-` inicial; `con_miles` permite comas de miles bien
     colocadas (sin exigirlas). Devuelve `None` si el texto no tiene esa forma.
     """
-    limpio = texto.strip()
-    if not _PATRONES_IMPORTE[(con_signo, con_miles)].fullmatch(limpio):
+    try:
+        return _leer(texto, _FORMAS_CELDA[(con_signo, con_miles)])
+    except ErrorFrontera:
         return None
-    return Decimal(limpio.replace(",", ""))
 
 
 def leer_tipo_cambio(texto: str) -> Optional[Decimal]:
     """Lee un tipo de cambio positivo con hasta cuatro decimales, o `None`."""
-    limpio = texto.strip()
-    if not _PATRON_TIPO_CAMBIO.fullmatch(limpio):
+    try:
+        valor = _leer(texto, _FORMA_TIPO_CAMBIO)
+    except ErrorFrontera:
         return None
-    valor = Decimal(limpio)
     return valor if valor > 0 else None
 
 
@@ -77,9 +69,10 @@ def leer_monto_resumen(valor: object, campo: str) -> Decimal:
     if not isinstance(valor, str):
         raise ValueError(
             f"{campo}: se esperaba texto con dos decimales, llegó {type(valor).__name__}")
-    if not _PATRON_MONTO_RESUMEN.fullmatch(valor):
-        raise ValueError(f"{campo}: {valor!r} no tiene la forma -1234.56")
-    return Decimal(valor)
+    try:
+        return _leer(valor, _FORMA_RESUMEN)
+    except ErrorFrontera as error:
+        raise ValueError(f"{campo}: {valor!r} no tiene la forma -1234.56 ({error})") from None
 
 
 def texto_monto(valor: Decimal) -> str:

@@ -9,10 +9,11 @@ igualdad por campo que usan el cruce y la evaluación (`mismo_valor`).
 """
 from __future__ import annotations
 
-import re
 from dataclasses import dataclass, fields
 from decimal import ROUND_HALF_UP, Decimal
 from typing import Dict, FrozenSet, Mapping, Optional, Tuple
+
+from frontera import ErrorFrontera, FormaImporte, leer_importe
 
 CAMPOS: Tuple[str, ...] = ("rfc_emisor", "rfc_receptor", "uuid", "fecha", "subtotal", "descuento", "iva", "ieps",
                            "isr_retenido", "iva_retenido", "total", "moneda")
@@ -42,15 +43,18 @@ DISCREPANCIA_MOTOR = "discrepancia_motor"
 ERROR_API = "error_api"
 
 CENTAVO = Decimal("0.01")
-# Solo dígitos ASCII: `\d` aceptaría dígitos de otros alfabetos.
-_FORMA_MONTO = re.compile(r"[0-9]+(?:\.[0-9]{1,2})?")
+# Frontera compartida: dígitos ASCII, sin signo, sin miles, sin espacios, hasta dos decimales.
+FORMA_MONTO = FormaImporte(decimales=2, negativo=False, recortar=False)
 
 
 def monto_estricto(texto: Optional[str]) -> Optional[Decimal]:
     """El monto con dos decimales, o None si el texto no es solo dígitos con punto opcional."""
-    if texto is None or not _FORMA_MONTO.fullmatch(texto):
+    if not isinstance(texto, str):
         return None
-    return Decimal(texto).quantize(CENTAVO, rounding=ROUND_HALF_UP)
+    try:
+        return leer_importe(texto, FORMA_MONTO)
+    except ErrorFrontera:
+        return None
 
 
 def texto_monto(monto: Decimal) -> str:

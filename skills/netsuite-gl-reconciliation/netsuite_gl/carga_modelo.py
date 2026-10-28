@@ -8,8 +8,10 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass
 from datetime import date
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal
 from typing import Any, Dict, Optional, Sequence, Tuple
+
+from frontera import ErrorFrontera, FormaImporte, leer_importe
 
 from netsuite_gl.fechas import fecha_iso
 
@@ -17,6 +19,10 @@ CAMPOS_ASIENTO: Tuple[str, ...] = ("id_externo", "fecha", "periodo", "memo", "re
 CAMPOS_LINEA: Tuple[str, ...] = ("cuenta", "debito", "credito", "clase", "entidad", "memo")
 LLAVE_RAIZ = "asientos"
 
+
+# Importes de carga: texto decimal exacto, sin redondear; la validación previa reporta más de dos
+# decimales como `importe_invalido` (spec, sección 7).
+FORMA_IMPORTE_EXACTO = FormaImporte(decimales=None)
 
 class ErrorEntrada(ValueError):
     """El documento de asientos no tiene la forma esperada (se rechaza antes de validar)."""
@@ -123,12 +129,9 @@ def _importe(objeto: Dict[str, Any], campo: str, donde: str) -> Decimal:
     if not isinstance(valor, str):
         raise ErrorEntrada(f"{donde}: '{campo}' debe ser texto decimal (p. ej. \"100.00\"), no {type(valor).__name__}")
     try:
-        numero = Decimal(valor.strip())
-    except InvalidOperation as exc:
-        raise ErrorEntrada(f"{donde}: '{campo}' no es un número decimal: {valor!r}") from exc
-    if not numero.is_finite():
-        raise ErrorEntrada(f"{donde}: '{campo}' debe ser finito")
-    return numero
+        return leer_importe(valor, FORMA_IMPORTE_EXACTO)
+    except ErrorFrontera as exc:
+        raise ErrorEntrada(f"{donde}: '{campo}' no es un número decimal: {exc}") from None
 
 
 def _fecha(objeto: Dict[str, Any], donde: str) -> date:

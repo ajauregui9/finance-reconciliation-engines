@@ -51,8 +51,9 @@ se publica como `monto_sin_afinidad`, pendiente de revisión humana.
      comprobante; los impuestos por concepto nunca se suman. Sin ese nodo, todo
      es 0.00. Un traslado `Exento` sin `Importe` aporta cero; cualquier otro
      traslado o retención sin `Importe` es un error. Todos los montos pasan por
-     la misma conversión a `Decimal` (0.01, `ROUND_HALF_UP`) y un valor negativo
-     o ilegible es un error que nombra el archivo y el atributo. El motor de
+     la misma frontera que el resto de los insumos (ver "Validación de
+     insumos") y un valor negativo o ilegible es un error que nombra el archivo
+     y el atributo. El motor de
      cruce no usa estos montos: `cargar_cfdis_xml` no cambia y no exige
      `SubTotal`.
 
@@ -77,14 +78,27 @@ se publica como `monto_sin_afinidad`, pendiente de revisión humana.
 
 - Cada línea JSONL debe ser un objeto JSON. Una línea vacía o ilegible es un
   error con número de línea; nunca se salta.
-- Montos: cadena o número (no booleano). Se convierten una sola vez con
-  `Decimal(str(x))` y se cuantizan a 0.01 con `ROUND_HALF_UP`. Los tipos de
-  cambio no se usan.
-- Fechas ISO (`AAAA-MM-DD`; en CFDIs también se acepta fecha y hora y se toma
-  la fecha).
+- Montos: cadena o número (no booleano), con la frontera compartida
+  (`frontera`): signo opcional, hasta dos decimales, dígitos ASCII, sin
+  separador de miles, exponentes ni espacios internos (los del borde se
+  recortan). **Un insumo nunca se redondea**: `100.005`, `١٠٠.٠٠` o `1,000.00`
+  son error. Un número JSON entero entra exacto; un float pasa por su `repr` y
+  se rechaza si tiene más de dos decimales significativos o más de 15 dígitos
+  (`0.1 + 0.2` es `0.30000000000000004`: error). El resultado queda en
+  centavos sin cambiar su valor. En el universo los tipos de cambio no se usan.
+- XML: `Total`, `SubTotal`, `Descuento`, `Importe` y los totales de impuestos
+  siguen la misma regla de montos (el Anexo 20 pide en el comprobante los
+  decimales de la moneda). `TipoCambio` es positivo, con hasta seis decimales
+  y sin redondear; solo el producto `Total × TipoCambio` se redondea a
+  centavos (`ROUND_HALF_UP`). `Fecha` tiene la forma exacta
+  `AAAA-MM-DDTHH:MM:SS`.
+- Fechas ISO `AAAA-MM-DD` con dígitos ASCII (la misma forma en Python 3.9 a
+  3.13: `20260710` o `2026-W28-5` son error); en CFDIs JSONL también se acepta
+  `AAAA-MM-DDTHH:MM:SS` y se toma la fecha.
 - `cargo_id` y `uuid` no se repiten. `estado = ok` exige `fecha`.
 - `total` y `total_mxn` de un CFDI no son negativos: el signo lo da el tipo.
-- Una config con llaves desconocidas o valores fuera de rango es inválida.
+- Una config con llaves desconocidas o valores fuera de rango es inválida; sus
+  tolerancias y umbrales siguen la misma regla de montos.
 
 ## Definiciones
 

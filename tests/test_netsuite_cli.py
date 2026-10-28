@@ -191,6 +191,7 @@ def test_no_hay_cliente_rest_ni_dependencias_externas() -> None:
     stdlib_permitida = {
         "__future__", "argparse", "collections", "csv", "dataclasses", "datetime", "decimal", "hashlib", "io", "json",
         "pathlib", "re", "sqlite3", "sys", "types", "typing", "netsuite_gl",
+        "frontera",  # frontera de entrada compartida del repo (solo biblioteca estándar)
     }
     for ruta in sorted(SKILL.rglob("*.py")):
         importados = set(_modulos_importados(ruta))

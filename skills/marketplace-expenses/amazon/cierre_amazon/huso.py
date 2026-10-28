@@ -1,38 +1,29 @@
 """Corte horario: del huso que declara el archivo al mes del huso de cierre.
 
 Solo se aceptan desfases fijos (`UTC±HH:MM`). No hay ningún desfase supuesto entre la
-plataforma y el cierre: cada instante se convierte con el huso que trae su archivo.
+plataforma y el cierre: cada instante se convierte con el huso que trae su archivo. Husos,
+fechas y meses se leen con la frontera compartida (`frontera.fechas`): forma fija y
+dígitos ASCII.
 """
 from __future__ import annotations
 
-import re
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 
-_PATRON_HUSO = re.compile(r"UTC([+-])(\d{2}):(\d{2})")
-_PATRON_MES = re.compile(r"(\d{4})-(\d{2})")
-_FORMATO_FECHA_HORA = "%Y-%m-%d %H:%M:%S"
+from frontera import leer_desfase_utc
+from frontera import leer_fecha_hora as _leer_fecha_hora
+from frontera import leer_mes
+
 _MAX_HORAS = 14
 
 
 def interpretar_huso(texto: str) -> timezone:
     """`UTC-07:00` -> `timezone(-7 h)`. Cualquier otra forma es un `ValueError`."""
-    coincidencia = _PATRON_HUSO.fullmatch(texto.strip())
-    if coincidencia is None:
-        raise ValueError(f"se espera un desfase fijo UTC±HH:MM, llegó {texto!r}")
-    signo, horas, minutos = coincidencia.groups()
-    if int(horas) > _MAX_HORAS or int(minutos) >= 60:
-        raise ValueError(f"desfase fijo fuera de rango: {texto!r}")
-    desfase = timedelta(hours=int(horas), minutes=int(minutos))
-    return timezone(-desfase if signo == "-" else desfase)
+    return leer_desfase_utc(texto.strip(), horas_max=_MAX_HORAS)
 
 
 def leer_fecha_hora(texto: str, huso: timezone) -> datetime:
     """Lee `AAAA-MM-DD HH:MM:SS` como hora local del huso dado."""
-    try:
-        local = datetime.strptime(texto.strip(), _FORMATO_FECHA_HORA)
-    except ValueError as exc:
-        raise ValueError(f"fecha y hora inválida (AAAA-MM-DD HH:MM:SS): {texto!r}") from exc
-    return local.replace(tzinfo=huso)
+    return _leer_fecha_hora(texto.strip()).replace(tzinfo=huso)
 
 
 def mes_en_huso(instante: datetime, huso: timezone) -> str:
@@ -42,10 +33,7 @@ def mes_en_huso(instante: datetime, huso: timezone) -> str:
 
 def validar_mes(texto: str) -> str:
     """Devuelve el mes si tiene forma `AAAA-MM` válida."""
-    coincidencia = _PATRON_MES.fullmatch(texto)
-    if coincidencia is None or not 1 <= int(coincidencia.group(2)) <= 12:
-        raise ValueError(f"mes inválido (AAAA-MM): {texto!r}")
-    return texto
+    return leer_mes(texto)
 
 
 def mes_anterior(mes: str) -> str:

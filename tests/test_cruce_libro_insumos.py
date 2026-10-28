@@ -58,15 +58,15 @@ def _veredictos(tmp_path: Path, filas: List[str], encabezado: str = "cargo_id,ve
 # ------------------------------------------------------------------- montos
 class TestFronteraDeMontos:
     @pytest.mark.parametrize("valor, esperado", [
-        ("10.00", "10.00"), ("-1234.5", "-1234.50"), (7, "7.00"), (10.005, "10.01"), (Decimal("2.345"), "2.35"),
-        (" 3.10 ", "3.10"),
+        ("10.00", "10.00"), ("-1234.5", "-1234.50"), ("7", "7.00"), (" 3.10 ", "3.10"),
     ])
-    def test_convierte_a_decimal_con_centavos_half_up(self, valor: object, esperado: str) -> None:
+    def test_convierte_texto_a_decimal_con_centavos_sin_redondear(self, valor: object, esperado: str) -> None:
         resultado = ins.a_monto(valor, "prueba")
         assert isinstance(resultado, Decimal)
         assert str(resultado) == esperado
 
-    @pytest.mark.parametrize("valor", [True, None, "abc", "1,234.56", "", float("nan"), float("inf"), "1e3", []])
+    @pytest.mark.parametrize("valor", [True, None, "abc", "1,234.56", "", float("nan"), float("inf"), "1e3", [],
+                                       7, 10.005, Decimal("2.345"), "10.005"])
     def test_rechaza_lo_que_no_es_un_monto(self, valor: object) -> None:
         with pytest.raises(ErrorInsumo, match="prueba"):
             ins.a_monto(valor, "prueba")
@@ -144,9 +144,9 @@ class TestUniverso:
         (cargo,) = ins.leer_universo(_jsonl(tmp_path, [_cargo(estado="ininterpretable", fecha=None)]))
         assert (cargo.estado, cargo.fecha) == ("ininterpretable", None)
 
-    def test_monto_numerico_pasa_por_la_frontera(self, tmp_path: Path) -> None:
-        (cargo,) = ins.leer_universo(_jsonl(tmp_path, [_cargo(monto=10.005)]))
-        assert cargo.monto == Decimal("10.01")
+    def test_monto_numerico_se_rechaza(self, tmp_path: Path) -> None:
+        with pytest.raises(ErrorInsumo, match="campo monto"):
+            ins.leer_universo(_jsonl(tmp_path, [_cargo(monto=10.005)]))
 
     @pytest.mark.parametrize("fila, mensaje", [
         ({"cargo_id": "X"}, "emisor"),

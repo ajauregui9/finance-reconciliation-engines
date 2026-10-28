@@ -7,7 +7,6 @@ from __future__ import annotations
 import csv
 import hashlib
 import io
-import re
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
@@ -15,11 +14,12 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import Dict, Hashable, Mapping, Sequence, Tuple
 
+from frontera import ErrorFrontera, leer_fecha
+
 from .dinero import a_monto
 from .errores import ErrorInsumo
 
 CODIFICACION = "utf-8-sig"
-PATRON_FECHA = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
 
 @dataclass(frozen=True)
@@ -44,12 +44,10 @@ class Registro:
 
     def fecha(self, columna: str) -> date:
         valor = self.texto(columna)
-        if not PATRON_FECHA.match(valor):
-            raise self.falla_en(columna, f"'{valor}' no tiene la forma AAAA-MM-DD")
         try:
-            return date.fromisoformat(valor)
-        except ValueError:
-            raise self.falla_en(columna, f"'{valor}' no es una fecha válida") from None
+            return leer_fecha(valor)
+        except ErrorFrontera as exc:
+            raise self.falla_en(columna, str(exc)) from None
 
     def monto(self, columna: str) -> Decimal:
         valor = self.texto(columna)

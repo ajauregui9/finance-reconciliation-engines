@@ -37,10 +37,20 @@ Campos que usa (los demás se ignoran):
 
 Una fila por línea de póliza. Columnas obligatorias: `asiento_id`, `linea`,
 `fecha`, `cuenta`, `proveedor_id`, `proveedor_nombre`, `debe`, `haber`, `moneda`.
-Las demás columnas se conservan fuera del análisis. `linea` es un entero;
-`debe`/`haber` son decimales no negativos; `moneda` debe ser la moneda de la
-config (el motor compara importes en una sola moneda). El par
-(`asiento_id`, `linea`) no se repite.
+Las demás columnas se conservan fuera del análisis. `linea` es un entero
+(dígitos ASCII, sin signo); `debe`/`haber` son decimales no negativos; `moneda`
+debe ser la moneda de la config (el motor compara importes en una sola moneda).
+El par (`asiento_id`, `linea`) no se repite.
+
+#### Frontera de entrada (código 2)
+
+Montos (`monto` del universo, `debe`/`haber`, `tolerancia_monto`), fechas y
+`linea` pasan por la frontera compartida (`frontera`): texto con signo opcional
+y hasta dos decimales, solo dígitos ASCII, sin separador de miles, exponentes ni
+espacios internos (los del borde se recortan). **Un insumo nunca se redondea**:
+`100.005`, `١٠.٠٠`, `1,000.00` o un número JSON (entero o float) son error con
+archivo, fila y campo. `umbral_similitud` es texto decimal exacto, con todos sus
+decimales. Las fechas tienen la forma exacta `AAAA-MM-DD`.
 
 ### 3. Veredictos humanos (`--veredictos`, CSV, opcional)
 
@@ -292,8 +302,8 @@ para la persona que revisa y no cambian el código de salida.
 
 ## Determinismo
 
-- Todo importe es `Decimal`. Los valores numéricos de entrada pasan por una sola
-  frontera (`Decimal(str(x))`, cuantizado a centavos con `ROUND_HALF_UP`).
+- Todo importe es `Decimal`. Los valores de entrada pasan por una sola frontera
+  (ver "Frontera de entrada"), que nunca redondea un insumo.
 - La similitud usa `Fraction`; no hay floats en ninguna comparación.
 - Ningún conjunto se recorre sin ordenar; la salida no lleva fechas de corrida.
 

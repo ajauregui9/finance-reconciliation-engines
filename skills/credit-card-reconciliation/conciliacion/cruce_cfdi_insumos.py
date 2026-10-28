@@ -7,10 +7,12 @@ que nombra el archivo, la línea y el campo; ninguna línea se salta.
 from __future__ import annotations
 
 import json
-from datetime import date, datetime
-from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
+from datetime import date
+from decimal import Decimal
 from pathlib import Path
 from typing import Any, Callable, Dict, FrozenSet, Iterable, Mapping, Optional, Tuple, Type, TypeVar
+
+from frontera import ErrorFrontera, FormaImporte, leer_fecha, leer_fecha_hora, leer_importe
 
 from .cruce_cfdi_modelo import (
     DIRECCIONES,
@@ -23,24 +25,24 @@ from .cruce_cfdi_modelo import (
     InsumoInvalido,
 )
 
-CENTAVO = Decimal("0.01")
 LARGO_FECHA_ISO = 10
+# Texto o número JSON con signo opcional y hasta dos decimales; un float pasa por su `repr`.
+FORMA_MONTO = FormaImporte(decimales=2, numeros=True)
 
 T = TypeVar("T")
 Registro = Tuple[int, Dict[str, Any]]
 
 
 def a_monto(valor: object, campo: str, error: Type[InsumoInvalido] = InsumoInvalido) -> Decimal:
-    """Convierte un monto de entrada (cadena o número) a Decimal con dos decimales, redondeo half-up."""
-    if isinstance(valor, bool) or not isinstance(valor, (str, int, float, Decimal)):
-        raise error(f"{campo}: se esperaba un monto (cadena o número) y llegó {type(valor).__name__}")
+    """Convierte un monto de entrada (cadena o número) a Decimal con dos decimales, sin redondear.
+
+    Más de dos decimales (también en un float), dígitos no ASCII, separador de miles,
+    exponentes o un float ambiguo son error: un insumo nunca se redondea.
+    """
     try:
-        numero = Decimal(str(valor).strip())
-    except InvalidOperation:
-        raise error(f"{campo}: monto ilegible {valor!r}") from None
-    if not numero.is_finite():
-        raise error(f"{campo}: monto no finito {valor!r}")
-    return numero.quantize(CENTAVO, rounding=ROUND_HALF_UP)
+        return leer_importe(valor, FORMA_MONTO)
+    except ErrorFrontera as exc:
+        raise error(f"{campo}: monto inválido: {exc}") from None
 
 
 def _valor(datos: Mapping[str, Any], campo: str) -> Any:
@@ -73,14 +75,12 @@ def _fecha(datos: Mapping[str, Any], campo: str, admite_hora: bool = False) -> O
     valor = _valor(datos, campo)
     if valor is None:
         return None
-    if not isinstance(valor, str):
-        raise InsumoInvalido(f"{campo}: se esperaba una fecha ISO y llegó {valor!r}")
     try:
-        if admite_hora and len(valor) > LARGO_FECHA_ISO:
-            return datetime.fromisoformat(valor).date()
-        return date.fromisoformat(valor)
-    except ValueError:
-        raise InsumoInvalido(f"{campo}: fecha ISO inválida {valor!r}") from None
+        if admite_hora and isinstance(valor, str) and len(valor) > LARGO_FECHA_ISO:
+            return leer_fecha_hora(valor, separador="T").date()
+        return leer_fecha(valor)
+    except ErrorFrontera as exc:
+        raise InsumoInvalido(f"{campo}: fecha ISO inválida: {exc}") from None
 
 
 def _no_negativo(datos: Mapping[str, Any], campo: str) -> Decimal:

@@ -4,17 +4,23 @@ Hacia la base SQLite los montos viajan como centavos enteros (`a_centavos`) y de
 se convierten una sola vez (`desde_centavos`). Así ninguna suma ni resta del libro mayor
 pasa por punto flotante: SQLite suma enteros de 64 bits de forma exacta y falla si se
 desbordan.
+
+La lectura de un monto externo delega en la frontera compartida (`frontera.leer_importe`):
+hasta dos decimales, dígitos ASCII y nunca un redondeo del insumo.
 """
 from __future__ import annotations
 
-from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
+from decimal import ROUND_HALF_UP, Decimal
 from typing import Optional, Union
+
+from frontera import ErrorFrontera, FormaImporte, leer_importe
 
 CENTAVO = Decimal("0.01")
 CERO = Decimal("0.00")
 CENTAVOS_MAXIMOS = 2**63 - 1  # el mayor entero que SQLite guarda sin pasar a REAL
 
 ValorCrudo = Union[str, int, Decimal]
+FORMA_MONTO = FormaImporte(decimales=2, numeros=True)
 
 
 class ErrorMonto(ValueError):
@@ -22,22 +28,20 @@ class ErrorMonto(ValueError):
 
 
 def a_decimal(valor: ValorCrudo) -> Decimal:
-    """Convierte texto, entero o `Decimal` a `Decimal` cuantizado al centavo.
+    """Convierte texto, entero o `Decimal` (hasta dos decimales) a `Decimal` en centavos, sin redondear.
 
-    Un `float` se rechaza: su valor binario ya no es el monto que alguien escribió.
+    Un `float` se rechaza: su valor binario ya no es el monto que alguien escribió. Más de
+    dos decimales, dígitos no ASCII o un separador de miles también son error.
     """
     if isinstance(valor, bool):
         raise ErrorMonto(f"un booleano no es un monto: {valor!r}")
     if isinstance(valor, float):
         raise ErrorMonto(f"un float no es un monto exacto: {valor!r}; llega como texto decimal")
-    texto = valor.strip() if isinstance(valor, str) else valor
     try:
-        numero = Decimal(texto)
-    except (InvalidOperation, ValueError, TypeError) as exc:
-        raise ErrorMonto(f"monto inválido: {valor!r}") from exc
-    if not numero.is_finite():
-        raise ErrorMonto(f"monto no finito: {valor!r}")
-    return _sin_cero_negativo(numero.quantize(CENTAVO, rounding=ROUND_HALF_UP))
+        numero = leer_importe(valor, FORMA_MONTO)
+    except ErrorFrontera as exc:
+        raise ErrorMonto(f"monto inválido: {exc}") from None
+    return _sin_cero_negativo(numero)
 
 
 def a_decimal_opcional(valor: Optional[ValorCrudo]) -> Optional[Decimal]:

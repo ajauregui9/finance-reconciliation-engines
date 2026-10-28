@@ -151,10 +151,11 @@ def test_montos_en_la_moneda_del_comprobante_sin_convertir(tmp_path: Path) -> No
     assert leido.cfdi.total_mxn == Decimal("2030.00")
 
 
-def test_redondea_a_centavos_half_up(tmp_path: Path) -> None:
-    xml = comprobante(subtotal="1000.005", impuestos=nodo_impuestos("160.125", traslado("160.125")))
-    leido = leer_uno(tmp_path, xml)
-    assert (leido.subtotal, leido.iva_trasladado) == (Decimal("1000.01"), Decimal("160.13"))
+def test_mas_de_dos_decimales_es_error_no_se_redondea(tmp_path: Path) -> None:
+    with pytest.raises(InsumoInvalido, match=r"SubTotal: .*a lo más 2 decimales"):
+        leer_uno(tmp_path, comprobante(subtotal="1000.005"))
+    with pytest.raises(InsumoInvalido, match=r"Importe del Traslado 002: .*a lo más 2 decimales"):
+        leer_uno(tmp_path, comprobante(impuestos=nodo_impuestos("160.125", traslado("160.125"))))
 
 
 def test_no_valida_el_cuadre_con_el_total(tmp_path: Path) -> None:
