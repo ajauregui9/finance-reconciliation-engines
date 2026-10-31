@@ -7,8 +7,8 @@ biblioteca estándar de Python (`sqlite3`, `csv`, `json`, `decimal`, `hashlib`).
 
 Alcance declarado: **SuiteQL vía conector MCP + CSV import; sin REST/SuiteScript.**
 
-- La experiencia que se demuestra es SuiteQL ejecutado vía un conector MCP y cargas por
-  CSV import. No hay cliente REST, OAuth/TBA, RESTlets ni SuiteScript, y no se agregan.
+- Este módulo demuestra SuiteQL ejecutado vía un conector MCP y cargas por CSV import. No
+  incluye cliente REST, OAuth/TBA, RESTlets ni SuiteScript, y no se agregan (ver ADR 0002).
 - Las queries se escriben en dialecto SuiteQL (estilo Oracle) y se ejecutan contra una base
   SQLite en memoria que imita las tablas de NetSuite. Una capa de compatibilidad traduce lo
   que SQLite no entiende (sección 5).

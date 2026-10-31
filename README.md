@@ -151,8 +151,8 @@ What the demos report on the versioned data:
   run here against an in-memory SQLite database that mimics the SuiteQL tables through a
   small documented compatibility layer; they have not been run against a live account in
   this repository. The module writes CSV import files for human review and never uploads
-  them. There is no REST client, OAuth/TBA, RESTlet or SuiteScript
-  ([ADR 0002](docs/adr/0002-netsuite-scope-suiteql-only.md)).
+  them. The repository has no REST client, OAuth/TBA, RESTlet or SuiteScript; a RESTlet needs a
+  live account to deploy and test ([ADR 0002](docs/adr/0002-netsuite-scope-suiteql-only.md)).
 - **`prompt_guard` is a quarantine with human review, not a security boundary.** Detection
   is pattern based; the guard only flags a record for a person and never approves, edits or
   removes anything. Ten known evasions (leetspeak, paraphrase, another language, split

@@ -2,10 +2,12 @@
 
 **Scope: SuiteQL via MCP connector + CSV import; no REST/SuiteScript.**
 
-This module shows the NetSuite work that was actually done: SuiteQL queries run through an
-MCP connector, plus loads through CSV import (see [ADR 0002](../../docs/adr/0002-netsuite-scope-suiteql-only.md)).
-There is no REST client, no OAuth/TBA, no RESTlet and no SuiteScript. A REST client against a
-mock would claim experience that does not exist, so none is included.
+This module shows the part of the NetSuite work that runs without a live account: SuiteQL
+queries run through an MCP connector, plus loads through CSV import (see
+[ADR 0002](../../docs/adr/0002-netsuite-scope-suiteql-only.md)). The author also built a
+RESTlet with token-based authentication; it is not reproduced here because it needs a live
+account to deploy and test, and a REST client against a mock would only test the mock. This
+module has no REST client, OAuth/TBA, RESTlet or SuiteScript.
 
 The queries are plain SuiteQL. Here they run against an in-memory SQLite database that mimics
 the SuiteQL tables, filled deterministically from the synthetic CFDIs in `examples/synthetic/`. A small,
